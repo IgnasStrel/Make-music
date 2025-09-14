@@ -1,0 +1,53 @@
+{
+  "name": "smoosic",
+  "version": "1.0.23",
+  "devDependencies": {
+    "copy-webpack-plugin": "^12.0.2",
+    "jquery": "^3.6.0",
+    "ts-node": "^10.9.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^4.7.2"
+  },
+  "types": "./types/src/application/exports.ts",
+  "dependencies": {
+    "@types/qunit": "^2.19.11",
+    "midi-parser-js": "^4.0.4",
+    "midi-writer-js": "^1.7.5",
+    "ts-loader": "^9.2.5",
+    "typedoc": "^0.25.0",
+    "typescript": "^5.2.2",
+    "vexflow_smoosic": "4.2.11"
+  },
+  "main": "build/smoosic.js",
+  "description": "<sub>[Github site](https://github.com/Smoosic/smoosic) | [source documentation](https://smoosic.github.io/Smoosic/release/docs/modules.html) | [change notes](https://aarondavidnewman.github.io/Smoosic/changes.html) | [application](https://smoosic.github.io/Smoosic/release/html/smoosic.html)<sub>",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "exit 0",
+    "build": "node ./build/build.js",
+    "types": "node ./build/build.js types",
+    "typedoc": "node ./node_modules/typedoc/bin/typedoc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smoosic/Smoosic.git"
+  },
+  "keywords": [
+    "music",
+    "engraving",
+    "notation",
+    "audio",
+    "midi",
+    "musicxml"
+  ],
+  "author": "Aaron D Newman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Smoosic/Smoosic/issues"
+  },
+  "homepage": "https://github.com/Smoosic/Smoosic#readme",
+  "publishConfig": {
+    "@AaronDavidNewman:registry": "https://npm.pkg.github.com"
+  }
+}
