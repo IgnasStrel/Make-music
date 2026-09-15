@@ -24,13 +24,13 @@
       --accent: #2f6fed;
       --accent-dark: #1d4fc4;
       --panel: rgba(255,255,255,0.97);
-      --panel-border: rgba(15,23,42,0.09);
-      /* Frosted-glass chrome: translucent + blurred, so the colourful
-         season background stays visible behind the UI instead of being
-         hidden behind near-solid white panels. */
-      --glass: rgba(255,255,255,0.6);
-      --glass-strong: rgba(255,255,255,0.86);
-      --glass-border: rgba(255,255,255,0.55);
+      --panel-border: rgba(15,23,42,0.1);
+      /* Plain, solid panel colours - easy to re-tint by eye. --glass is the
+         everyday chrome background (a whisper of blue), --glass-strong is
+         pure white for surfaces (like the staff) that need to stay crisp. */
+      --glass: #f7f9fc;
+      --glass-strong: #ffffff;
+      --glass-border: var(--panel-border);
     }
 
     body {
@@ -56,7 +56,6 @@
     .back-link {
       text-decoration: none; color: var(--ink);
       background: var(--glass);
-      backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
       border: 1px solid var(--glass-border);
       border-radius: 999px; padding: 8px 16px;
       font-size: 15px; font-weight: 700; font-family: var(--heading-font);
@@ -86,7 +85,6 @@
     .scircle {
       width: 62px; height: 62px; border-radius: 18px;
       background: var(--glass);
-      backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
       border: 1px solid var(--glass-border);
       cursor: pointer;
       display: flex; flex-direction: column;
@@ -111,7 +109,6 @@
       left: calc(100% + 10px);
       top: 50%; transform: translateY(-50%);
       background: var(--glass-strong);
-      backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
       border: 1px solid var(--glass-border);
       border-radius: 14px; padding: 8px;
       z-index: 300;
@@ -194,7 +191,6 @@
     /* Note type bar */
     .note-bar {
       background: var(--glass);
-      backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
       border: 1px solid var(--glass-border);
       border-radius: 14px; padding: 6px 10px;
       display: flex; gap: 2px; align-items: center; justify-content: center;
@@ -227,7 +223,6 @@
       /* Kept nearly-opaque (unlike the glass chrome elsewhere) so the
          written notes always stay crisp and readable over any background. */
       background: var(--glass-strong);
-      backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%);
       border: 1px solid var(--glass-border);
       border-radius: 16px; padding: 16px 20px 14px;
       box-shadow: 0 6px 24px rgba(15,23,42,0.14);
@@ -305,18 +300,22 @@
       overflow-y: auto;
     }
 
-    /* Each nav group (Žaidimai / Mokymasis / Pamokos) is its own glass card
-       with a clickable header that expands/collapses its body - a smooth,
-       dependency-free "unfold" using the CSS grid-rows trick (0fr -> 1fr)
-       instead of a JS height hack or an animation library. */
+    /* Each nav group (Žaidimai / Mokymasis / Pamokos) is its own plain white
+       card with a clickable header that expands/collapses its body - a
+       smooth, dependency-free "unfold" using the CSS grid-rows trick
+       (0fr -> 1fr) instead of a JS height hack or an animation library. */
     .nav-card {
       background: var(--glass);
-      backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
       border: 1px solid var(--glass-border);
       border-radius: 18px;
       box-shadow: 0 6px 22px rgba(15,23,42,0.12);
       overflow: hidden;
     }
+    /* A weak colour hint per card so the sidebar isn't just flat white -
+       change these 3 lines any time to whatever tint you like. */
+    .right-col .nav-card:nth-of-type(1) { background: #fdf3f8; }
+    .right-col .nav-card:nth-of-type(2) { background: #fdfaf0; }
+    .right-col .nav-card:nth-of-type(3) { background: #f2fbf6; }
     .nav-card-head {
       width: 100%; display: flex; align-items: center; gap: 10px;
       background: transparent; border: none; cursor: pointer;
@@ -343,7 +342,7 @@
 
     .nav-btn {
       display: flex; align-items: center; gap: 12px;
-      width: 100%; background: rgba(255,255,255,0.4);
+      width: 100%; background: rgba(255,255,255,0.7);
       border: 1px solid transparent;
       border-radius: 14px; padding: 10px 12px;
       font-family: var(--font); font-size: 14.5px; font-weight: 600; color: var(--ink);
@@ -357,7 +356,7 @@
       display: flex; align-items: center; justify-content: center;
       background: var(--nav-accent, #2f6fed); background: color-mix(in srgb, var(--nav-accent, #2f6fed) 20%, white);
     }
-    .nav-btn:hover { background: rgba(255,255,255,0.75); transform: translateX(3px) translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,0.12); }
+    .nav-btn:hover { background: #ffffff; transform: translateX(3px) translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,0.12); }
     .nav-btn:active { transform: scale(0.98); }
 
     /* ── Motion polish: notes pop in, panels + nav items unfold on load ── */
