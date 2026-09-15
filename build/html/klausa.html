@@ -30,7 +30,7 @@
 
       // ---- "Klausyk - atspėk": real animal/music pairs for the Phaser mini-game ----
       var PAIRS = [
-        { img: 'media/img/antis-varle.png', sides: [
+        { img: 'media/img/antis-varle.png', video: 'media/video/antis-varle.mp4', sides: [
           { key: 'antis', ico: '🦆', label: 'Antis', audio: 'media/audio/antis.mp3' },
           { key: 'varle', ico: '🐸', label: 'Varlė', audio: 'media/audio/varle.mp3' }
         ]},
@@ -185,6 +185,7 @@
           var scene = this;
           order.forEach(function (p, i) {
             scene.load.image('animalImg' + i, p.img);
+            if (p.video) { scene.load.video('animalVid' + i, p.video, true); }
             p.sides.forEach(function (s) { scene.load.audio(s.key, s.audio); });
           });
         }
@@ -198,19 +199,26 @@
           }).setOrigin(0.5, 0);
           var IMG_X = 400, IMG_Y = 270, IMG_W = 620, IMG_H = 438, IMG_RADIUS = 26;
           var bg = scene.add.image(IMG_X, IMG_Y, 'animalImg0').setDisplaySize(IMG_W, IMG_H).setAlpha(0);
+          // A looping video stands in for the picture on rounds that have one
+          // (e.g. antis-varle) — same spot, same mask, always moving.
+          var bgVideo = scene.add.video(IMG_X, IMG_Y).setDisplaySize(IMG_W, IMG_H).setAlpha(0);
+          bgVideo.setMute(true);
 
           // Clip the picture to rounded corners, then draw a crisp rounded
           // frame on top so it reads as one soft, modern card.
           var imgMaskShape = scene.make.graphics();
           imgMaskShape.fillStyle(0xffffff);
           imgMaskShape.fillRoundedRect(IMG_X - IMG_W / 2, IMG_Y - IMG_H / 2, IMG_W, IMG_H, IMG_RADIUS);
-          bg.setMask(imgMaskShape.createGeometryMask());
+          var imgGeoMask = imgMaskShape.createGeometryMask();
+          bg.setMask(imgGeoMask);
+          bgVideo.setMask(imgGeoMask);
           scene.add.graphics()
             .lineStyle(4, 0xffffff, 0.85)
             .strokeRoundedRect(IMG_X - IMG_W / 2, IMG_Y - IMG_H / 2, IMG_W, IMG_H, IMG_RADIUS);
 
-          // A slow, continuous "Ken Burns" breathing zoom so the picture
-          // never feels like a static screenshot, even before any tap.
+          // A slow, continuous "Ken Burns" breathing zoom so a still picture
+          // never feels like a static screenshot, even before any tap. Video
+          // rounds already move on their own, so they skip this.
           scene.tweens.add({ targets: bg, scaleX: '*=1.035', scaleY: '*=1.035', duration: 5200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
           // A few faint drifting notes in the side margins, just for ambience.
@@ -235,10 +243,19 @@
           var leftZone = makeImageZone(scene, 245, 270, 310, 438);
           var rightZone = makeImageZone(scene, 555, 270, 310, 438);
 
-          function fadeInImage(key) {
+          function showRound(pair, i) {
             bg.setAlpha(0);
-            bg.setTexture(key);
-            scene.tweens.add({ targets: bg, alpha: 1, duration: 350, ease: 'Sine.easeOut' });
+            bgVideo.stop();
+            bgVideo.setAlpha(0);
+            if (pair.video) {
+              // (key, autoplay, loop) — loop:true keeps it moving continuously.
+              bgVideo.changeSource('animalVid' + i, true, true);
+              bgVideo.setMute(true); // muted so autoplay is never blocked by the browser
+              scene.tweens.add({ targets: bgVideo, alpha: 1, duration: 350, ease: 'Sine.easeOut' });
+            } else {
+              bg.setTexture('animalImg' + i);
+              scene.tweens.add({ targets: bg, alpha: 1, duration: 350, ease: 'Sine.easeOut' });
+            }
           }
 
           var stopEvent = null;
@@ -253,7 +270,7 @@
             drawAnimalDots(round);
             locked = true;
             var pair = order[round];
-            fadeInImage('animalImg' + round);
+            showRound(pair, round);
             leftZone.item = pair.sides[0];
             rightZone.item = pair.sides[1];
             target = K.rand(pair.sides);
@@ -296,10 +313,11 @@
                 scene.time.delayedCall(1100, nextRound);
               } else {
                 feedbackBadge(scene, z.zone.x, z.zone.y, false);
-                var ox = bg.x;
+                var shakeTarget = order[round].video ? bgVideo : bg;
+                var ox = shakeTarget.x;
                 scene.tweens.add({
-                  targets: bg, x: ox + 8, duration: 55, yoyo: true, repeat: 3,
-                  onComplete: function () { bg.x = ox; setZoneEnabled(z, true); }
+                  targets: shakeTarget, x: ox + 8, duration: 55, yoyo: true, repeat: 3,
+                  onComplete: function () { shakeTarget.x = ox; setZoneEnabled(z, true); }
                 });
                 K.audio.wrong();
                 hintText.setText('❌ Pabandyk dar kartą');
