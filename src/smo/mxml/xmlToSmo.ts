@@ -150,7 +150,7 @@ export class XmlToSmo {
       XmlToSmo.setSlurDefaults(rv);
       xmlState.completeTies(rv);
         
-      rv.preferences.showPiano = false;
+      rv.preferences.showPiano = true;
       XmlToSmo.setVoltas(rv, xmlState);
       rv.staves.forEach((staff) => {
 

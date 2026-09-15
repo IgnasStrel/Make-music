@@ -276,9 +276,8 @@ export class SmoScore {
     if (this.staves.length) {
       this.numberStaves();
     }
-    if (typeof (this.preferences.showPiano) === 'undefined') {
-      this.preferences.showPiano = false;
-    }
+    // Keep piano visible by default when loading any score.
+    this.preferences.showPiano = true;
     this.audioSettings = new SmoAudioPlayerSettings(params.audioSettings);
     this.updateMeasureFormats();
     this.updateSystemGroups();
@@ -291,9 +290,9 @@ export class SmoScore {
   }
   static get scoreInfoDefaults(): SmoScoreInfo {
     return JSON.parse(JSON.stringify({
-      name: 'Smoosical',
-      title: 'Smoosical',
-      subTitle: '(Op. 1)',
+      name: 'Nauja pamoka',
+      title: 'Nauja pamoka',
+      subTitle: '',
       composer: 'Me',
       copyright: '',
       version: 1
@@ -776,7 +775,47 @@ export class SmoScore {
     measure.voices.push({
       notes: SmoMeasure.getDefaultNotes(measureDefaults as SmoMeasureParams)
     });
-    // Since this is a new score, a part and the score are the same.  So make sure 
+    // A new score always starts with 2 systems (rows) of 4 measures each, so 8
+    // measures total.  Force a system break before measure 4 so the second row
+    // always starts there.  The break has to be stored in partInfo.measureFormatting,
+    // otherwise updateMeasureFormatsForPart() resets it.
+    let mi = 1;
+    for (mi = 1; mi < 8; ++mi) {
+      score.addMeasure(mi);
+    }
+    const breakFormat = new SmoMeasureFormat(SmoMeasureFormat.defaults);
+    breakFormat.systemBreak = true;
+    breakFormat.measureIndex = 4;
+    score.staves[0].measures[4].format = new SmoMeasureFormat(breakFormat);
+    score.staves[0].partInfo.measureFormatting[4] = new SmoMeasureFormat(breakFormat);
+    // Make the notation much larger and fit 2 rows on screen without a vertical
+    // scrollbar (this is geared towards a kids' app).  svgScale drives the size of
+    // the music; pageHeight is sized to the window so the SVG fits the visible area.
+    // The layout has to be applied to BOTH the score's layoutManager and the
+    // staff's partInfo.layoutManager, since _mapPartFormatting() replaces the
+    // former with the latter when the (single-staff) score is shown as a part.
+    const applyKidLayout = (lm: SmoLayoutManager) => {
+      const gl = lm.getGlobalLayout();
+      gl.svgScale = 2.4;
+      // 4 measures per system: forces both rows to justify to the full page width
+      // (the last system is only stretched when maxMeasureSystem > 1).
+      gl.maxMeasureSystem = 4;
+      if (typeof window !== 'undefined') {
+        // Reserve room for the top control bar and the piano keyboard at the bottom.
+        const visibleMusicHeight = Math.max(360, window.innerHeight - 230);
+        gl.pageHeight = Math.round(visibleMusicHeight / gl.zoomScale);
+      }
+      lm.updateGlobalLayout(gl);
+      // Spread the two big rows vertically to fill the available space.
+      lm.pageLayouts.forEach((pl) => {
+        pl.topMargin = 60;
+        pl.bottomMargin = 40;
+        pl.interGap = 180;
+      });
+    };
+    applyKidLayout(score.layoutManager!);
+    applyKidLayout(score.staves[0].partInfo.layoutManager);
+    // Since this is a new score, a part and the score are the same.  So make sure
     // we don't multi-measure rest the entire score.
     score.staves[0].partInfo.expandMultimeasureRests = true;
     return score;

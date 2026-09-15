@@ -40,14 +40,20 @@ export class SuiDom {
         b('div').classes('workspace language-dir').attr('dir', 'ltr')
           .append(
             b('div').classes('control-bar')
-              .append(b('div').classes('titleText').text('Make Music'))
-              .append(
-                b('div').classes('piano-container')
-                  .append(b('div').classes('key-left-ctrl'))
-                  .append(b('div').classes('piano-keys'))
-                  .append(b('div').classes('key-right-ctrl'))
-              )
+              .append(b('div').classes('titleText').attr('id', 'make-music-title').text('MUSICATION'))
               .append(b('div').classes('controls-top').attr('id', 'controls-top'))
+              .append(
+                b('div').classes('piano-ctrl-bar')
+                  .append(b('button').classes('piano-ctrl-toggle').append(b('span').classes('icon icon-smo')))
+                  .append(
+                    b('div').classes('piano-ctrl-bar-buttons')
+                      .append(b('button').classes('icon icon-cross close close-piano'))
+                      .append(b('button').classes('piano-ctrl jsGrowDuration').append(b('span').classes('icon icon-duration_grow')))
+                      .append(b('button').classes('piano-ctrl jsShrinkDuration').append(b('span').classes('icon icon-duration_less')))
+                      .append(b('button').classes('piano-ctrl jsGrowDot').append(b('span').classes('icon icon-duration_grow_dot')))
+                      .append(b('button').classes('piano-ctrl jsShrinkDot').append(b('span').classes('icon icon-duration_less_dot')))
+                  )
+              )
           )
           .append(
             b('div').classes('media')
@@ -57,6 +63,12 @@ export class SuiDom {
                     b('ul').classes('nav nav-pills flex-column mb-auto').attr('id', 'controls-left')
                   )
               )
+          )
+          .append(
+            b('div').classes('piano-container')
+              .append(b('div').classes('key-left-ctrl'))
+              .append(b('div').classes('piano-keys'))
+              .append(b('div').classes('key-right-ctrl'))
           )
       );
 

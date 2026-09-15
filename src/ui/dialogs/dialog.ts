@@ -83,6 +83,7 @@ export interface SuiDialogParams {
   startPromise: Promise<void> | null
   view: SuiScoreViewOperations,
   eventSource: BrowserEventSource,
+  anchorElement?: string | HTMLElement | any,
   // definition: DialogDefinition,
   modifier?: any,
   config?: SmoUiConfiguration
@@ -149,6 +150,7 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
     return {
       BINDCOMPONENTS: 'bindComponents', DRAGGABLE: 'makeDraggable',
       KEYBOARD_CAPTURE: 'captureKeyboardPromise', GLOBALPOS: 'positionGlobally',
+      ANCHORPOS: 'positionFromAnchor',
       SELECTIONPOS: 'positionFromSelection', MODIFIERPOS: 'positionFromModifier',
       HIDEREMOVE: 'hideRemoveButton'
     };
@@ -178,8 +180,9 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
   view: SuiScoreViewOperations;
   completeNotifier: CompleteNotifier;
   modifier: any;
+  anchorElement: string | HTMLElement | any;
   dgDom: DialogDom;
-  displayOptions: string[] = ['BINDCOMPONENTS', 'DRAGGABLE', 'KEYBOARD_CAPTURE', 'GLOBALPOS', 'HIDEREMOVE'];
+  displayOptions: string[] = ['BINDCOMPONENTS', 'DRAGGABLE', 'KEYBOARD_CAPTURE', 'ANCHORPOS', 'HIDEREMOVE'];
   keydownHandler: EventHandler | null = null;
   // ### SuiDialogBase ctor
   // Creates the DOM element for the dialog and gets some initial elements
@@ -194,6 +197,7 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
     this.completeNotifier = parameters.completeNotifier;
     this.modifier = parameters.modifier;
     this.ctor = parameters.ctor;
+    this.anchorElement = parameters.anchorElement ?? null;
 
     this.closeDialogPromise = new Promise<void>((resolve) => {
       $('body').off('dialogDismiss').on('dialogDismiss', () => {
@@ -332,6 +336,54 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
       (this as any)[SuiDialogBase.displayOptions[option]]();
     });
   }
+  getAnchorDomElement() {
+    if (this.anchorElement) {
+      const anchor = $(this.anchorElement);
+      if (anchor.length) {
+        return anchor;
+      }
+    }
+    const activeElement = document.activeElement as HTMLElement | null;
+    if (activeElement) {
+      const active = $(activeElement);
+      if (active.length && (active.is('button') || active.is('.nav-link') || active.closest('button,.nav-link').length > 0)) {
+        return active.closest('button,.nav-link').length ? active.closest('button,.nav-link') : active;
+      }
+    }
+    return null;
+  }
+  positionFromAnchor() {
+    const anchor = this.getAnchorDomElement();
+    if (!anchor || !anchor.length) {
+      this.positionGlobally();
+      return;
+    }
+    const modal = $(this.dgDom.element).find('.attributeModal');
+    const offset = anchor.offset();
+    if (!offset) {
+      this.positionGlobally();
+      return;
+    }
+    const anchorHeight = anchor.outerHeight() || 0;
+    const anchorWidth = anchor.outerWidth() || 0;
+    const modalWidth = modal.outerWidth() || 420;
+    const modalHeight = modal.outerHeight() || 280;
+    const padding = 10;
+    let top = (offset.top as number) + anchorHeight + 6;
+    let left = (offset.left as number) + anchorWidth - modalWidth;
+
+    if (left < padding) {
+      left = padding;
+    }
+    if (left + modalWidth > window.innerWidth - padding) {
+      left = Math.max(padding, window.innerWidth - modalWidth - padding);
+    }
+    if (top + modalHeight > window.innerHeight - padding) {
+      top = Math.max(padding, (offset.top as number) - modalHeight - 6);
+    }
+    modal.css('top', '' + top + 'px');
+    modal.css('left', '' + left + 'px');
+  }
   // ### position
   // Position the dialog near a selection.  If the dialog is not visible due
   // to scrolling, make sure it is visible.
@@ -373,7 +425,6 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
     const b = buildDom;
     const r = b('div').classes('attributeModal').attr('id', 'attr-modal-' + id)
       .css('top', parameters.top + 'px').css('left', parameters.left + 'px')
-      .append(b('spanb').classes('draggable button').append(b('span').classes('icon icon-move jsDbMove')))
       .append(b('h2').classes('dialog-label').text(this.label));
 
     var ctrl = b('div').classes('smoControlContainer');
@@ -404,9 +455,7 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
     $('.attributeDialog').append(r.dom());
 
     const trapper = new InputTrapper('.attributeDialog');
-    trapper.trap();
-    $('.attributeDialog').find('.cancel-button').focus();
-    return {
+    return { 
       element: $('.attributeDialog'),
       trapper
     };
@@ -420,21 +469,15 @@ export const suiDialogTranslate = (dialog: DialogDefinition, ctor: string): Dial
     }
     $('body').removeClass('showAttributeDialog');
     $('body').trigger('dialogDismiss');
-    this.dgDom.trapper.close();
+    if (this.dgDom.trapper && this.dgDom.trapper.close) {
+      this.dgDom.trapper.close();
+    }
   }
   // ### makeDraggable
   // generic code to make the dialog box draggable so it doesn't
   // get in front of stuff.
   makeDraggable() {
-    createTopDomContainer('.draganime');
-    const cb = () => { };
-    draggable({
-      parent: $(this.dgDom.element).find('.attributeModal'),
-      handle: $(this.dgDom.element).find('.jsDbMove'),
-      animateDiv: '.draganime',
-      cb,
-      moveParent: true
-    });
+    // drag disabled
   }
   // ### captureKeyboardPromise
   // capture keyboard events until the dialog closes,

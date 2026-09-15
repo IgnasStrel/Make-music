@@ -3,6 +3,7 @@
 import { smoLanguageStringAr } from './language_ar';
 import { smoLanguageStringDe } from './language_de';
 import { smoLanguageStringEn } from './language_en';
+import { smoLanguageStringLt } from './language_lt';
 import { MenuChoiceDefinition, MenuDefinition, MenuTranslation, MenuTranslations } from '../menus/menu';
 import { ButtonLabel } from '../buttons/button';
 import { SmoNamespace } from '../../smo/data/common';
@@ -24,6 +25,16 @@ export class SmoTranslator {
 
   static menus: any[] = [];
   static debugMask: number = 0;
+  static activeTranslations: MenuTranslation[] = [];
+
+  static translateMenuItems(ctor: string, menuItems: MenuChoiceDefinition[]): MenuChoiceDefinition[] {
+    const menuTrans = SmoTranslator.activeTranslations.find((mt) => mt.ctor === ctor);
+    if (!menuTrans) return menuItems;
+    return menuItems.map((item) => {
+      const itemTrans = menuTrans.menuItems.find((mi) => mi.value === item.value);
+      return itemTrans ? { ...item, text: itemTrans.text } : item;
+    });
+  }
 
   static registerMenu(_class: any) {
     if (!SmoTranslator.menus[_class]) {
@@ -98,13 +109,26 @@ export class SmoTranslator {
    * @returns 
    */
   static setLanguage(language: string) {
-    console.warn('Ouch, need to implement languages');
     if (!(SmoLanguage as any)[language]) {
       return; // no xlate exists
     }
-    const trans = (SmoLanguage as any)[language] as LanguageTranslation;    
+    const trans = (SmoLanguage as any)[language] as LanguageTranslation;
     // Handle rtl languages
     $('body').find('.language-dir').each((ix: number, dd: any) => { $(dd).attr('dir', trans.dir); });
+    // Update ribbon button text
+    if (trans.strings.buttonText) {
+      trans.strings.buttonText.forEach((bt: ButtonLabel) => {
+        if (bt.buttonId === 'makeMusicTitle') {
+          $('#make-music-title').text(bt.buttonText);
+        } else if (bt.buttonId === 'addNoteText') {
+          $('#piano-add-note-text').text(bt.buttonText);
+        } else {
+          $('#' + bt.buttonId + ' .text-span').text(bt.buttonText);
+        }
+      });
+    }
+    // Store active menu translations for future menu instantiation
+    SmoTranslator.activeTranslations = trans.strings.menus ?? [];
   }
 
   static get allMenus() {
@@ -174,6 +198,12 @@ export class SmoLanguage {
 
   static get de(): LanguageTranslation {
     const strings = JSON.parse(smoLanguageStringDe) as TranslationStrings;
+    const rv: LanguageTranslation = { dir: 'ltr', strings, helpHtml: {} };
+    return rv;
+  }
+
+  static get lt(): LanguageTranslation {
+    const strings = JSON.parse(smoLanguageStringLt) as TranslationStrings;
     const rv: LanguageTranslation = { dir: 'ltr', strings, helpHtml: {} };
     return rv;
   }

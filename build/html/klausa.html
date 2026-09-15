@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Klausyk - atspėk</title>
+  <link rel="stylesheet" href="../styles/kids.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="spacer"></div>
+    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+  </div>
+
+  <!-- ===== Klausyk - atspėk: real animal-music recordings (Phaser mini-game) ===== -->
+  <section class="screen" id="playAnimal">
+    <h2>🐾 Klausyk - atspėk</h2>
+    <div class="progress-dots" id="animalDots"></div>
+    <div id="animalStage" class="phaser-stage"></div>
+    <div class="scoreboard"><div>Taškai: <b id="animalScore">0</b></div></div>
+  </section>
+
+  <script src="lib/phaser.min.js"></script>
+  <script src="kids.js"></script>
+  <script src="seasonBg.js"></script>
+  <script>
+    (function () {
+      var K = window.Kids;
+      var ROUNDS = 6;
+
+      // ---- "Klausyk - atspėk": real animal/music pairs for the Phaser mini-game ----
+      var PAIRS = [
+        { img: 'media/img/antis-varle.png', sides: [
+          { key: 'antis', ico: '🦆', label: 'Antis', audio: 'media/audio/antis.mp3' },
+          { key: 'varle', ico: '🐸', label: 'Varlė', audio: 'media/audio/varle.mp3' }
+        ]},
+        { img: 'media/img/bite-sraige.png', sides: [
+          { key: 'bite', ico: '🐝', label: 'Bitė', audio: 'media/audio/bite.mp3' },
+          { key: 'sraige', ico: '🐌', label: 'Sraigė', audio: 'media/audio/sraige.mp3' }
+        ]},
+        { img: 'media/img/dramblys-drugelis.png', sides: [
+          { key: 'dramblys', ico: '🐘', label: 'Dramblys', audio: 'media/audio/dramblys.mp3' },
+          { key: 'drugelis', ico: '🦋', label: 'Drugelis', audio: 'media/audio/drugelis.mp3' }
+        ]},
+        { img: 'media/img/karve-zyle.png', sides: [
+          { key: 'karve', ico: '🐄', label: 'Karvė', audio: 'media/audio/karve.mp3' },
+          { key: 'zyle', ico: '🐦', label: 'Zylė', audio: 'media/audio/zyle.mp3' }
+        ]},
+        { img: 'media/img/meskiukas-vovere.png', sides: [
+          { key: 'meskiukas', ico: '🐻', label: 'Meškiukas', audio: 'media/audio/meskiukas.mp3' },
+          { key: 'vovere', ico: '🐿️', label: 'Voverė', audio: 'media/audio/vovere.mp3' }
+        ]},
+        { img: 'media/img/vezlys-kiskis.png', sides: [
+          { key: 'vezlys', ico: '🐢', label: 'Vėžlys', audio: 'media/audio/vezlys.mp3' },
+          { key: 'kiskis', ico: '🐰', label: 'Kiškis', audio: 'media/audio/kiskis.mp3' }
+        ]}
+      ];
+
+      // =====================================================================
+      // "Klausyk - atspėk" — a real-recording animal-guess game rendered with
+      // Phaser (canvas scene, tweened feedback) instead of the plain-DOM
+      // engine above, since every round needs its own picture + audio file.
+      // =====================================================================
+      var ROUNDS_A = 6;
+      var animalGame = null;
+      var animalDotsEl = document.getElementById('animalDots');
+      var animalScoreEl = document.getElementById('animalScore');
+
+      function drawAnimalDots(round) {
+        animalDotsEl.innerHTML = '';
+        for (var i = 0; i < ROUNDS_A; i++) {
+          var d = document.createElement('div');
+          d.className = 'dot' + (i < round ? ' done' : (i === round ? ' cur' : ''));
+          animalDotsEl.appendChild(d);
+        }
+      }
+
+      // A rounded, glossy pill button that gently "breathes" and pulses a
+      // soft ripple behind it, so it visibly invites a tap even when idle.
+      function makeRoundButton(scene, x, y, w, h, label, color, textColor) {
+        var radius = h / 2;
+
+        var ripple = scene.add.graphics().setPosition(x, y);
+        ripple.fillStyle(color, 0.4);
+        ripple.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
+        scene.tweens.add({
+          targets: ripple, scaleX: 1.35, scaleY: 1.55, alpha: 0,
+          duration: 1500, repeat: -1, ease: 'Sine.easeOut'
+        });
+
+        var g = scene.add.graphics().setPosition(x, y);
+        g.fillStyle(color, 1);
+        g.fillRoundedRect(-w / 2, -h / 2, w, h, radius);
+        g.fillStyle(0xffffff, 0.25);
+        g.fillRoundedRect(-w / 2 + 5, -h / 2 + 5, w - 10, h * 0.4, radius - 5);
+        g.lineStyle(2, 0xffffff, 0.3);
+        g.strokeRoundedRect(-w / 2, -h / 2, w, h, radius);
+
+        var txt = scene.add.text(x, y, label, {
+          fontFamily: 'Inter, Arial, sans-serif', fontSize: 26, fontStyle: 'bold', color: textColor || '#f3f3fb'
+        }).setOrigin(0.5);
+
+        scene.tweens.add({ targets: [g, txt], scaleX: 1.045, scaleY: 1.045, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+        var zone = scene.add.zone(x, y, w, h).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        return {
+          zone: zone, g: g, txt: txt, ripple: ripple,
+          setEnabled: function (on) {
+            if (on) { zone.setInteractive({ useHandCursor: true }); g.setAlpha(1); txt.setAlpha(1); ripple.setVisible(true); }
+            else { zone.disableInteractive(); g.setAlpha(0.4); txt.setAlpha(0.55); ripple.setVisible(false); }
+          }
+        };
+      }
+      // An invisible tappable half laid directly over the picture (left/right
+      // animal), with a soft colour wash so kids can see where to tap.
+      function makeImageZone(scene, x, y, w, h) {
+        var hl = scene.add.rectangle(x, y, w, h, 0x7ee8a2, 0).setOrigin(0.5);
+        var zone = scene.add.zone(x, y, w, h).setOrigin(0.5);
+        return { zone: zone, hl: hl, item: null };
+      }
+      function setZoneEnabled(z, on) {
+        if (on) { z.zone.setInteractive({ useHandCursor: true }); z.hl.setFillStyle(0x7ee8a2, 0.12); }
+        else { z.zone.disableInteractive(); z.hl.setFillStyle(0x7ee8a2, 0); }
+      }
+      function burst(scene, x, y) {
+        var colors = [0xffd166, 0x7ee8a2, 0xec407a, 0x1e88e5];
+        for (var i = 0; i < 16; i++) {
+          var p = scene.add.circle(x, y, 5, colors[i % colors.length]);
+          var angle = Math.random() * Math.PI * 2;
+          var dist = 60 + Math.random() * 90;
+          scene.tweens.add({
+            targets: p,
+            x: x + Math.cos(angle) * dist,
+            y: y + Math.sin(angle) * dist,
+            alpha: 0,
+            duration: 550 + Math.random() * 250,
+            ease: 'Cubic.easeOut',
+            onComplete: function (tw, targets) { targets[0].destroy(); }
+          });
+        }
+      }
+      // A bouncy ✓/✗ badge that pops in with an overshoot, wiggles once with
+      // personality, then either floats up and away (correct) or shrinks
+      // back down (wrong) — replaces the old flat green/red rectangle fill.
+      function feedbackBadge(scene, x, y, ok) {
+        var color = ok ? 0x2fbf71 : 0xe6483c;
+        var circle = scene.add.circle(x, y, 40, color, 0.96).setScale(0);
+        var label = scene.add.text(x, y, ok ? '✓' : '✗', {
+          fontFamily: 'Inter, Arial, sans-serif', fontSize: 46, fontStyle: 'bold', color: '#ffffff'
+        }).setOrigin(0.5).setScale(0);
+        var group = [circle, label];
+        var destroy = function () { circle.destroy(); label.destroy(); };
+        scene.tweens.add({
+          targets: group, scale: 1, duration: 360, ease: 'Back.easeOut',
+          onComplete: function () {
+            if (ok) {
+              scene.tweens.add({ targets: group, angle: { from: -8, to: 8 }, duration: 90, yoyo: true, repeat: 2 });
+              scene.tweens.add({ targets: group, y: y - 70, scale: 0.4, alpha: 0, delay: 380, duration: 420, ease: 'Cubic.easeIn', onComplete: destroy });
+            } else {
+              scene.tweens.add({ targets: group, angle: { from: -10, to: 10 }, duration: 60, yoyo: true, repeat: 3 });
+              scene.tweens.add({ targets: group, scale: 0, alpha: 0, delay: 320, duration: 260, ease: 'Back.easeIn', onComplete: destroy });
+            }
+          }
+        });
+      }
+      // An expanding, fading ring — a quick celebratory pulse behind the badge.
+      function ringPulse(scene, x, y, color) {
+        var ring = scene.add.circle(x, y, 34, color, 0).setStrokeStyle(6, color, 0.9).setScale(0.7);
+        scene.tweens.add({
+          targets: ring, scale: 2.6, alpha: 0, duration: 600, ease: 'Sine.easeOut',
+          onComplete: function () { ring.destroy(); }
+        });
+      }
+
+      function startAnimalGuess() {
+        K.showScreen('playAnimal');
+        animalScoreEl.textContent = '0';
+        drawAnimalDots(0);
+        if (animalGame) { animalGame.destroy(true); animalGame = null; }
+
+        var order = K.shuffle(PAIRS);
+
+        function preload() {
+          var scene = this;
+          order.forEach(function (p, i) {
+            scene.load.image('animalImg' + i, p.img);
+            p.sides.forEach(function (s) { scene.load.audio(s.key, s.audio); });
+          });
+        }
+
+        function create() {
+          var scene = this;
+          var round = 0, score = 0, locked = true, target = null, sound = null;
+
+          var hintText = scene.add.text(400, 20, 'Kraunama…', {
+            fontFamily: 'Inter, Arial, sans-serif', fontSize: 22, color: '#f3f3fb'
+          }).setOrigin(0.5, 0);
+          var IMG_X = 400, IMG_Y = 270, IMG_W = 620, IMG_H = 438, IMG_RADIUS = 26;
+          var bg = scene.add.image(IMG_X, IMG_Y, 'animalImg0').setDisplaySize(IMG_W, IMG_H).setAlpha(0);
+
+          // Clip the picture to rounded corners, then draw a crisp rounded
+          // frame on top so it reads as one soft, modern card.
+          var imgMaskShape = scene.make.graphics();
+          imgMaskShape.fillStyle(0xffffff);
+          imgMaskShape.fillRoundedRect(IMG_X - IMG_W / 2, IMG_Y - IMG_H / 2, IMG_W, IMG_H, IMG_RADIUS);
+          bg.setMask(imgMaskShape.createGeometryMask());
+          scene.add.graphics()
+            .lineStyle(4, 0xffffff, 0.85)
+            .strokeRoundedRect(IMG_X - IMG_W / 2, IMG_Y - IMG_H / 2, IMG_W, IMG_H, IMG_RADIUS);
+
+          // A slow, continuous "Ken Burns" breathing zoom so the picture
+          // never feels like a static screenshot, even before any tap.
+          scene.tweens.add({ targets: bg, scaleX: '*=1.035', scaleY: '*=1.035', duration: 5200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+          // A few faint drifting notes in the side margins, just for ambience.
+          var NOTE_GLYPHS = ['♪', '♫', '♩', '♬'];
+          [
+            { x: 45, size: 22, dur: 5200, delay: 0 },
+            { x: 755, size: 26, dur: 6100, delay: 700 },
+            { x: 62, size: 18, dur: 7000, delay: 1500 }
+          ].forEach(function (spot) {
+            var t = scene.add.text(spot.x, 600, K.rand(NOTE_GLYPHS), {
+              fontFamily: 'Inter, Arial, sans-serif', fontSize: spot.size, color: '#ffffff'
+            }).setOrigin(0.5).setAlpha(0.16);
+            scene.tweens.add({
+              targets: t, y: 10, duration: spot.dur, delay: spot.delay, repeat: -1, ease: 'Sine.easeInOut',
+              onRepeat: function () { t.y = 600 + Math.random() * 30; t.setText(K.rand(NOTE_GLYPHS)); }
+            });
+          });
+
+          var listenBtn = makeRoundButton(scene, 400, 545, 230, 64, '🔊 Klausyk', 0x7ee8a2, '#0e2a17');
+          // Left/right halves of the picture itself are the answer — tap the
+          // animal you hear, right where it's drawn.
+          var leftZone = makeImageZone(scene, 245, 270, 310, 438);
+          var rightZone = makeImageZone(scene, 555, 270, 310, 438);
+
+          function fadeInImage(key) {
+            bg.setAlpha(0);
+            bg.setTexture(key);
+            scene.tweens.add({ targets: bg, alpha: 1, duration: 350, ease: 'Sine.easeOut' });
+          }
+
+          var stopEvent = null;
+
+          function nextRound() {
+            if (round >= ROUNDS_A) { return finish(); }
+            // A previous round's "force stop after 8s" timer must not be
+            // allowed to fire later and stop THIS round's sound instead —
+            // that's what made playback randomly cut off after a couple of
+            // seconds when a round was answered quickly.
+            if (stopEvent) { stopEvent.remove(false); stopEvent = null; }
+            drawAnimalDots(round);
+            locked = true;
+            var pair = order[round];
+            fadeInImage('animalImg' + round);
+            leftZone.item = pair.sides[0];
+            rightZone.item = pair.sides[1];
+            target = K.rand(pair.sides);
+            setZoneEnabled(leftZone, false);
+            setZoneEnabled(rightZone, false);
+            hintText.setText('Paspausk „Klausyk" 👂');
+            sound = scene.sound.get(target.key) || scene.sound.add(target.key);
+          }
+
+          listenBtn.zone.on('pointerdown', function () {
+            scene.sound.stopAll();
+            if (stopEvent) { stopEvent.remove(false); stopEvent = null; }
+            var s = sound;
+            s.play({ volume: 0.85 });
+            stopEvent = scene.time.delayedCall(8000, function () { s.stop(); });
+            if (locked) {
+              locked = false;
+              setZoneEnabled(leftZone, true);
+              setZoneEnabled(rightZone, true);
+              hintText.setText('Klausyk ir paspausk ant to gyvūno paveikslėlyje');
+            }
+          });
+
+          function pick(z) {
+            return function () {
+              if (locked || !z.item) { return; }
+              if (z.item.key === target.key) {
+                locked = true;
+                setZoneEnabled(leftZone, false);
+                setZoneEnabled(rightZone, false);
+                scene.sound.stopAll();
+                ringPulse(scene, z.zone.x, z.zone.y, 0x7ee8a2);
+                feedbackBadge(scene, z.zone.x, z.zone.y, true);
+                burst(scene, z.zone.x, z.zone.y);
+                score++; animalScoreEl.textContent = score;
+                K.audio.correct();
+                K.mascot('happy', 'Šaunu!');
+                hintText.setText('✅ Teisingai!');
+                round++;
+                scene.time.delayedCall(1100, nextRound);
+              } else {
+                feedbackBadge(scene, z.zone.x, z.zone.y, false);
+                var ox = bg.x;
+                scene.tweens.add({
+                  targets: bg, x: ox + 8, duration: 55, yoyo: true, repeat: 3,
+                  onComplete: function () { bg.x = ox; setZoneEnabled(z, true); }
+                });
+                K.audio.wrong();
+                hintText.setText('❌ Pabandyk dar kartą');
+              }
+            };
+          }
+          leftZone.zone.on('pointerdown', pick(leftZone));
+          rightZone.zone.on('pointerdown', pick(rightZone));
+
+          function finish() {
+            drawAnimalDots(ROUNDS_A);
+            K.stars.add(score);
+            K.progress.markDone('klausa.animalguess');
+            hintText.setText('🎉 Surinkai ' + score + ' iš ' + ROUNDS_A);
+            K.confetti();
+            K.mascot('cheer', 'Gavai ' + score + ' žvaigždutes! ⭐');
+            setZoneEnabled(leftZone, false);
+            setZoneEnabled(rightZone, false);
+            listenBtn.setEnabled(false);
+          }
+
+          nextRound();
+        }
+
+        animalGame = new Phaser.Game({
+          type: Phaser.AUTO,
+          parent: 'animalStage',
+          transparent: true,
+          scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            width: 800,
+            height: 620
+          },
+          scene: { preload: preload, create: create }
+        });
+      }
+
+      startAnimalGuess();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Testai</title>
+  <link rel="stylesheet" href="../styles/kids.css" />
+  <style>
+    .opt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; width: 100%; }
+    .visual-box { min-height: 80px; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="rasymas.html">← Atgal</a>
+    <div class="spacer"></div>
+    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+  </div>
+
+  <!-- ===== Menu ===== -->
+  <section class="screen" id="menu">
+    <h1>📝 Testai
+      <small>Atsakyk į 5 klausimus ir surink žvaigždutes</small>
+    </h1>
+    <div class="menu-grid">
+      <button class="menu-card" data-test="natos"><span class="ico">🌈</span><span class="name">Natų pažinimas</span><span class="sub">Do–Si spalvos ir garsai</span></button>
+      <button class="menu-card" data-test="ritmas"><span class="ico">👏</span><span class="name">Ritmo testas</span><span class="sub">kiek garsų: ta / ti-ti</span></button>
+      <button class="menu-card" data-test="garsai"><span class="ico">🔊</span><span class="name">Garsų testas</span><span class="sub">aukštas / žemas / greitas…</span></button>
+    </div>
+  </section>
+
+  <!-- ===== Quiz ===== -->
+  <section class="screen" id="quiz">
+    <h2 id="quizTitle">—</h2>
+    <div class="progress-dots" id="dots"></div>
+    <div class="visual-box" id="visual"></div>
+    <div class="controls" id="audioControls" style="display:none">
+      <button class="btn btn-primary" id="replay">🔊 Klausyk dar</button>
+    </div>
+    <div class="hint" id="qtext">—</div>
+    <div class="opt-grid" id="options"></div>
+    <div class="scoreboard"><div>Taškai: <b id="score">0</b></div></div>
+    <button class="btn btn-ghost" id="quitBtn">← Testai</button>
+  </section>
+
+  <!-- ===== Result ===== -->
+  <section class="screen" id="result">
+    <h2 id="resTitle">🎉 Rezultatas</h2>
+    <div class="card">
+      <div class="illus" id="resFace">🤩</div>
+      <p class="lead" id="resText">—</p>
+    </div>
+    <div class="controls">
+      <button class="btn btn-primary" id="retryBtn">🔁 Bandyti dar</button>
+      <button class="btn btn-ghost" id="resMenu">← Kiti testai</button>
+    </div>
+  </section>
+
+  <script src="kids.js"></script>
+  <script src="seasonBg.js"></script>
+  <script>
+    (function () {
+      var K = window.Kids;
+      var SOLF = K.SOLFEGE;
+      var N = 5; // questions per test
+
+      // Each test returns a question object:
+      //  { audio: fn|null, visual: html|null, q: text, options: [{label, correct, ico?}] }
+      var TESTS = {
+        natos: {
+          title: '🌈 Natų pažinimas',
+          make: function () {
+            var t = K.rand(SOLF);
+            var opts = K.shuffle(SOLF).filter(function (s) { return s !== t; }).slice(0, 3).concat([t]);
+            opts = K.shuffle(opts);
+            return {
+              audio: function () { K.audio.tone(t.note, { dur: 0.9 }); },
+              visual: '<span class="note-dot" style="background:' + t.color + ';width:80px;height:80px;font-size:24px">' + t.solf + '</span>',
+              q: 'Kuri tai nata?',
+              options: opts.map(function (s) { return { label: s.solf, correct: s === t }; })
+            };
+          }
+        },
+        ritmas: {
+          title: '👏 Ritmo testas',
+          make: function () {
+            var titi = Math.random() < 0.5;
+            return {
+              audio: function () { K.audio.clap(); if (titi) { setTimeout(function () { K.audio.clap(); }, 240); } },
+              visual: null,
+              q: 'Kiek garsų išgirdai?',
+              options: [
+                { label: '1 — „ta" ♩', correct: !titi },
+                { label: '2 — „ti-ti" ♫', correct: titi }
+              ]
+            };
+          }
+        },
+        garsai: {
+          title: '🔊 Garsų testas',
+          make: function () {
+            var kind = K.rand(['pitch', 'dyn', 'tempo']);
+            if (kind === 'pitch') {
+              var high = Math.random() < 0.5;
+              var n = K.rand(high ? ['C5', 'E5', 'C6'] : ['C3', 'E3', 'G3']);
+              return { audio: function () { K.audio.tone(n, { dur: 1.0 }); }, visual: null,
+                q: 'Garsas aukštas ar žemas?',
+                options: [ { label: '🐦 Aukštas', correct: high }, { label: '🐻 Žemas', correct: !high } ] };
+            } else if (kind === 'dyn') {
+              var loud = Math.random() < 0.5;
+              return { audio: function () { K.audio.tone('G4', { dur: 1.0, gain: loud ? 0.6 : 0.07 }); }, visual: null,
+                q: 'Garsiai ar tyliai?',
+                options: [ { label: '🔊 Garsiai', correct: loud }, { label: '🤫 Tyliai', correct: !loud } ] };
+            } else {
+              var fast = Math.random() < 0.5; var gap = fast ? 0.17 : 0.6;
+              var seq = ['C4', 'D4', 'E4', 'F4', 'G4'].map(function (x) { return { note: x, dur: gap * 0.9, gap: gap }; });
+              return { audio: function () { K.audio.melody(seq, {}); }, visual: null,
+                q: 'Greitai ar lėtai?',
+                options: [ { label: '🐇 Greitai', correct: fast }, { label: '🐢 Lėtai', correct: !fast } ] };
+            }
+          }
+        }
+      };
+
+      var titleEl = document.getElementById('quizTitle');
+      var dotsEl = document.getElementById('dots');
+      var visualEl = document.getElementById('visual');
+      var audioControls = document.getElementById('audioControls');
+      var qtextEl = document.getElementById('qtext');
+      var optionsEl = document.getElementById('options');
+      var scoreEl = document.getElementById('score');
+      var replayBtn = document.getElementById('replay');
+
+      var test = null, idx = 0, score = 0, q = null, answered = false;
+
+      function dots() {
+        dotsEl.innerHTML = '';
+        for (var i = 0; i < N; i++) {
+          var d = document.createElement('div');
+          d.className = 'dot' + (i < idx ? ' done' : (i === idx ? ' cur' : ''));
+          dotsEl.appendChild(d);
+        }
+      }
+
+      function start(testId) {
+        test = TESTS[testId]; idx = 0; score = 0; scoreEl.textContent = '0';
+        titleEl.textContent = test.title;
+        K.showScreen('quiz'); next();
+      }
+
+      function next() {
+        if (idx >= N) { return finish(); }
+        dots(); answered = false;
+        q = test.make();
+        visualEl.innerHTML = q.visual || '';
+        qtextEl.className = 'hint'; qtextEl.textContent = q.q;
+        audioControls.style.display = q.audio ? '' : 'none';
+        optionsEl.innerHTML = '';
+        q.options.forEach(function (o) {
+          var b = document.createElement('button');
+          b.className = 'menu-card';
+          b.innerHTML = '<span class="name">' + o.label + '</span>';
+          b.addEventListener('click', function () { answer(o, b); });
+          optionsEl.appendChild(b);
+        });
+        if (q.audio) { K.audio.resume(); setTimeout(q.audio, 250); }
+      }
+
+      function answer(o, b) {
+        if (answered) { return; }
+        if (o.correct) {
+          answered = true;
+          b.style.background = 'var(--accent)'; b.style.color = '#0e2a17';
+          score++; scoreEl.textContent = score;
+          K.audio.correct(); K.mascot('happy', 'Teisingai!');
+          qtextEl.className = 'hint ok'; qtextEl.textContent = '✅ Teisingai!';
+          idx++;
+          setTimeout(next, 1000);
+        } else {
+          b.style.background = 'var(--bad)'; b.style.color = '#3a0d0d';
+          K.audio.wrong();
+          qtextEl.className = 'hint no'; qtextEl.textContent = '❌ Ne — pabandyk kitą';
+        }
+      }
+
+      function finish() {
+        K.stars.add(score); // 1 star per correct answer
+        var face = score >= 4 ? '🤩' : score >= 3 ? '🙂' : '🦉';
+        document.getElementById('resFace').textContent = face;
+        document.getElementById('resText').textContent =
+          'Surinkai ' + score + ' iš ' + N + '. Gavai ' + score + ' ⭐' +
+          (score >= 4 ? ' — puiku!' : score >= 3 ? ' — gerai!' : ' — pabandyk dar kartą!');
+        K.showScreen('result');
+        if (score >= 4) { K.confetti(); K.mascot('cheer', 'Šaunuolis! ⭐'); }
+      }
+
+      replayBtn.addEventListener('click', function () { if (q && q.audio) { K.audio.resume(); q.audio(); } });
+      document.querySelectorAll('.menu-card[data-test]').forEach(function (b) {
+        b.addEventListener('click', function () { start(b.dataset.test); });
+      });
+      document.getElementById('quitBtn').addEventListener('click', function () { K.showScreen('menu'); });
+      document.getElementById('resMenu').addEventListener('click', function () { K.showScreen('menu'); });
+      document.getElementById('retryBtn').addEventListener('click', function () { if (test) { var id = Object.keys(TESTS).find(function (k) { return TESTS[k] === test; }); start(id); } });
+
+      K.initScreens('menu');
+    })();
+  </script>
+</body>
+</html>

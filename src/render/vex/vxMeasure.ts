@@ -33,6 +33,7 @@ import { VexFlow, Stave,StemmableNote, Note, Beam, Tuplet, Voice,
 import { VxMeasureIf, VexNoteModifierIf, VxNote } from './vxNote';
 import { SmoTuplet } from '../../smo/data/tuplet';
 import { vexGlyph } from './glyphDimensions';
+import { colorForPitch } from '../../smo/data/noteColors';
 const VF = VexFlow;
 
 declare var $: any;
@@ -226,6 +227,10 @@ export class VxMeasure implements VxMeasureIf {
         vexNote.setStyle({ fillStyle: voiceFill[voiceIx - 1] });
       } else if (smoNote.isHidden() && this.printing) {
         vexNote.setStyle({ fillStyle: "#ffffff00" });
+      } else if (voiceIx === 0 && !this.printing && !smoNote.isRest() && smoNote.pitches.length) {
+        // Kids' notation aid: color the notehead by pitch (Do=red .. Si=pink),
+        // matching the palette used across the ear-training mini-games.
+        vexNote.setStyle({ fillStyle: colorForPitch(smoNote.pitches[0].letter) });
       }
       smoNote.renderId = 'vf-' + vexNote.getAttribute('id'); // where does 'vf' come from?
       if (this.stave) {

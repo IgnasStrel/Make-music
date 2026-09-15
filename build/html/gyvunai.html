@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>MUSICATION — Gyvūnų muzika 🐾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow-x: hidden; }
+
+    body {
+      font-family: 'Chewy', cursive;
+      background: linear-gradient(145deg, #1a2a4a 0%, #0e1a2e 100%);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      width: 100%; display: flex; align-items: center;
+      padding: 10px 16px; gap: 12px;
+    }
+    .back-link {
+      text-decoration: none; color: #1a4d00;
+      background: rgba(255,255,255,0.88);
+      border-radius: 10px; padding: 6px 16px;
+      font-size: 15px; font-family: 'Chewy', cursive;
+      transition: 0.15s;
+    }
+    .back-link:hover { background: rgba(255,255,255,1); }
+    .page-title {
+      font-size: 24px; color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    /* ── Main page ── */
+    .page { width: 100%; max-width: 860px; padding: 0 16px 40px; }
+
+    /* ── Phase heading ── */
+    .phase-heading {
+      text-align: center; color: #c8e0ff;
+      font-size: 20px; margin: 10px 0 18px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    }
+
+    /* ── Animal grid ── */
+    .animal-grid {
+      display: flex; flex-wrap: wrap;
+      gap: 14px; justify-content: center;
+    }
+
+    .animal-card {
+      width: 148px; min-height: 158px;
+      background: rgba(255,255,255,0.12);
+      border: 3px solid rgba(255,255,255,0.18);
+      border-radius: 24px; padding: 16px 10px 14px;
+      cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      transition: transform 0.15s, border-color 0.15s, background 0.15s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+      position: relative; overflow: hidden;
+    }
+    .animal-card:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.2); }
+    .animal-card.playing {
+      border-color: #7ae0ff;
+      background: rgba(80,180,255,0.25);
+      box-shadow: 0 0 0 4px rgba(80,180,255,0.3), 0 8px 28px rgba(0,0,0,0.3);
+      transform: scale(1.06);
+    }
+    .animal-card.heard { border-color: #7ed87e; }
+    .animal-card .heard-badge {
+      position: absolute; top: 8px; right: 8px;
+      font-size: 16px; display: none;
+    }
+    .animal-card.heard .heard-badge { display: block; }
+
+    .a-ico  { font-size: 60px; line-height: 1; }
+    .a-name { font-size: 18px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+    .a-hint { font-size: 11px; color: rgba(255,255,255,0.6); text-align: center; }
+
+    /* Playing wave animation */
+    .playing-wave {
+      display: none; gap: 3px; align-items: flex-end; height: 18px;
+    }
+    .animal-card.playing .playing-wave { display: flex; }
+    .playing-wave span {
+      width: 4px; background: #7ae0ff; border-radius: 2px;
+      animation: waveBar 0.8s ease-in-out infinite;
+    }
+    .playing-wave span:nth-child(2) { animation-delay: 0.15s; }
+    .playing-wave span:nth-child(3) { animation-delay: 0.3s; }
+    .playing-wave span:nth-child(4) { animation-delay: 0.15s; }
+    @keyframes waveBar { 0%,100%{height:4px} 50%{height:16px} }
+
+    /* ── Start button ── */
+    .start-wrap {
+      text-align: center; margin-top: 28px;
+    }
+    .start-btn {
+      font-family: 'Chewy', cursive; font-size: 26px;
+      background: linear-gradient(135deg, #ff8c42, #ff4fa3);
+      color: #fff; border: none; border-radius: 22px;
+      padding: 14px 48px; cursor: pointer;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 10px 30px rgba(255,80,100,0.4);
+      transition: 0.13s; display: none;
+      animation: startPulse 1.6s ease-in-out infinite;
+    }
+    .start-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+    .start-btn.visible { display: inline-block; }
+    @keyframes startPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+
+    /* ── Guess overlay ── */
+    .guess-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.82);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      padding: 20px;
+    }
+    .guess-overlay.active { display: flex; }
+
+    .guess-title {
+      font-size: 34px; color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      animation: gTitlePulse 1.4s ease-in-out infinite;
+      text-align: center;
+    }
+    @keyframes gTitlePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+    .guess-music-indicator {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.12); border-radius: 16px;
+      padding: 10px 24px; color: #7ae0ff; font-size: 18px;
+    }
+    .music-bars { display: flex; gap: 4px; align-items: flex-end; height: 22px; }
+    .music-bars span {
+      width: 5px; background: #7ae0ff; border-radius: 3px;
+      animation: waveBar 0.8s ease-in-out infinite;
+    }
+    .music-bars span:nth-child(2) { animation-delay: 0.2s; }
+    .music-bars span:nth-child(3) { animation-delay: 0.4s; }
+    .music-bars span:nth-child(4) { animation-delay: 0.2s; }
+
+    .guess-grid {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      justify-content: center; max-width: 600px;
+    }
+    .guess-card {
+      width: 116px; height: 116px;
+      background: rgba(255,255,255,0.95);
+      border: 3px solid transparent; border-radius: 22px;
+      cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px;
+      transition: 0.15s; box-shadow: 0 6px 22px rgba(0,0,0,0.3);
+      font-family: 'Chewy', cursive;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .guess-card:hover { transform: scale(1.1); border-color: #4a8ee0; background: #e8f4ff; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+    .guess-card .gc-ico  { font-size: 46px; line-height: 1; }
+    .guess-card .gc-name { font-size: 15px; color: #333; }
+
+    .guess-actions {
+      display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    }
+    .guess-replay-btn {
+      font-family: 'Chewy', cursive; font-size: 15px;
+      background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+      color: #fff; padding: 9px 24px; border-radius: 14px; cursor: pointer;
+      transition: 0.13s;
+    }
+    .guess-replay-btn:hover { background: rgba(255,255,255,0.32); }
+    .guess-close-btn {
+      font-family: 'Chewy', cursive; font-size: 14px;
+      background: transparent; border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.6); padding: 9px 20px;
+      border-radius: 14px; cursor: pointer;
+    }
+
+    /* ── Result overlay ── */
+    .result-overlay {
+      position: fixed; inset: 0; z-index: 700;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      pointer-events: none; gap: 16px;
+    }
+    .result-overlay.active { display: flex; }
+    .result-text {
+      font-size: 44px; color: #fff;
+      text-shadow: 0 3px 16px rgba(0,0,0,0.5);
+      animation: rPop 0.35s cubic-bezier(.36,.07,.19,.97);
+      text-align: center;
+    }
+    @keyframes rPop { from{transform:scale(0.2);opacity:0} to{transform:scale(1);opacity:1} }
+
+    /* ── Fireworks ── */
+    #fireworks-canvas {
+      position: fixed; inset: 0; z-index: 600;
+      pointer-events: none; display: none;
+    }
+
+    /* ── X mark ── */
+    .x-mark {
+      position: fixed; inset: 0; z-index: 700;
+      display: none; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .x-mark.active { display: flex; }
+    .x-inner {
+      font-size: 210px; line-height: 1; color: #e53935;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+      animation: xpop 0.3s cubic-bezier(.36,.07,.19,.97);
+    }
+    @keyframes xpop { from{transform:scale(0.1) rotate(-20deg);opacity:0} to{transform:scale(1) rotate(0deg);opacity:1} }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back-link" href="rasymas.html">← Atgal</a>
+  <span class="page-title">🐾 Gyvūnų muzika</span>
+</div>
+
+<div class="page">
+  <div class="phase-heading" id="phaseHeading">
+    🎵 Spausk ant gyvūno ir klausyk jo muzikos!
+  </div>
+
+  <div class="animal-grid" id="animalGrid"></div>
+
+  <div class="start-wrap">
+    <button class="start-btn" id="startBtn">🎮 Atspėk gyvūną!</button>
+  </div>
+</div>
+
+<!-- Guess overlay -->
+<div class="guess-overlay" id="guessOverlay">
+  <div class="guess-title">Atspėk gyvūną! 🎵</div>
+  <div class="guess-music-indicator">
+    <div class="music-bars">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    Muzika skamba...
+  </div>
+  <div class="guess-grid" id="guessGrid"></div>
+  <div class="guess-actions">
+    <button class="guess-replay-btn" id="replayBtn">🔁 Klausyti dar kartą</button>
+    <button class="guess-close-btn" id="closeBtn">✕ Uždaryti</button>
+  </div>
+</div>
+
+<!-- Fireworks canvas -->
+<canvas id="fireworks-canvas"></canvas>
+
+<!-- X mark -->
+<div class="x-mark" id="xMark"><span class="x-inner">✕</span></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Audio context ───────────────────────────────────────────────────────────
+  var CTX = null, COMP = null;
+  function getCtx() {
+    if (!CTX) {
+      CTX  = new (window.AudioContext || window.webkitAudioContext)();
+      COMP = CTX.createDynamicsCompressor();
+      COMP.threshold.value = -14; COMP.knee.value = 6;
+      COMP.ratio.value = 4; COMP.attack.value = 0.003; COMP.release.value = 0.22;
+      COMP.connect(CTX.destination);
+    }
+    return CTX;
+  }
+
+  var FREQ = {
+    'C2':65.41,'E2':82.41,'G2':98.00,'A2':110.00,
+    'C3':130.81,'E3':164.81,'G3':196.00,'A3':220.00,'B3':246.94,
+    'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,'G4':392.00,'A4':440.00,'B4':493.88,
+    'Cs5':554.37,'D5':587.33,'E5':659.26,'F5':698.46,'G5':783.99,'A5':880.00
+  };
+
+  function synthPiano(freq, dur) {
+    var ctx = getCtx();
+    if (ctx.state !== 'running') ctx.resume();
+    var now = ctx.currentTime;
+    var ds  = Math.max(0.35, 1.0 - (freq - 130.0) / 1800.0);
+    var end = now + dur, rel = now + dur + 0.55 * ds;
+    var m = ctx.createGain();
+    m.gain.setValueAtTime(0.001, now);
+    m.gain.linearRampToValueAtTime(0.52, now + 0.006);
+    m.gain.exponentialRampToValueAtTime(0.20, now + 0.08);
+    m.gain.setValueAtTime(0.20, end - 0.01);
+    m.gain.exponentialRampToValueAtTime(0.001, rel);
+    m.connect(COMP);
+    [1,2,3,4,5,6].forEach(function (h, i) {
+      var osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq * h * Math.sqrt(1 + 0.00018 * h * h);
+      var amp = [1,.42,.20,.11,.066,.038][i];
+      var t1  = now + (dur + 0.6) * [1,.87,.74,.62,.52,.44][i] * ds;
+      g.gain.setValueAtTime(amp, now); g.gain.exponentialRampToValueAtTime(0.001, t1);
+      osc.connect(g); g.connect(m); osc.start(now); osc.stop(t1 + 0.05);
+    });
+  }
+
+  // ── Animal definitions ──────────────────────────────────────────────────────
+  var ANIMALS = [
+    { key: 'karve',    emoji: '🐄', name: 'Karvė',
+      notes: [['C3',.85],['E3',.75],['G3',1.0],['E3',.75],['C3',1.3],['G2',.9],['C3',1.0]] },
+    { key: 'varle',    emoji: '🐸', name: 'Varlė',
+      notes: [['G4',.18],['G4',.18],['E4',.35],['G4',.18],['A4',.18],['G4',.6],['E4',.18],['G4',.18],['A4',.35]] },
+    { key: 'paukstis', emoji: '🐦', name: 'Paukštis',
+      notes: [['E5',.2],['G5',.2],['A5',.32],['G5',.2],['E5',.2],['D5',.44],['E5',.2],['G5',.44],['A5',.28]] },
+    { key: 'bite',     emoji: '🐝', name: 'Bitė',
+      notes: [['B4',.12],['Cs5',.12],['B4',.12],['Cs5',.12],['A4',.12],['B4',.12],['Cs5',.4],['B4',.12],['A4',.28]] },
+    { key: 'liutas',   emoji: '🦁', name: 'Liūtas',
+      notes: [['C2',1.1],['G2',.8],['C3',.6],['E3',.5],['G2',.9],['C2',1.5],['E2',.7]] }
+  ];
+
+  var playId = 0;
+  var currentAnimal = null;
+  var heardSet = {};
+
+  function stopMusic() { playId++; }
+
+  function playTheme(animalKey, durationSecs) {
+    var a = ANIMALS.find(function (x) { return x.key === animalKey; });
+    if (!a) return;
+    stopMusic();
+    var myId = ++playId;
+    var ctx = getCtx();
+    if (ctx.state !== 'running') ctx.resume();
+    durationSecs = durationSecs || 12;
+    var notes = a.notes, t = 0, ni = 0;
+    while (t < durationSecs) {
+      (function (note, dur, when) {
+        setTimeout(function () {
+          if (playId !== myId) return;
+          var f = FREQ[note]; if (f) synthPiano(f, dur * 1.5);
+        }, when * 1000);
+      })(notes[ni][0], notes[ni][1], t);
+      t += notes[ni][1] + 0.06;
+      ni = (ni + 1) % notes.length;
+    }
+  }
+
+  // ── Build animal grid ───────────────────────────────────────────────────────
+  var grid = document.getElementById('animalGrid');
+  ANIMALS.forEach(function (a) {
+    var card = document.createElement('div');
+    card.className = 'animal-card';
+    card.dataset.key = a.key;
+    card.innerHTML =
+      '<span class="heard-badge">✅</span>' +
+      '<span class="a-ico">' + a.emoji + '</span>' +
+      '<span class="a-name">' + a.name + '</span>' +
+      '<div class="playing-wave"><span></span><span></span><span></span><span></span></div>' +
+      '<span class="a-hint">Spausk klausyti</span>';
+
+    card.addEventListener('click', function () {
+      document.querySelectorAll('.animal-card').forEach(function (c) { c.classList.remove('playing'); });
+      card.classList.add('playing');
+      heardSet[a.key] = true;
+      card.classList.add('heard');
+      playTheme(a.key, 12);
+      setTimeout(function () { card.classList.remove('playing'); }, 12500);
+      var allHeard = ANIMALS.every(function (x) { return heardSet[x.key]; });
+      if (allHeard) document.getElementById('startBtn').classList.add('visible');
+    });
+
+    grid.appendChild(card);
+  });
+
+  // ── Start game ──────────────────────────────────────────────────────────────
+  document.getElementById('startBtn').addEventListener('click', function () {
+    stopMusic();
+    document.querySelectorAll('.animal-card').forEach(function (c) { c.classList.remove('playing'); });
+
+    // Pick random animal
+    currentAnimal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+
+    // Build guess grid (shuffled)
+    var guessGrid = document.getElementById('guessGrid');
+    guessGrid.innerHTML = '';
+    var shuffled = ANIMALS.slice().sort(function () { return Math.random() - 0.5; });
+    shuffled.forEach(function (a) {
+      var card = document.createElement('button');
+      card.className = 'guess-card';
+      card.innerHTML = '<span class="gc-ico">' + a.emoji + '</span><span class="gc-name">' + a.name + '</span>';
+      card.addEventListener('click', function () { handleGuess(a.key); });
+      guessGrid.appendChild(card);
+    });
+
+    document.getElementById('guessOverlay').classList.add('active');
+    playTheme(currentAnimal.key, 40);
+  });
+
+  document.getElementById('replayBtn').addEventListener('click', function () {
+    if (currentAnimal) playTheme(currentAnimal.key, 40);
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', function () {
+    stopMusic();
+    document.getElementById('guessOverlay').classList.remove('active');
+    currentAnimal = null;
+  });
+
+  function handleGuess(key) {
+    if (!currentAnimal) return;
+    var correct = (key === currentAnimal.key);
+    stopMusic();
+    document.getElementById('guessOverlay').classList.remove('active');
+    currentAnimal = null;
+    if (correct) { showFireworks(); } else { showXMark(); }
+  }
+
+  // ── X mark ──────────────────────────────────────────────────────────────────
+  function showXMark() {
+    var el = document.getElementById('xMark');
+    el.classList.add('active');
+    setTimeout(function () { el.classList.remove('active'); }, 2200);
+  }
+
+  // ── Fireworks ───────────────────────────────────────────────────────────────
+  function showFireworks() {
+    var canvas = document.getElementById('fireworks-canvas');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+    var c = canvas.getContext('2d');
+    var COLORS = ['#ff4444','#ffbb00','#44ff88','#44aaff','#ff44ff','#ffff44','#ff8844'];
+    var particles = [];
+    for (var b = 0; b < 10; b++) {
+      var bx  = 0.1 * canvas.width  + Math.random() * 0.8 * canvas.width;
+      var by  = 0.05 * canvas.height + Math.random() * 0.6 * canvas.height;
+      var col = COLORS[Math.floor(Math.random() * COLORS.length)];
+      for (var p = 0; p < 38; p++) {
+        var angle = (Math.PI * 2 / 38) * p + Math.random() * 0.1;
+        var spd   = 2.5 + Math.random() * 7;
+        particles.push({ x:bx, y:by, vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd-1.5, col:col, life:1 });
+      }
+    }
+    var start = Date.now();
+    (function frame() {
+      if (Date.now() - start > 3500) {
+        canvas.style.display = 'none';
+        c.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+      c.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(function (p) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.14; p.life -= 0.010;
+        if (p.life <= 0) return;
+        c.globalAlpha = Math.max(0, p.life);
+        c.fillStyle = p.col;
+        c.beginPath(); c.arc(p.x, p.y, 5, 0, Math.PI*2); c.fill();
+      });
+      c.globalAlpha = 1;
+      requestAnimationFrame(frame);
+    })();
+  }
+
+})();
+</script>
+<script src="seasonBg.js"></script>
+</body>
+</html>

@@ -161,7 +161,7 @@ export class SmoScorePreferences {
   autoAdvance: boolean = true;
   defaultDupleDuration: number = 4096;
   defaultTripleDuration: number = 6144;
-  showPiano: boolean = false;
+  showPiano: boolean = true;
   hideEmptyLines: boolean = false;
   autoScrollPlayback: boolean = true;
   transposingScore: boolean = false;
@@ -173,7 +173,7 @@ export class SmoScorePreferences {
       defaultDupleDuration: 4096,
       defaultTripleDuration: 6144,
       autoScrollPlayback: true,
-      showPiano: false,
+      showPiano: true,
       hideEmptyLines: false,
       transposingScore: false,
       showPartNames: false
@@ -496,11 +496,16 @@ function isSmoLayoutManagerParamsSer(params: Partial<SmoLayoutManagerParamsSer>)
  */
 export class SmoLayoutManager extends SmoScoreModifierBase {
   static get defaultLayout(): SmoGlobalLayout {
+    const zoomScale = 0.85;
+    // Use ~88% of window width for the music area (sidebar takes the rest)
+    const musicWidth = (typeof window !== 'undefined')
+      ? Math.max(8 * 96 + 48, Math.round(window.innerWidth * 0.88))
+      : 8 * 96 + 48;
     return {
       svgScale: 0.55,
-      zoomScale: 2.0,
+      zoomScale: zoomScale,
       noteSpacing: 1.0,
-      pageWidth: 8 * 96 + 48,
+      pageWidth: Math.round(musicWidth / zoomScale),
       pageHeight: 11 * 96,
       proportionality: 5,
       maxMeasureSystem: 0

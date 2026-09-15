@@ -1114,9 +1114,10 @@ export class SuiScoreViewOperations extends SuiScoreView {
    * @param chordPedal {boolean} - indicates we are adding to a chord
    */
   async setPitchPiano(pitch: Pitch, chordPedal: boolean): Promise<void> {
+    const selections = this.tracker.selections;
     const measureSelections = this.undoTrackerMeasureSelections(
       'setAbsolutePitch ' + pitch.letter + '/' + pitch.accidental);
-    this.tracker.selections.forEach((selected) => {
+    selections.forEach((selected) => {
       const npitch: Pitch = {
         letter: pitch.letter,
         accidental: pitch.accidental, octave: pitch.octave
@@ -1132,6 +1133,9 @@ export class SuiScoreViewOperations extends SuiScoreView {
         SmoOperation.setPitch(altSel!, [npitch]);
       }
     });
+    if (selections.length === 1 && this.score.preferences.autoPlay) {
+      SuiOscillator.playSelectionNow(selections[0], this.score, 1);
+    }
     this._renderChangedMeasures(measureSelections);
     await this.renderer.updatePromise();
   }

@@ -94,7 +94,7 @@ export abstract class SuiMenuBase {
     const definition: MenuDefinition = 
        params.items ?? this.getDefinition();
     this.label = definition.label;
-    this.menuItems = definition.menuItems;
+    this.menuItems = SmoTranslator.translateMenuItems(params.ctor, definition.menuItems);
     this.completeNotifier = params.completeNotifier;
     this.score = params.score;
     this.view = params.view;
@@ -212,6 +212,7 @@ export class SuiConfiguredMenu extends SuiMenuBase {
         this.menuItems.push(option.menuChoice);
       }
     });
+    this.menuItems = SmoTranslator.translateMenuItems(this.ctor, this.menuItems);
     const customize = SuiConfiguredMenu.menuCustomizations[this.ctor];
     if (customize) {
       customize(this);

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Melodijos žaidimai</title>
+  <link rel="stylesheet" href="../styles/kids.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="rasymas.html">← Atgal</a>
+    <div class="spacer"></div>
+    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+  </div>
+
+  <!-- ===== Menu ===== -->
+  <section class="screen" id="menu">
+    <h1>🎹 Melodijos žaidimai
+      <small>Klausyk ir kartok — spalvotos natos Do–Re–Mi</small>
+    </h1>
+    <div class="menu-grid">
+      <button class="menu-card" id="goEcho">
+        <span class="ico">🔁</span><span class="name">Atkartok melodiją</span><span class="sub">pakartok pianino garsus</span>
+      </button>
+      <button class="menu-card" id="goSolf">
+        <span class="ico">✋</span><span class="name">Solmizacija</span><span class="sub">rankų ženklai Do–Si</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== Atkartok melodiją ===== -->
+  <section class="screen" id="echo">
+    <h2>🔁 Atkartok melodiją</h2>
+    <div class="progress-dots" id="echoDots"></div>
+    <div class="hint" id="echoHint">Paspausk „Klausyk" ir įsimink melodiją</div>
+    <div class="piano" id="echoPiano"></div>
+    <div class="controls">
+      <button class="btn btn-primary" id="echoListen">🔊 Klausyk</button>
+    </div>
+    <div class="scoreboard"><div>Taškai: <b id="echoScore">0</b></div></div>
+    <button class="btn btn-ghost" id="echoBack">← Kiti žaidimai</button>
+  </section>
+
+  <!-- ===== Solmizacija ===== -->
+  <section class="screen" id="solf">
+    <h2>✋ Solmizacija</h2>
+    <p class="lead" id="solfLead">Mokykis: paspausk natą — išgirsi garsą ir pamatysi rankos ženklą.</p>
+    <div class="solf-row" id="solfRow"></div>
+    <div class="controls">
+      <button class="btn btn-amber" id="solfMode">🎮 Žaisti</button>
+      <button class="btn btn-primary" id="solfListen" style="display:none">🔊 Klausyk natą</button>
+    </div>
+    <div class="hint" id="solfHint">&nbsp;</div>
+    <div class="scoreboard"><div>Taškai: <b id="solfScore">0</b></div></div>
+    <button class="btn btn-ghost" id="solfBack">← Kiti žaidimai</button>
+  </section>
+
+  <script src="kids.js"></script>
+  <script src="seasonBg.js"></script>
+  <script>
+    (function () {
+      var K = window.Kids;
+      var SOLF = K.SOLFEGE; // 7 notes Do..Si with colours + signs
+
+      // ---------- shared: build a coloured piano of the 7 solfège notes ----------
+      function buildPiano(container, onPress) {
+        container.innerHTML = '';
+        SOLF.forEach(function (s) {
+          var b = document.createElement('button');
+          b.className = 'pkey'; b.style.background = s.color; b.dataset.note = s.note;
+          b.innerHTML = s.solf + '<small>' + s.note.charAt(0) + '</small>';
+          b.addEventListener('click', function () { onPress(s, b); });
+          container.appendChild(b);
+        });
+      }
+      function lightKey(container, note) {
+        var k = container.querySelector('.pkey[data-note="' + note + '"]');
+        if (k) { k.classList.add('lit'); setTimeout(function () { k.classList.remove('lit'); }, 350); }
+      }
+
+      /* ===================== Atkartok melodiją (Simon-style) ===================== */
+      var echoPiano = document.getElementById('echoPiano');
+      var echoHint = document.getElementById('echoHint');
+      var echoDots = document.getElementById('echoDots');
+      var echoScore = document.getElementById('echoScore');
+      var echoListen = document.getElementById('echoListen');
+      var LENGTHS = [2, 3, 3, 4, 4];
+      var eRound = 0, eScore = 0, seq = [], inputIdx = 0, eInput = false, eStars = 0;
+
+      function eDots() {
+        echoDots.innerHTML = '';
+        for (var i = 0; i < LENGTHS.length; i++) {
+          var d = document.createElement('div');
+          d.className = 'dot' + (i < eRound ? ' done' : (i === eRound ? ' cur' : ''));
+          echoDots.appendChild(d);
+        }
+      }
+      function startEcho() {
+        eRound = 0; eScore = 0; eStars = 0; echoScore.textContent = '0';
+        K.showScreen('echo'); eNext();
+      }
+      function eNext() {
+        if (eRound >= LENGTHS.length) { return eFinish(); }
+        eDots(); eInput = false; inputIdx = 0;
+        seq = [];
+        for (var i = 0; i < LENGTHS[eRound]; i++) { seq.push(K.rand(SOLF).note); }
+        echoHint.textContent = 'Paspausk „Klausyk" 👂';
+        echoListen.disabled = false;
+      }
+      function ePlay() {
+        echoListen.disabled = true; eInput = false;
+        echoHint.textContent = 'Klausyk…';
+        K.audio.resume();
+        var items = seq.map(function (n) { return { note: n, dur: 0.55, gap: 0.6 }; });
+        K.audio.melody(items, { onNote: function (i, it) { lightKey(echoPiano, it.note); } }).then(function () {
+          eInput = true; inputIdx = 0;
+          echoHint.textContent = 'Dabar tu! Pakartok 🎹';
+        });
+      }
+      function ePress(s) {
+        if (!eInput) { K.audio.tone(s.note, { dur: 0.5 }); return; }
+        K.audio.tone(s.note, { dur: 0.5 });
+        if (s.note === seq[inputIdx]) {
+          inputIdx++;
+          if (inputIdx >= seq.length) {
+            eInput = false;
+            eScore += seq.length; echoScore.textContent = eScore;
+            eStars += (seq.length >= 4 ? 2 : 1);
+            K.audio.correct(); K.mascot('happy', 'Teisingai!');
+            echoHint.className = 'hint ok'; echoHint.textContent = '✅ Puiku!';
+            eRound++;
+            setTimeout(function () { echoHint.className = 'hint'; eNext(); }, 1200);
+          }
+        } else {
+          eInput = false;
+          K.audio.wrong(); K.mascot('sad', 'Beveik!');
+          echoHint.className = 'hint no'; echoHint.textContent = '🙂 Ne ta nata. Klausyk dar kartą!';
+          setTimeout(function () { echoHint.className = 'hint'; eNext(); }, 1500);
+        }
+      }
+      function eFinish() {
+        eDots();
+        K.stars.add(eStars);
+        echoHint.className = 'hint ok';
+        echoHint.textContent = '🎉 Baigta! ' + eScore + ' taškų, ' + eStars + ' ⭐';
+        K.confetti(); K.mascot('cheer', 'Gera klausa! ⭐');
+        echoListen.disabled = true;
+      }
+      buildPiano(echoPiano, ePress);
+      echoListen.addEventListener('click', ePlay);
+      document.getElementById('echoBack').addEventListener('click', function () { K.showScreen('menu'); });
+      document.getElementById('goEcho').addEventListener('click', startEcho);
+
+      /* ===================== Solmizacija ===================== */
+      var solfRow = document.getElementById('solfRow');
+      var solfHint = document.getElementById('solfHint');
+      var solfLead = document.getElementById('solfLead');
+      var solfScore = document.getElementById('solfScore');
+      var solfModeBtn = document.getElementById('solfMode');
+      var solfListen = document.getElementById('solfListen');
+      var sMode = 'learn', sTarget = null, sRound = 0, sScore = 0, S_ROUNDS = 7;
+
+      function buildSolf() {
+        solfRow.innerHTML = '';
+        SOLF.forEach(function (s) {
+          var b = document.createElement('button');
+          b.className = 'choice'; b.style.flex = '0 1 120px'; b.style.minHeight = '130px';
+          b.style.borderColor = s.color; b.dataset.note = s.note;
+          b.innerHTML = '<span class="ico">' + s.sign + '</span>' +
+                        '<span class="note-dot" style="background:' + s.color + '">' + s.solf + '</span>';
+          b.addEventListener('click', function () { sPress(s, b); });
+          solfRow.appendChild(b);
+        });
+      }
+      function sPress(s, b) {
+        K.audio.tone(s.note, { dur: 0.8 });
+        if (sMode === 'learn') { K.say(s.solf); return; }
+        if (!sTarget) { return; }
+        if (s.note === sTarget.note) {
+          sScore++; solfScore.textContent = sScore;
+          b.classList.add('correct'); setTimeout(function () { b.classList.remove('correct'); }, 600);
+          K.audio.correct(); K.mascot('happy', 'Taip — ' + s.solf + '!');
+          solfHint.className = 'hint ok'; solfHint.textContent = '✅ ' + s.solf + ' teisingai!';
+          sRound++; sTarget = null;
+          if (sRound >= S_ROUNDS) { setTimeout(sFinish, 1000); }
+          else { setTimeout(sNext, 1000); }
+        } else {
+          b.classList.add('wrong'); setTimeout(function () { b.classList.remove('wrong'); }, 500);
+          K.audio.wrong();
+          solfHint.className = 'hint no'; solfHint.textContent = '❌ Tai ' + s.solf + '. Klausyk dar.';
+        }
+      }
+      function startSolf() { sMode = 'learn'; sScore = 0; solfScore.textContent = '0'; setLearn(); K.showScreen('solf'); }
+      function setLearn() {
+        sMode = 'learn'; sTarget = null;
+        solfModeBtn.textContent = '🎮 Žaisti';
+        solfListen.style.display = 'none';
+        solfLead.textContent = 'Mokykis: paspausk natą — išgirsi garsą ir pamatysi rankos ženklą.';
+        solfHint.className = 'hint'; solfHint.innerHTML = '&nbsp;';
+      }
+      function setGame() {
+        sMode = 'game'; sRound = 0; sScore = 0; solfScore.textContent = '0';
+        solfModeBtn.textContent = '🎓 Mokytis';
+        solfListen.style.display = '';
+        solfLead.textContent = 'Klausyk natos ir paspausk teisingą Do–Si.';
+        sNext();
+      }
+      function sNext() {
+        sTarget = K.rand(SOLF);
+        solfHint.className = 'hint'; solfHint.textContent = 'Paspausk „Klausyk natą" 👂';
+      }
+      function sListen() { if (sTarget) { K.audio.tone(sTarget.note, { dur: 1.0 }); } }
+      function sFinish() {
+        var earned = Math.max(1, Math.round(sScore / 2));
+        K.stars.add(earned);
+        solfHint.className = 'hint ok';
+        solfHint.textContent = '🎉 Baigta! ' + sScore + '/' + S_ROUNDS + ', gavai ' + earned + ' ⭐';
+        K.confetti(); K.mascot('cheer', 'Šaunu! ⭐'); sTarget = null;
+      }
+      buildSolf();
+      solfModeBtn.addEventListener('click', function () { if (sMode === 'learn') { setGame(); } else { setLearn(); } });
+      solfListen.addEventListener('click', sListen);
+      document.getElementById('solfBack').addEventListener('click', function () { K.showScreen('menu'); });
+      document.getElementById('goSolf').addEventListener('click', startSolf);
+
+      K.initScreens('menu');
+    })();
+  </script>
+</body>
+</html>

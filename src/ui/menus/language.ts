@@ -20,12 +20,8 @@ export class SuiLanguageMenu extends SuiMenuBase {
       value: 'en'
     }, {
       icon: '',
-      text: 'Deutsch',
-      value: 'de'
-    }, {
-      icon: '',
-      text: 'اَلْعَرَبِيَّةُ',
-      value: 'ar'
+      text: 'Lietuvių',
+      value: 'lt'
     }, {
       icon: '',
       text: 'Cancel',

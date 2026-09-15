@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Ritmo žaidimai</title>
+  <link rel="stylesheet" href="../styles/kids.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="rasymas.html">← Atgal</a>
+    <div class="spacer"></div>
+    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+  </div>
+
+  <!-- ===== Menu ===== -->
+  <section class="screen" id="menu">
+    <h1>👏 Ritmo žaidimai
+      <small>„ta" = viena ketvirtinė &nbsp;•&nbsp; „ti-ti" = dvi aštuntinės</small>
+    </h1>
+    <div class="menu-grid">
+      <button class="menu-card" id="goPlok">
+        <span class="ico">👏</span><span class="name">Plok ritmą</span><span class="sub">pakuša parodytą ritmą</span>
+      </button>
+      <button class="menu-card" id="goAidas">
+        <span class="ico">🔁</span><span class="name">Ritmo aidas</span><span class="sub">pakartok tai, ką išgirdai</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== Play ===== -->
+  <section class="screen" id="play">
+    <h2 id="playTitle">—</h2>
+    <div class="progress-dots" id="dots"></div>
+    <div class="rhythm-row" id="rhythm"></div>
+    <div class="hint" id="hint">—</div>
+    <div class="controls">
+      <button class="btn btn-primary" id="listenBtn">🔊 Klausyk</button>
+      <button class="btn btn-amber" id="turnBtn" disabled>👏 Tavo eilė</button>
+    </div>
+    <button class="tap-pad" id="tapPad">👏 PLOK</button>
+    <div class="scoreboard"><div>Pataikei: <b id="score">0</b></div></div>
+    <button class="btn btn-ghost" id="backMenu">← Kiti žaidimai</button>
+  </section>
+
+  <script src="kids.js"></script>
+  <script src="seasonBg.js"></script>
+  <script>
+    (function () {
+      var K = window.Kids;
+      var BEAT = 0.7;           // seconds per beat (~85 bpm, comfy for kids)
+      var TOL = 0.24;           // hit tolerance window (seconds)
+      var ROUNDS = 4;
+
+      var GLYPH = { ta: { g: '♩', s: 'ta' }, titi: { g: '♫', s: 'ti-ti' } };
+      var PATTERNS = [           // fixed patterns for "Plok ritmą" (4 beats each)
+        ['ta', 'ta', 'ta', 'ta'],
+        ['ta', 'titi', 'ta', 'ta'],
+        ['titi', 'ta', 'titi', 'ta'],
+        ['ta', 'titi', 'titi', 'ta']
+      ];
+
+      var rhythmEl = document.getElementById('rhythm');
+      var hintEl = document.getElementById('hint');
+      var dotsEl = document.getElementById('dots');
+      var scoreEl = document.getElementById('score');
+      var listenBtn = document.getElementById('listenBtn');
+      var turnBtn = document.getElementById('turnBtn');
+      var tapPad = document.getElementById('tapPad');
+      var titleEl = document.getElementById('playTitle');
+
+      var mode = 'plok';         // 'plok' | 'aidas'
+      var round = 0, totalHits = 0, pattern = null;
+      var recording = false, recStart = 0, taps = [];
+
+      function setHint(t, cls) { hintEl.textContent = t; hintEl.className = 'hint' + (cls ? ' ' + cls : ''); }
+      function drawDots() {
+        dotsEl.innerHTML = '';
+        for (var i = 0; i < ROUNDS; i++) {
+          var d = document.createElement('div');
+          d.className = 'dot' + (i < round ? ' done' : (i === round ? ' cur' : ''));
+          dotsEl.appendChild(d);
+        }
+      }
+      // Onset times (seconds from start) for a pattern of beats.
+      function onsets(pat) {
+        var out = [];
+        pat.forEach(function (b, i) {
+          var base = i * BEAT;
+          if (b === 'titi') { out.push(base, base + BEAT / 2); }
+          else { out.push(base); }
+        });
+        return out;
+      }
+      function renderPattern(pat, hideSyllables) {
+        rhythmEl.innerHTML = '';
+        pat.forEach(function (b) {
+          var box = document.createElement('div');
+          box.className = 'beat';
+          var gl = hideSyllables ? '❓' : GLYPH[b].g;
+          var sy = hideSyllables ? '?' : GLYPH[b].s;
+          box.innerHTML = '<div class="glyph">' + gl + '</div><div class="syl">' + sy + '</div>';
+          rhythmEl.appendChild(box);
+        });
+      }
+      function flashBeat(i) {
+        var boxes = rhythmEl.children;
+        if (boxes[i]) { boxes[i].classList.add('flash'); setTimeout(function () { boxes[i].classList.remove('flash'); }, BEAT * 600); }
+      }
+
+      // Play a pattern: claps at every onset, beat flash on the boxes.
+      function playPattern(pat, done) {
+        K.audio.resume();
+        var ons = onsets(pat);
+        ons.forEach(function (t) { setTimeout(function () { K.audio.clap(); }, t * 1000); });
+        pat.forEach(function (b, i) { setTimeout(function () { flashBeat(i); }, i * BEAT * 1000); });
+        var total = pat.length * BEAT;
+        setTimeout(function () { if (done) { done(); } }, total * 1000 + 150);
+      }
+
+      function startMode(m) {
+        mode = m; round = 0; totalHits = 0; scoreEl.textContent = '0';
+        titleEl.textContent = (m === 'plok' ? '👏 Plok ritmą' : '🔁 Ritmo aidas');
+        K.showScreen('play');
+        nextRound();
+      }
+
+      function randomPattern(beats) {
+        var p = [];
+        for (var i = 0; i < beats; i++) { p.push(Math.random() < 0.5 ? 'ta' : 'titi'); }
+        return p;
+      }
+
+      function nextRound() {
+        if (round >= ROUNDS) { return finish(); }
+        drawDots();
+        turnBtn.disabled = true;
+        recording = false;
+        if (mode === 'plok') {
+          pattern = PATTERNS[round];
+          renderPattern(pattern, false);
+          setHint('Paspausk „Klausyk", tada pakuša tą patį ritmą 👏');
+        } else {
+          pattern = randomPattern(3 + (round % 2)); // 3 or 4 beats
+          renderPattern(pattern, true);             // hidden — it's an echo game
+          setHint('Paspausk „Klausyk" ir įsimink, tada pakartok');
+        }
+        listenBtn.disabled = false;
+      }
+
+      function listen() {
+        listenBtn.disabled = true;
+        setHint('Klausyk… 👂');
+        playPattern(pattern, function () {
+          setHint('Dabar tu! Paspausk „Tavo eilė" ir plok 👏');
+          turnBtn.disabled = false;
+        });
+      }
+
+      // Count-in (4 ticks), then open a recording window matching the pattern length.
+      function myTurn() {
+        turnBtn.disabled = true; listenBtn.disabled = true;
+        taps = []; recording = false;
+        setHint('Ruoškis… 1 – 2 – 3 – 4');
+        for (var i = 0; i < 4; i++) { setTimeout(function () { K.audio.tick(); }, i * BEAT * 1000); }
+        setTimeout(function () {
+          recording = true; recStart = performance.now();
+          setHint('PLOK! 👏');
+          pattern.forEach(function (b, i) { setTimeout(function () { flashBeat(i); }, i * BEAT * 1000); });
+          var win = pattern.length * BEAT + TOL + 0.2;
+          setTimeout(function () { recording = false; evaluate(); }, win * 1000);
+        }, 4 * BEAT * 1000);
+      }
+
+      function tap() {
+        if (!recording) { return; }
+        K.audio.clap({ gain: 0.5 });
+        taps.push((performance.now() - recStart) / 1000);
+      }
+
+      function evaluate() {
+        var ons = onsets(pattern);
+        var used = taps.slice();
+        var hits = 0;
+        ons.forEach(function (t) {
+          var best = -1, bestD = TOL;
+          for (var i = 0; i < used.length; i++) {
+            if (used[i] == null) { continue; }
+            var d = Math.abs(used[i] - t);
+            if (d <= bestD) { bestD = d; best = i; }
+          }
+          if (best >= 0) { hits++; used[best] = null; }
+        });
+        var acc = hits / ons.length;
+        totalHits += hits; scoreEl.textContent = totalHits;
+        var stars = acc >= 0.85 ? 3 : acc >= 0.6 ? 2 : acc >= 0.35 ? 1 : 0;
+        K._roundStars = (K._roundStars || 0) + stars;
+        if (acc >= 0.6) { K.audio.correct(); K.mascot('happy', 'Geras ritmas!'); setHint('✅ Pataikei ' + hits + ' iš ' + ons.length + '!', 'ok'); }
+        else { K.audio.wrong(); K.mascot('sad', 'Bandom dar!'); setHint('🙂 Pataikei ' + hits + ' iš ' + ons.length + '. Klausyk atidžiai!', 'no'); }
+        round++;
+        setTimeout(nextRound, 1500);
+      }
+
+      function finish() {
+        drawDots();
+        var earned = K._roundStars || 0; K._roundStars = 0;
+        K.stars.add(earned);
+        setHint('🎉 Baigta! Pataikei ' + totalHits + ' garsų. Gavai ' + earned + ' ⭐', 'ok');
+        K.confetti();
+        K.mascot('cheer', 'Puikus ritmas! ⭐');
+        listenBtn.disabled = true; turnBtn.disabled = true;
+      }
+
+      listenBtn.addEventListener('click', listen);
+      turnBtn.addEventListener('click', myTurn);
+      tapPad.addEventListener('pointerdown', function (e) { e.preventDefault(); tap(); });
+      document.getElementById('goPlok').addEventListener('click', function () { startMode('plok'); });
+      document.getElementById('goAidas').addEventListener('click', function () { startMode('aidas'); });
+      document.getElementById('backMenu').addEventListener('click', function () { K.showScreen('menu'); });
+
+      K.initScreens('menu');
+    })();
+  </script>
+</body>
+</html>

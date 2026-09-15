@@ -1280,6 +1280,11 @@ export const smoLanguageStringDe = `{
                 },
                 {
                     "icon": "",
+                    "text": "Lietuvių",
+                    "value": "lt"
+                },
+                {
+                    "icon": "",
                     "text": "Cancel",
                     "value": "cancel"
                 }

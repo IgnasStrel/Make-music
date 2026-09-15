@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MUSICATION — muzikos redaktorius ir mokymosi žaidimai</title>
+<link rel="icon" href="assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#kas-tai" class="brand">
+      <img src="assets/logo.png" alt="MUSICATION logotipas" class="brand-logo" />
+      <span class="brand-name">MUSICATION</span>
+    </a>
+
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="kas-tai">🏠 Kas tai</button>
+      <button class="tab-btn" data-tab="apie-mus">💜 Apie mus</button>
+      <button class="tab-btn" data-tab="kaina">💰 Kaina</button>
+      <button class="tab-btn" data-tab="kontaktai">✉️ Kontaktai</button>
+    </nav>
+
+    <div class="auth-area">
+      <span class="user-pill" id="userPill" hidden></span>
+      <button class="btn btn-ghost" id="loginBtn">Prisijungti</button>
+      <button class="btn btn-ghost" id="logoutBtn" hidden>Atsijungti</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- KAS TAI -->
+  <section class="tab-panel active" id="panel-kas-tai">
+    <div class="hero">
+      <div class="floaties" aria-hidden="true">
+        <span class="floaty f1">🎵</span>
+        <span class="floaty f2">⭐</span>
+        <span class="floaty f3">🎶</span>
+        <span class="floaty f4">🥁</span>
+        <span class="floaty f5">🎧</span>
+      </div>
+      <div class="hero-text">
+        <p class="eyebrow">✨ Muzikos mokymo programa mokykloms</p>
+        <h1>Muzika tampa aiški, kai ją gali <span class="accent">rašyti, girdėti ir žaisti</span>.</h1>
+        <p class="lead">
+          MUSICATION — darbalaukio programa, skirta muzikos mokymui mokyklose.
+          Trys skirtingi lygiai — <strong>darželiui ir pradinėms klasėms</strong>,
+          <strong>vidurinėms klasėms</strong> bei <strong>pažengusiems</strong> —
+          pritaikyti kiekvienos amžiaus grupės poreikiams: nuo žaidybinių klausos
+          pratimų iki pilno natų redaktoriaus.
+        </p>
+        <div class="hero-actions">
+          <a href="#kaina" class="btn btn-primary" data-tab-link="kaina">Žiūrėti kainas</a>
+          <button class="btn btn-outline" id="heroDownloadBtn">Atsisiųsti programą</button>
+        </div>
+        <p class="hero-note" id="heroNote">
+          Atsisiuntimas prieinamas prisijungus <strong>administratoriaus</strong> paskyra.
+        </p>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-glow"></div>
+        <div class="hero-card-inner">
+          <div class="mock-window">
+            <div class="mock-titlebar"><span></span><span></span><span></span></div>
+            <div class="mock-body">
+              <div class="mock-staff"></div>
+              <div class="mock-staff"></div>
+              <div class="mock-staff short"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-ico">🎼</div>
+        <h3>Pilnas natų redaktorius</h3>
+        <p>Rašykite ir redaguokite natas, importuokite MusicXML, eksportuokite ir spausdinkite gatavas partitūras.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">🎧</div>
+        <h3>Klausos lavinimo žaidimai</h3>
+        <p>Aukštai, žemai, garsiai, tylu — smagūs pratimai, ugdantys muzikinę klausą nuo pirmų pamokų.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">🥁</div>
+        <h3>Ritmo ir melodijos treniruotės</h3>
+        <p>Ritmo atpažinimas, melodijos kartojimas ir natų atmintis — žaidimų forma, kuri patinka vaikams.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">📚</div>
+        <h3>Trumpos pamokėlės ir testai</h3>
+        <p>Kiekviena tema paaiškinta paprastai, o žinios iškart patikrinamos trumpu testu.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">💻</div>
+        <h3>Darbalaukio programa</h3>
+        <p>Veikia Windows aplinkoje be naršyklės — greitas paleidimas, viskas vienoje vietoje.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-ico">🎓</div>
+        <h3>3 lygiai pagal amžių</h3>
+        <p>Darželiui ir pradinėms klasėms, vidurinėms klasėms bei pažengusiems — kiekvienai grupei pritaikyta atskira programa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- APIE MUS -->
+  <section class="tab-panel" id="panel-apie-mus">
+    <div class="section-head">
+      <p class="eyebrow">💜 Apie mus</p>
+      <h2>Muziką darome prieinamą kiekvienam</h2>
+    </div>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          Esame komanda, kurianti muzikos mokymo įrankius mokykloms.
+          MUSICATION gimė iš noro sujungti du dalykus, kurie dažnai gyvena atskirai:
+          rimtą, profesionalų natų redagavimo įrankį ir smagų, vaikams pritaikytą
+          būdą pramokti muzikos pagrindų.
+        </p>
+        <p>
+          Programą kuriame ir tobuliname patys, kad ji veiktų greitai ir patogiai —
+          be naršyklės, be nereikalingų žingsnių — ir būtų pritaikyta tiesiogiai
+          mokyklų pamokoms.
+        </p>
+        <p>
+          Mums svarbu, kad muzikos mokymasis nebūtų nuobodus: kiekviena funkcija —
+          nuo klausos pratimų iki natų rašymo — kuriama taip, kad būtų suprantama
+          tiek patiems mažiausiems, tiek jau pažengusiems mokiniams.
+        </p>
+      </div>
+      <div class="about-stats">
+        <div class="stat"><span class="stat-num">10+</span><span class="stat-label">mokymosi žaidimų</span></div>
+        <div class="stat"><span class="stat-num">1</span><span class="stat-label">pilnas natų redaktorius</span></div>
+        <div class="stat"><span class="stat-num">3</span><span class="stat-label">mokymo programos pagal amžių</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KAINA -->
+  <section class="tab-panel" id="panel-kaina">
+    <div class="section-head">
+      <p class="eyebrow">💰 Kaina</p>
+      <h2>Trys programos, pritaikytos mokyklai</h2>
+      <p class="section-sub">Vienkartinis mokestis mokyklai, be paslėptų mokesčių. Kainos orientacinės.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Darželis ir pradinės klasės</h3>
+        <p class="price"><span>100&nbsp;€</span><small>vienkartinai</small></p>
+        <ul class="price-features">
+          <li>Klausos lavinimo žaidimai</li>
+          <li>Ritmo ir melodijos žaidimai</li>
+          <li>Natų atmintis, gyvūnų muzika</li>
+          <li>Trumpos, vaizdingos pamokėlės</li>
+          <li>El. pašto pagalba</li>
+        </ul>
+        <button class="btn btn-outline price-btn">Rinktis šį lygį</button>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">Populiariausias</div>
+        <h3>Vidurinės klasės</h3>
+        <p class="price"><span>200&nbsp;€</span><small>vienkartinai</small></p>
+        <ul class="price-features">
+          <li>Viskas iš pirmo lygio</li>
+          <li>Natų rašymo pagrindai</li>
+          <li>Pažengę klausos ir ritmo pratimai</li>
+          <li>Testai su rezultatų sekimu</li>
+          <li>Prioritetinė pagalba</li>
+        </ul>
+        <button class="btn btn-primary price-btn">Rinktis šį lygį</button>
+      </div>
+      <div class="price-card">
+        <h3>Pažengusiems</h3>
+        <p class="price"><span>300&nbsp;€</span><small>vienkartinai</small></p>
+        <ul class="price-features">
+          <li>Viskas iš ankstesnių lygių</li>
+          <li>Pilnas natų redaktorius</li>
+          <li>MusicXML importas / eksportas</li>
+          <li>Admin / Worker paskyrų valdymas</li>
+          <li>Asmeninis diegimo konsultantas</li>
+        </ul>
+        <button class="btn btn-outline price-btn">Rinktis šį lygį</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- KONTAKTAI -->
+  <section class="tab-panel" id="panel-kontaktai">
+    <div class="section-head">
+      <p class="eyebrow">✉️ Kontaktai</p>
+      <h2>Susisiekite su mumis</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <div class="feature-ico">✉️</div>
+        <h3>El. paštas</h3>
+        <p><a href="mailto:ignaslab46@gmail.com">ignaslab46@gmail.com</a></p>
+      </div>
+      <div class="contact-card">
+        <div class="feature-ico">💬</div>
+        <h3>Palikite žinutę</h3>
+        <form class="contact-form" id="contactForm">
+          <input type="text" placeholder="Vardas" required />
+          <input type="email" placeholder="El. paštas" required />
+          <textarea placeholder="Žinutė" rows="3" required></textarea>
+          <button type="submit" class="btn btn-primary">Siųsti</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>&copy; 2026 MUSICATION. Visos teisės saugomos.</p>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginOverlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="loginClose" aria-label="Uždaryti">&times;</button>
+    <h3>Prisijungimas</h3>
+    <p class="modal-sub">Demo paskyros: <code>admin / admin123</code> ir <code>worker / worker123</code></p>
+    <form id="loginForm">
+      <label>Vartotojo vardas
+        <input type="text" id="loginUser" autocomplete="username" required />
+      </label>
+      <label>Slaptažodis
+        <input type="password" id="loginPass" autocomplete="current-password" required />
+      </label>
+      <p class="login-error" id="loginError" hidden>Neteisingas vartotojo vardas arba slaptažodis.</p>
+      <button type="submit" class="btn btn-primary modal-submit">Prisijungti</button>
+    </form>
+  </div>
+</div>
+
+<!-- DOWNLOAD MODAL (locked for worker) -->
+<div class="modal-overlay" id="lockedOverlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="lockedClose" aria-label="Uždaryti">&times;</button>
+    <div class="feature-ico" style="font-size:40px;">🔒</div>
+    <h3>Atsisiuntimas neprieinamas</h3>
+    <p class="modal-sub" id="lockedText">
+      Programą atsisiųsti gali tik <strong>administratoriaus</strong> paskyra. Susisiekite su savo administratoriumi.
+    </p>
+    <button class="btn btn-outline modal-submit" id="lockedOk">Supratau</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

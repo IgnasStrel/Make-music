@@ -21,6 +21,7 @@ export class SuiPiano {
   view: SuiScoreViewOperations;
   octaveOffset: number = 0;
   chordPedal: boolean = false;
+  lastPitch: Pitch = { letter: 'c', octave: 0, accidental: 'n' };
   objects: PianoKey[] = [];
   suggestFadeTimer: NodeJS.Timer | null = null;
   elementId: string = 'piano-svg';
@@ -32,11 +33,11 @@ export class SuiPiano {
 
   static get dimensions() {
     return {
-      wwidth: 23,
-      bwidth: 13,
-      wheight: 120,
-      bheight: 80,
-      octaves: 1
+      wwidth: 36,
+      bwidth: 22,
+      wheight: 150,
+      bheight: 102,
+      octaves: 7
     };
   }
   // 7 white keys per octave
@@ -125,6 +126,30 @@ export class SuiPiano {
     $('button.jsRight').off('click').on('click', () => {
       this.view.tracker.moveSelectionRight();
     });
+    $('button.jsAddNote').off('click').on('click', async () => {
+      const before = this.view.tracker.selections[0]?.selector;
+      const pitch: Pitch = {
+        letter: this.lastPitch.letter,
+        accidental: this.lastPitch.accidental,
+        octave: this.lastPitch.octave
+      };
+      await this.view.setPitchPiano(pitch, false);
+      this.view.tracker.moveSelectionRight();
+      const after = this.view.tracker.selections[0]?.selector;
+      const atEnd = !!before && !!after &&
+        before.staff === after.staff &&
+        before.measure === after.measure &&
+        before.voice === after.voice &&
+        before.tick === after.tick;
+      if (atEnd) {
+        await this.view.addMeasure(true);
+        this.view.tracker.moveSelectionRight();
+      }
+    });
+    $('.piano-ctrl-toggle').off('click').on('click', () => {
+      $('.piano-ctrl-bar').toggleClass('expanded');
+      $('.piano-ctrl-toggle').toggleClass('expanded');
+    });
     $('button.jsGrowDuration').off('click').on('click', () => {
       this.view.batchDurationOperation('doubleDuration');
     });
@@ -210,34 +235,46 @@ export class SuiPiano {
       var el = this.renderElement!.getElementById(keyPressed.keyElement.id) as SVGSVGElement;
       $(el).addClass('pressed-key');
     }
-    const key = keyPressed.keyElement.id.substr(6, keyPressed.keyElement.id.length - 6);
+    const keyToken = keyPressed.keyElement.id.substr(6, keyPressed.keyElement.id.length - 6);
+    const key = keyToken.split('-')[0];
     const pitch: Pitch = {
       letter: key[0].toLowerCase() as PitchLetter,
       octave: this.octaveOffset,
       accidental: key.length > 1 ? key[1] : 'n'
     };
+    this.lastPitch = {
+      letter: pitch.letter,
+      octave: pitch.octave,
+      accidental: pitch.accidental
+    };
 
-    this.view.setPitchPiano(pitch, this.chordPedal);
+    const beforeSel = this.view.tracker.selections[0]?.selector;
+    this.view.setPitchPiano(pitch, this.chordPedal).then(() => {
+      if (!this.chordPedal) {
+        // Temporarily disable autoPlay so moveSelectionRight doesn't play the note again
+        const wasAutoPlay = this.view.score.preferences.autoPlay;
+        this.view.score.preferences.autoPlay = false;
+        this.view.tracker.moveSelectionRight();
+        this.view.score.preferences.autoPlay = wasAutoPlay;
+        const afterSel = this.view.tracker.selections[0]?.selector;
+        const atEnd = !!beforeSel && !!afterSel &&
+          beforeSel.staff === afterSel.staff &&
+          beforeSel.measure === afterSel.measure &&
+          beforeSel.voice === afterSel.voice &&
+          beforeSel.tick === afterSel.tick;
+        if (atEnd) {
+          this.view.addMeasure(true).then(() => {
+            this.view.score.preferences.autoPlay = false;
+            this.view.tracker.moveSelectionRight();
+            this.view.score.preferences.autoPlay = wasAutoPlay;
+          });
+        }
+      }
+    });
   }
   _renderControls() {
     var b = buildDom;
-    var r = b('button').classes('icon icon-cross close close-piano');
-    $('.piano-container .key-right-ctrl').append(r.dom());
-    r = b('button').classes('piano-ctrl jsGrowDuration').append(b('span').classes('icon icon-duration_grow'));
-    $('.piano-container .key-right-ctrl').append(r.dom());
-    r = b('button').classes('piano-ctrl jsShrinkDuration').append(b('span').classes('icon icon-duration_less'));
-    $('.piano-container .key-right-ctrl').append(r.dom());
-    r = b('button').classes('piano-ctrl jsGrowDot').append(b('span').classes('icon icon-duration_grow_dot'));
-    $('.piano-container .key-right-ctrl').append(r.dom());
-    r = b('button').classes('piano-ctrl jsShrinkDot').append(b('span').classes('icon icon-duration_less_dot'));
-    $('.piano-container .key-right-ctrl').append(r.dom());
-
-    r = b('button').classes('key-ctrl jsLeft').append(b('span').classes('icon icon-arrow-left'));
-    $('.piano-container .piano-keys').prepend(r.dom());
-    r = b('button').classes('key-ctrl jsRight').append(b('span').classes('icon icon-arrow-right'));
-    $('.piano-container .piano-keys').append(r.dom());
-
-    r = b('button').classes('piano-ctrl').attr('id', 'piano-8va-button').append(
+    var r = b('button').classes('piano-ctrl').attr('id', 'piano-8va-button').append(
       b('span').classes('bold-italic').text('8')).append(
         b('sup').classes('italic').text('va'));
     $('.piano-container .key-left-ctrl').append(r.dom());
@@ -257,6 +294,10 @@ export class SuiPiano {
     $('.piano-container .key-left-ctrl').append(r.dom());
     r = b('button').classes('piano-ctrl jsChord')
       .append(b('span').classes('icon icon-chords'));
+    $('.piano-container .key-left-ctrl').append(r.dom());
+    r = b('button').classes('piano-ctrl jsAddNote').attr('id', 'piano-add-note').append(
+      b('span').classes('bold').text('+'))
+      .append(b('span').attr('id', 'piano-add-note-text').text('Note'));
     $('.piano-container .key-left-ctrl').append(r.dom());
   }
   handleResize() {
@@ -321,9 +362,6 @@ export class SuiPiano {
     var bheight = d.bheight;
     var owidth = SuiPiano.wkeysPerOctave * wwidth;
 
-    // Start on C2 to C6 to reduce space
-    var octaveOff = 7 - d.octaves;
-
     var x = 0;
     var y = 0;
     var r = b('g');
@@ -331,11 +369,12 @@ export class SuiPiano {
       x = i * owidth;
       xwhite.forEach((key) => {
         var nt = key.note;
+        var keyId = nt + '-o' + i;
         var classes = 'piano-key white-key';
         if (nt == 'C4') {
           classes += ' middle-c';
         }
-        var rect = b('rect').attr('id', 'keyId-' + nt).rect(x + key.x, y, wwidth, wheight, classes);
+        var rect = b('rect').attr('id', 'keyId-' + keyId).rect(x + key.x, y, wwidth, wheight, classes);
         r.append(rect);
 
         var tt = b('text').text(x + key.x + (wwidth / 5), bheight + 16, 'note-text', nt);
@@ -343,8 +382,9 @@ export class SuiPiano {
       });
       xblack.forEach((key) => {
         var nt = key.note;
+        var keyId = nt + '-o' + i;
         var classes = 'piano-key black-key';
-        var rect = b('rect').attr('id', 'keyId-' + nt).attr('fill', 'url(#piano-grad)').rect(x + key.x, 0, bwidth, bheight, classes);
+        var rect = b('rect').attr('id', 'keyId-' + keyId).rect(x + key.x, 0, bwidth, bheight, classes);
         r.append(rect);
       });
     }

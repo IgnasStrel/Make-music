@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Natų atmintis</title>
+  <link rel="stylesheet" href="../styles/kids.css" />
+  <style>
+    /* Card-flip grid — specific to this game, so it stays out of the shared kids.css. */
+    .mem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+      gap: 12px;
+      width: 100%;
+      max-width: 620px;
+      perspective: 800px;
+    }
+    .mem-card {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .mem-card .flip {
+      position: absolute; inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 0.35s ease;
+    }
+    .mem-card.open .flip, .mem-card.matched .flip { transform: rotateY(180deg); }
+    .mem-face {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 14px;
+      backface-visibility: hidden;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.28);
+      font-size: 30px;
+    }
+    .mem-face.back {
+      background: var(--panel2);
+      border: 2px solid var(--border);
+      color: var(--soft);
+    }
+    .mem-face.front {
+      transform: rotateY(180deg);
+      color: #1a1a2e;
+      flex-direction: column;
+      gap: 4px;
+      font-weight: bold;
+    }
+    .mem-face.front .solf-name { font-size: 15px; }
+    .mem-card.matched .mem-face.front { box-shadow: 0 0 0 3px #fff inset, 0 5px 0 rgba(0,0,0,0.28); }
+    .mem-card:active .flip { transform: scale(0.96) rotateY(var(--rot, 0deg)); }
+    .mem-card.open:active .flip, .mem-card.matched:active .flip { --rot: 180deg; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="rasymas.html">← Atgal</a>
+    <div class="spacer"></div>
+    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+  </div>
+
+  <!-- ===== Menu ===== -->
+  <section class="screen" id="menu">
+    <h1>🧠 Natų atmintis
+      <small>Rask poras pagal spalvą ir garsą — Do, Re, Mi, Fa, Sol, La, Si</small>
+    </h1>
+    <div class="menu-grid">
+      <button class="menu-card" id="goPlay">
+        <span class="ico">🃏</span><span class="name">Žaisti</span><span class="sub">14 kortelių, 7 poros</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== Play ===== -->
+  <section class="screen" id="play">
+    <h2>🧠 Rask poras!</h2>
+    <div class="scoreboard">
+      <div>Bandymai: <b id="tries">0</b></div>
+      <div>Poros: <b id="found">0</b> / <span id="totalPairs">7</span></div>
+    </div>
+    <div class="mem-grid" id="grid"></div>
+    <div class="hint" id="hint">Paspausk kortelę, kad ją atverstum 👆</div>
+    <div class="controls">
+      <button class="btn btn-amber" id="restartBtn">🔀 Naujas žaidimas</button>
+      <button class="btn btn-ghost" id="backMenu">← Meniu</button>
+    </div>
+  </section>
+
+  <script src="kids.js"></script>
+  <script src="seasonBg.js"></script>
+  <script>
+    (function () {
+      var K = window.Kids;
+      var gridEl = document.getElementById('grid');
+      var triesEl = document.getElementById('tries');
+      var foundEl = document.getElementById('found');
+      var hintEl = document.getElementById('hint');
+
+      var open = [];       // currently face-up, unmatched card elements (max 2)
+      var lock = false;    // true while showing a mismatch before flipping back
+      var tries = 0, found = 0, total = 0;
+
+      function setHint(t) { hintEl.textContent = t; }
+
+      function buildDeck() {
+        var deck = [];
+        K.SOLFEGE.forEach(function (s) { deck.push(s); deck.push(s); }); // 7 notes x 2 = 14 cards
+        return K.shuffle(deck);
+      }
+
+      function newGame() {
+        open = []; lock = false; tries = 0; found = 0;
+        triesEl.textContent = '0'; foundEl.textContent = '0';
+        var deck = buildDeck();
+        total = deck.length / 2;
+        document.getElementById('totalPairs').textContent = total;
+        gridEl.innerHTML = '';
+        deck.forEach(function (solf, i) {
+          var card = document.createElement('button');
+          card.className = 'mem-card';
+          card.dataset.note = solf.note;
+          card.innerHTML =
+            '<span class="flip">' +
+              '<span class="mem-face back">❓</span>' +
+              '<span class="mem-face front" style="background:' + solf.color + '">' +
+                '<span class="solf-dot">' + solf.sign + '</span>' +
+                '<span class="solf-name">' + solf.solf + '</span>' +
+              '</span>' +
+            '</span>';
+          card.addEventListener('click', function () { flip(card, solf); });
+          gridEl.appendChild(card);
+        });
+        setHint('Paspausk kortelę, kad ją atverstum 👆');
+      }
+
+      function flip(card, solf) {
+        if (lock || card.classList.contains('open') || card.classList.contains('matched')) { return; }
+        card.classList.add('open');
+        K.audio.tone(solf.note, { dur: 0.6 });
+        open.push(card);
+        if (open.length < 2) { return; }
+
+        // Two cards face up: check for a match.
+        tries++; triesEl.textContent = tries;
+        lock = true;
+        var a = open[0], b = open[1];
+        if (a.dataset.note === b.dataset.note) {
+          a.classList.add('matched'); b.classList.add('matched');
+          found++; foundEl.textContent = found;
+          K.audio.correct();
+          K.stars.add(1);
+          setHint('✅ Radai porą! ' + solf.solf + ' skamba taip.');
+          open = []; lock = false;
+          if (found >= total) { finish(); }
+        } else {
+          K.audio.wrong();
+          setHint('🙂 Ne ta pora — bandyk dar kartą.');
+          setTimeout(function () {
+            a.classList.remove('open'); b.classList.remove('open');
+            open = []; lock = false;
+          }, 800);
+        }
+      }
+
+      function finish() {
+        setHint('🎉 Radai visas poras per ' + tries + ' bandymus!');
+        K.progress.markDone('atmintis');
+        K.confetti();
+        K.mascot('cheer', 'Puiki atmintis! ⭐');
+      }
+
+      document.getElementById('goPlay').addEventListener('click', function () {
+        newGame();
+        K.showScreen('play');
+      });
+      document.getElementById('restartBtn').addEventListener('click', newGame);
+      document.getElementById('backMenu').addEventListener('click', function () { K.showScreen('menu'); });
+
+      K.initScreens('menu');
+    })();
+  </script>
+</body>
+</html>

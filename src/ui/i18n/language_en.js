@@ -1270,13 +1270,8 @@ export const smoLanguageStringEn = `{
        },
        {
         "icon": "",
-        "text": "Deutsch",
-        "value": "de"
-       },
-       {
-        "icon": "",
-        "text": "اَلْعَرَبِيَّةُ",
-        "value": "ar"
+        "text": "Lietuvių",
+        "value": "lt"
        },
        {
         "icon": "",
@@ -1390,6 +1385,26 @@ export const smoLanguageStringEn = `{
     ],
     "buttonText": [
      {
+      "buttonId": "makeMusicTitle",
+      "buttonText": "Make Music"
+     },
+     {
+      "buttonId": "addNoteText",
+      "buttonText": "Note"
+     },
+     {
+      "buttonId": "keySignature",
+      "buttonText": "Key"
+     },
+     {
+      "buttonId": "ribbonTempo",
+      "buttonText": "Tempo"
+     },
+     {
+      "buttonId": "ribbonTime",
+      "buttonText": "Time"
+     },
+     {
       "buttonId": "helpDialog",
       "buttonText": "Help"
      },
@@ -1398,8 +1413,40 @@ export const smoLanguageStringEn = `{
       "buttonText": "Language"
      },
      {
+      "buttonId": "editMenu",
+      "buttonText": "Edit"
+     },
+     {
       "buttonId": "fileMenu",
       "buttonText": "File"
+     },
+     {
+      "buttonId": "scoreMenu",
+      "buttonText": "Score"
+     },
+     {
+      "buttonId": "partMenu",
+      "buttonText": "Parts"
+     },
+     {
+      "buttonId": "voiceMenu",
+      "buttonText": "Voices"
+     },
+     {
+      "buttonId": "beamMenu",
+      "buttonText": "Beams"
+     },
+     {
+      "buttonId": "tupletMenu",
+      "buttonText": "Tuplets"
+     },
+     {
+      "buttonId": "noteMenu",
+      "buttonText": "Notes"
+     },
+     {
+      "buttonId": "textMenu",
+      "buttonText": "Text"
      },
      {
       "buttonId": "libraryMenu",

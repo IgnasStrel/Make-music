@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Pamokėlės</title>
+  <link rel="stylesheet" href="../styles/kids.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a class="back" href="rasymas.html">← Atgal</a>
+    <div class="spacer"></div>
+    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+  </div>
+
+  <!-- ===== Menu ===== -->
+  <section class="screen" id="menu">
+    <h1>📚 Pamokėlės
+      <small>Trumpos pamokėlės su garsais ir paveiksliukais</small>
+    </h1>
+    <div class="menu-grid" id="lessonMenu"></div>
+  </section>
+
+  <!-- ===== Lesson 1: high/low ===== -->
+  <section class="screen" id="aukstizemi">
+    <h2>🐦 Aukšti ir žemi garsai</h2>
+    <div class="card">
+      <div class="illus">🐦 ⬆️</div>
+      <p class="lead">Paukštelis čiulba <b>aukštai</b> — garsas plonas ir aukštas.</p>
+      <button class="btn btn-primary" data-note="C6">🔊 Aukštas garsas</button>
+      <div class="illus">🐻 ⬇️</div>
+      <p class="lead">Meška urzgia <b>žemai</b> — garsas storas ir žemas.</p>
+      <button class="btn btn-primary" data-note="C3">🔊 Žemas garsas</button>
+    </div>
+    <button class="btn btn-amber done-btn" data-lesson="aukstizemi">✓ Supratau (gauk ⭐)</button>
+    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
+  </section>
+
+  <!-- ===== Lesson 2: dynamics ===== -->
+  <section class="screen" id="dinamika">
+    <h2>🔊 Garsiai ir tyliai</h2>
+    <div class="card">
+      <p class="lead">Muzika gali skambėti <b>garsiai</b> (ženklas <b>f</b> — forte) arba <b>tyliai</b> (ženklas <b>p</b> — piano).</p>
+      <div class="controls">
+        <button class="btn btn-primary" data-note="G4" data-gain="0.6">🔊 Garsiai (f)</button>
+        <button class="btn btn-primary" data-note="G4" data-gain="0.07">🤫 Tyliai (p)</button>
+      </div>
+      <p class="lead">Ta pati nata — tik vienas garsas stiprus, kitas švelnus.</p>
+    </div>
+    <button class="btn btn-amber done-btn" data-lesson="dinamika">✓ Supratau (gauk ⭐)</button>
+    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
+  </section>
+
+  <!-- ===== Lesson 3: ta / ti-ti ===== -->
+  <section class="screen" id="ritmas">
+    <h2>👏 Ritmas: ta ir ti-ti</h2>
+    <div class="card">
+      <div class="rhythm-row">
+        <div class="beat"><div class="glyph">♩</div><div class="syl">ta</div></div>
+      </div>
+      <p class="lead"><b>ta</b> — vienas ilgas plojimas (ketvirtinė nata).</p>
+      <button class="btn btn-primary" id="playTa">👏 Plok „ta"</button>
+      <div class="rhythm-row">
+        <div class="beat"><div class="glyph">♫</div><div class="syl">ti-ti</div></div>
+      </div>
+      <p class="lead"><b>ti-ti</b> — du greiti plojimai (dvi aštuntinės).</p>
+      <button class="btn btn-primary" id="playTiti">👏 Plok „ti-ti"</button>
+    </div>
+    <button class="btn btn-amber done-btn" data-lesson="ritmas">✓ Supratau (gauk ⭐)</button>
+    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
+  </section>
+
+  <!-- ===== Lesson 4: coloured notes ===== -->
+  <section class="screen" id="spalvotos">
+    <h2>🌈 Spalvotos natos</h2>
+    <div class="card">
+      <p class="lead">Kiekviena nata turi savo spalvą. Paspausk ir išgirsk Do–Re–Mi–Fa–Sol–La–Si!</p>
+      <div class="piano" id="colorPiano"></div>
+    </div>
+    <button class="btn btn-amber done-btn" data-lesson="spalvotos">✓ Supratau (gauk ⭐)</button>
+    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
+  </section>
+
+  <!-- ===== Lesson 5: staff ===== -->
+  <section class="screen" id="penkline">
+    <h2>🎼 Natos ant penklinės</h2>
+    <div class="card">
+      <p class="lead">Natos gyvena ant <b>penkių linijų</b>. Kuo aukščiau nata — tuo aukštesnis garsas. Paspausk natą!</p>
+      <div id="staff"></div>
+    </div>
+    <button class="btn btn-amber done-btn" data-lesson="penkline">✓ Supratau (gauk ⭐)</button>
+    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
+  </section>
+
+  <script src="kids.js"></script>
+  <script src="seasonBg.js"></script>
+  <script>
+    (function () {
+      var K = window.Kids;
+      var SOLF = K.SOLFEGE;
+
+      var LESSONS = [
+        { id: 'aukstizemi', ico: '🐦', name: 'Aukšti ir žemi garsai' },
+        { id: 'dinamika',   ico: '🔊', name: 'Garsiai ir tyliai' },
+        { id: 'ritmas',     ico: '👏', name: 'Ritmas: ta ir ti-ti' },
+        { id: 'spalvotos',  ico: '🌈', name: 'Spalvotos natos' },
+        { id: 'penkline',   ico: '🎼', name: 'Natos ant penklinės' }
+      ];
+
+      // ---- Menu ----
+      var menu = document.getElementById('lessonMenu');
+      function renderMenu() {
+        menu.innerHTML = '';
+        LESSONS.forEach(function (l) {
+          var done = K.progress.isDone('lesson.' + l.id);
+          var card = document.createElement('button');
+          card.className = 'menu-card';
+          card.innerHTML = '<span class="ico">' + l.ico + '</span><span class="name">' + l.name +
+            '</span><span class="sub">' + (done ? '✅ išmokta' : 'paspausk ir mokykis') + '</span>';
+          card.addEventListener('click', function () { K.showScreen(l.id); });
+          menu.appendChild(card);
+        });
+      }
+      renderMenu();
+
+      // ---- Generic "play a note" buttons (data-note / data-gain) ----
+      document.querySelectorAll('button[data-note]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          K.audio.resume();
+          K.audio.tone(b.dataset.note, { dur: 1.0, gain: b.dataset.gain ? parseFloat(b.dataset.gain) : 0.35 });
+        });
+      });
+
+      // ---- Lesson 3: clap demos ----
+      document.getElementById('playTa').addEventListener('click', function () { K.audio.resume(); K.audio.clap(); });
+      document.getElementById('playTiti').addEventListener('click', function () {
+        K.audio.resume(); K.audio.clap(); setTimeout(function () { K.audio.clap(); }, 240);
+      });
+
+      // ---- Lesson 4: coloured piano ----
+      var cp = document.getElementById('colorPiano');
+      SOLF.forEach(function (s) {
+        var b = document.createElement('button');
+        b.className = 'pkey'; b.style.background = s.color;
+        b.innerHTML = s.solf + '<small>' + s.note.charAt(0) + '</small>';
+        b.addEventListener('click', function () { K.audio.resume(); K.audio.tone(s.note, { dur: 0.8 }); K.say(s.solf); });
+        cp.appendChild(b);
+      });
+
+      // ---- Lesson 5: simple staff (SVG) ----
+      (function buildStaff() {
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var W = 460, H = 200, x0 = 70, top = 50, gap = 18; // line gap
+        var svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
+        // 5 staff lines
+        for (var i = 0; i < 5; i++) {
+          var ln = document.createElementNS(svgNS, 'line');
+          var y = top + i * gap;
+          ln.setAttribute('x1', 20); ln.setAttribute('x2', W - 20);
+          ln.setAttribute('y1', y); ln.setAttribute('y2', y);
+          ln.setAttribute('stroke', '#b9b9d6'); ln.setAttribute('stroke-width', '2');
+          svg.appendChild(ln);
+        }
+        // Notes C4..G4 climbing. Vertical step = gap/2 per scale step; C4 sits below the staff.
+        var bottomY = top + 4 * gap; // bottom line
+        var notes = SOLF.slice(0, 5); // Do..Sol
+        notes.forEach(function (s, idx) {
+          var cx = x0 + idx * 75;
+          var cy = bottomY + gap / 2 - idx * (gap / 2); // each step up by half a line gap
+          var c = document.createElementNS(svgNS, 'circle');
+          c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 12);
+          c.setAttribute('fill', s.color); c.setAttribute('stroke', '#1a1a2e'); c.setAttribute('stroke-width', '2');
+          c.style.cursor = 'pointer';
+          c.addEventListener('click', function () { K.audio.resume(); K.audio.tone(s.note, { dur: 0.8 }); K.say(s.solf); });
+          svg.appendChild(c);
+          var tx = document.createElementNS(svgNS, 'text');
+          tx.setAttribute('x', cx); tx.setAttribute('y', H - 14); tx.setAttribute('text-anchor', 'middle');
+          tx.setAttribute('fill', '#f3f3fb'); tx.setAttribute('font-size', '16'); tx.setAttribute('font-family', 'Chewy, cursive');
+          tx.textContent = s.solf;
+          svg.appendChild(tx);
+        });
+        document.getElementById('staff').appendChild(svg);
+      })();
+
+      // ---- "Supratau" -> star (once per lesson) ----
+      document.querySelectorAll('.done-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var id = 'lesson.' + b.dataset.lesson;
+          if (!K.progress.isDone(id)) {
+            K.progress.markDone(id); K.stars.add(1);
+            K.confetti(); K.mascot('cheer', 'Gavai ⭐!');
+          } else {
+            K.mascot('happy', 'Jau išmokta!');
+          }
+          renderMenu();
+          setTimeout(function () { K.showScreen('menu'); }, 900);
+        });
+      });
+
+      document.querySelectorAll('.back-lesson').forEach(function (b) {
+        b.addEventListener('click', function () { K.showScreen('menu'); });
+      });
+
+      K.initScreens('menu');
+    })();
+  </script>
+</body>
+</html>

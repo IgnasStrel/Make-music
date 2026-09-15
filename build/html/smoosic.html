@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 		<meta charset="utf-8">
-		<title>Smoosic Editor</title>
+		<title>MUSICATION — Pilnas redaktorius</title>
 		<link href="../styles/fonts.css" rel="stylesheet">
         <link href="../styles/media.css" rel="stylesheet">
         <link href="../styles/ribbon.css" rel="stylesheet">
@@ -12,6 +12,9 @@
         <link href="../styles/tree.css" rel="stylesheet">
         <link href="../styles/bravura-font-codes.css" rel="stylesheet">
         <link href="../styles/bootstrap.min.css" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
         <!-- script type="text/javascript" src="../../../vexflow_smoosic/build/cjs/vexflow-debug.js"></script -->
         <!-- script type="text/javascript" src="../../node_modules/vexflow_smoosic/build/cjs/vexflow-debug-with-tests.js"></script -->
         <!-- script type="text/javascript" src="../../../vexflow_smoosic/build/cjs/vexflow-debug-with-tests.js"></script -->
@@ -26,11 +29,795 @@
              Smo.SuiApplication.configure(config);
            });
        </script>
+    <style>
+      /* Playful "Chewy" font everywhere in the UI.  Icon glyphs (.icon-*),
+         note-duration glyphs (.nt-dur) and the rendered score (SVG) keep their
+         own fonts so notation & icons don't break. */
+      :not(svg):not(svg *):not([class^="icon-"]):not([class*=" icon-"]):not(.nt-dur) {
+        font-family: 'Chewy', cursive !important;
+      }
+      #bg-selector {
+        position: relative;
+        z-index: 9999;
+      }
+      #bg-selector-btn {
+        width: 100%;
+        cursor: pointer;
+      }
+      /* The background-changer dropdown panel itself is transparent (not a solid
+         box), so you can see the background through it while choosing. */
+      #bg-dropdown {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: calc(100% + 6px);
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        overflow: visible;
+        backdrop-filter: none;
+        min-width: 160px;
+        box-shadow: none;
+      }
+      #bg-dropdown.open { display: block; }
+      #bg-dropdown .bg-orb-row { padding: 6px; max-width: 168px; }
+      /* Transparent backgrounds for controls */
+      button, .btn, .nav-link, input, select, textarea,
+      .controls-top button, .controls-left button,
+      .menuElement button, .piano-container button {
+        background: #ffffff00 !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      /* Removed controls (originals replaced by simple Lithuanian menus below) */
+      #selectPart, #refresh, #zoomout, #zoomin,
+      #keySignature, #ribbonTempo, #ribbonTime {
+        display: none !important;
+      }
+      /* Simple Lithuanian fly-out menus for key / time / tempo */
+      .simple-menu { position: relative; }
+      .simple-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        background: rgba(20,20,20,0.95);
+        border: 1.5px solid rgba(255,255,255,0.2);
+        border-radius: 8px;
+        overflow: hidden;
+        backdrop-filter: blur(8px);
+        min-width: 180px;
+        z-index: 10001;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+      }
+      .simple-dropdown.open { display: block; }
+      .simple-option {
+        display: block;
+        width: 100%;
+        padding: 9px 14px;
+        background: none;
+        border: none;
+        color: #eee;
+        text-align: left;
+        cursor: pointer;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+      .simple-option:hover { background: rgba(255,255,255,0.12) !important; }
+      /* The left-sidebar (Raktas) menu flies out to the right */
+      #controls-left .simple-dropdown { top: 0; left: calc(100% + 6px); }
+      /* Removed left nav items */
+      #controls-left li.nav-item:has(#fileMenu),
+      #controls-left li.nav-item:has(#editMenu),
+      #controls-left li.nav-item:has(#libraryMenu),
+      #controls-left li.nav-item:has(#noteMenu),
+      #controls-left li.nav-item:has(#tupletMenu),
+      #controls-left li.nav-item:has(#beamMenu),
+      #controls-left li.nav-item:has(#voiceMenu) {
+        display: none !important;
+      }
+      /* Hide the measure system-break marker */
+      .measure-format {
+        display: none !important;
+      }
+      /* Hide the note-name labels on the piano keys */
+      .note-text {
+        display: none !important;
+      }
+      /* Keep only the piano keyboard opaque, above the background overlay.
+         The notes area (music container) stays transparent so the background shows through. */
+      body.show-piano .piano-container {
+        z-index: 10000 !important;
+        background-color: #ffffff !important;
+      }
+      /* Down arrow on each left nav item */
+      #controls-left .nav-link .text-span::after {
+        content: " \25BE";
+        font-size: 0.85em;
+        opacity: 0.7;
+        margin-left: 4px;
+      }
+      /* Use the MUSICATION logo image in place of the title text */
+      #make-music-title {
+        background-image: url("../uploads/logo.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        flex: 0 0 200px !important;
+        width: 200px;
+        height: 56px;
+        text-indent: -9999px;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      /* ---- Top control bar: all buttons share one uniform size ---- */
+      #notes-tool, #note-toolbar {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2px;
+        margin: 5px;
+        vertical-align: top;
+      }
+      #notes-tool button,
+      #note-toolbar .nt-btn {
+        height: 44px;
+        min-width: 40px;
+        padding: 0 6px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #1a1a2e;
+        font-size: 18px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #notes-tool button:hover,
+      #note-toolbar .nt-btn:hover { background: rgba(0,0,0,0.10) !important; }
+      #notes-tool button:active,
+      #note-toolbar .nt-btn:active { background: rgba(0,0,0,0.18) !important; }
+      /* Uniform glyph / icon size inside every top button */
+      #notes-tool button span,
+      #note-toolbar .nt-btn .icon { font-size: 22px; color: #1a1a2e; }
+      #notes-tool button sup { font-size: 12px; }
+      #note-toolbar .nt-dur {
+        font-family: 'Bravura', 'Segoe UI Symbol', 'Noto Music', sans-serif;
+        font-size: 24px;
+      }
+      #note-toolbar .nt-sep {
+        width: 1px;
+        height: 30px;
+        background: rgba(0,0,0,0.25);
+        margin: 0 4px;
+        display: inline-block;
+      }
+
+      /* ---- Keep the top control bar on a single compact line ---- */
+      .controls-top {
+        flex-wrap: nowrap !important;
+        align-items: center;
+        min-width: 0;
+        height: 58px !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+      #notes-tool, #note-toolbar { flex-wrap: nowrap !important; }
+      /* The app's leftover off-screen overflow container otherwise inflates the bar */
+      .controls-top > .ribbonButtonContainer.collapseContainer { align-self: center; }
+
+      /* ---- Native left menus (Kalba, Partitūra, ...) as dark simple dropdowns ---- */
+      .menuContainer .menuElement {
+        background: rgba(20,20,20,0.95) !important;
+        border: 1.5px solid rgba(255,255,255,0.2) !important;
+        border-radius: 10px !important;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+        padding: 4px !important;
+        min-width: 190px;
+        z-index: 10002 !important;
+      }
+      .menuContainer .menuElement .menuOption a.dropdown-item,
+      .menuContainer .menuElement .menuOption a.dropdown-item:focus,
+      .menuContainer .menuElement .menuOption a.dropdown-item:active,
+      .menuContainer .menuElement .menuOption a.dropdown-item.active {
+        color: #eee !important;
+        background: transparent !important;
+        padding: 9px 14px;
+        border-radius: 7px;
+      }
+      .menuContainer .menuElement .menuOption .menuText { color: #eee; }
+      .menuContainer .menuElement .menuOption a.dropdown-item:hover { background: rgba(255,255,255,0.12) !important; }
+      .menuContainer .menuElement .menuOption a.dropdown-item:hover .menuText { color: #fff; }
+      /* Drop the key-number column and empty icon slots for a clean look */
+      .menuContainer .menuElement .menu-key { display: none !important; }
+      .menuContainer .menuElement .menuOption span.icon[class$="icon-"] { display: none !important; }
+      /* No screen dimming - behave like a light dropdown, not a modal */
+      body.modal .overlay { opacity: 0 !important; }
+      /* Left nav items: no white box on hover (the app default is gray-200) */
+      #controls-left li.nav-item:hover { background: transparent !important; }
+
+      /* ---- Subtle 3D look for the piano keyboard ---- */
+      body.show-piano .piano-container {
+        box-shadow: 0 -3px 12px rgba(0,0,0,0.4),
+                    inset 0 7px 9px -7px rgba(0,0,0,0.55) !important;
+      }
+      .piano-keys { position: relative; }
+      .white-key { rx: 3px; }
+      .black-key {
+        rx: 2px;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+      }
+      /* Glossy sheen: light along the top, shadow toward the front edge */
+      .piano-keys::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+        background: linear-gradient(to bottom,
+          rgba(255,255,255,0.40) 0%,
+          rgba(255,255,255,0.06) 7%,
+          rgba(0,0,0,0) 52%,
+          rgba(0,0,0,0.16) 90%,
+          rgba(0,0,0,0.30) 100%);
+      }
+
+      /* ===== Right-hand panel (Žaidimai / Testai / Pamokėlės) ===== */
+      #controls-right {
+        margin-top: 33px;
+        min-width: 200px;
+        max-width: 230px;
+        gap: 6px;
+        border-left: 1px solid rgba(0,0,0,0.06);
+        z-index: 10000;
+        /* More games now live here than before (7 cards + Testai/Pamokėlės) -
+           cap the height and scroll internally so an expanded section never
+           grows down behind the fixed piano keyboard and becomes unclickable.
+           The exact max-height is computed in JS from the piano's real
+           position (see fitPanelHeight below); this is just a safe fallback. */
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      #controls-right .nav-item { min-width: 150px; }
+      /* No white/gray hover box on the section headers (like the left sidebar) */
+      #controls-right li.nav-item:hover,
+      #controls-right .right-acc-btn:hover { background: transparent !important; }
+      /* Section header (accordion toggle) - looks like a left nav item */
+      .right-acc-btn {
+        width: 100%;
+        text-align: left;
+        font-size: 1.05em;
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+      .right-acc-btn .left-text { flex: 1 1 auto; }
+      .right-acc-btn .text-span::after {
+        content: " \25B8";              /* ▸ collapsed */
+        float: right;
+        font-size: 0.85em;
+        opacity: 0.7;
+        transition: transform 0.2s ease;
+      }
+      .right-acc.open .right-acc-btn .text-span::after {
+        content: " \25BE";              /* ▾ expanded */
+      }
+      .right-acc-body { display: none; padding: 6px 2px 12px; }
+      .right-acc.open .right-acc-body { display: block; }
+
+      /* Žaidimai / Testai / Pamokėlės: colorful rounded cards with an icon.
+         Each card gets a rainbow accent stripe from the same solfège palette
+         used across the kids games (Do-red .. Si-pink), cycling by position. */
+      .game-grid { display: flex; flex-direction: column; gap: 10px; }
+      .game-card, .right-text-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 10px;
+        border-radius: 14px;
+        border: none !important;
+        border-left: 5px solid var(--card-accent, #7ee8a2) !important;
+        background: rgba(0,0,0,0.035) !important;
+        cursor: pointer;
+        text-align: left;
+        font-size: 14px;
+        box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+        transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      }
+      .game-card { flex-direction: column; justify-content: center; text-align: center; }
+      .game-card:hover, .right-text-row:hover {
+        background: rgba(0,0,0,0.07) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+      }
+      .game-card:active, .right-text-row:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+      .game-ico { font-size: 30px; line-height: 1; }
+      .game-name { font-size: 14px; text-align: center; }
+      .right-text-row .row-ico { font-size: 22px; line-height: 1; }
+      .right-text-row .row-text { display: flex; flex-direction: column; gap: 1px; }
+      .right-text-row .row-sub { font-size: 11.5px; opacity: 0.65; }
+    </style>
 </head>
 <body>
-  <sub id="link-hdr"><a href="https://github.com/Smoosic/smoosic">Github site</a> | 
-    <a href="https://smoosic.github.io/Smoosic/changes.md">change notes</a> |
-     <a href="https://smoosic.github.io/Smoosic/release/html/smoosic.html">application</a><button class="close-header"><span class="icon icon-cross"></span></button></sub>
+  <script>window.SEASON_BG_MODE = 'wash'; window.SEASON_BG_NO_FLOATING = true; window.SEASON_BG_DEFAULT = 'beach';</script>
+  <script src="seasonBg.js"></script>
+  <div id="notes-tool">
+    <button id="notes-tool-btn"><span class="icon icon-note"></span></button>
+  </div>
+  <li id="bg-selector" class="nav-item" data-group="scoreEdit">
+    <button id="bg-selector-btn" class="nav-link link-body-emphasis hover-text">
+      <span class="left-text"><span class="text-span">Fonas</span></span>
+    </button>
+    <div id="bg-dropdown">
+      <div class="bg-orb-row">
+        <button type="button" class="bg-orb" data-theme-orb="none" title="Be fono">⬜</button>
+        <button type="button" class="bg-orb" data-theme-orb="beach" title="Paplūdimys" style="--orb-grad:linear-gradient(135deg,#4fc3f7,#0288d1)">🌊</button>
+        <button type="button" class="bg-orb" data-theme-orb="desert" title="Dykuma" style="--orb-grad:linear-gradient(135deg,#ffd27a,#c9862c)">🏜️</button>
+        <button type="button" class="bg-orb" data-theme-orb="pavasaris" title="Pavasaris" style="--orb-grad:linear-gradient(135deg,#ffc1e3,#7ee8a2)">🌸</button>
+        <button type="button" class="bg-orb" data-theme-orb="vasara" title="Vasara" style="--orb-grad:linear-gradient(135deg,#ffe066,#4fc3f7)">☀️</button>
+        <button type="button" class="bg-orb" data-theme-orb="ruduo" title="Ruduo" style="--orb-grad:linear-gradient(135deg,#ffb46e,#8b5e34)">🍂</button>
+        <button type="button" class="bg-orb" data-theme-orb="ziema" title="Žiema" style="--orb-grad:linear-gradient(135deg,#eaf7ff,#4a76a8)">❄️</button>
+      </div>
+    </div>
+  </li>
+  <script>
+    (function() {
+      var dropdown = document.getElementById('bg-dropdown');
+      var btn = document.getElementById('bg-selector-btn');
+      var selector = document.getElementById('bg-selector');
+      var keyMenu = null, tempoMenu = null, timeMenu = null;
+
+      // --- Simple Lithuanian dropdowns for key / time / tempo, calling the
+      //     app's view operations directly (instead of the English dialogs). ---
+      function inst() { return window.Smo.SuiApplication.instance; }
+      function curMeasure() {
+        try {
+          var v = inst().view;
+          var s = v.tracker.selections;
+          if (s && s.length && s[0].measure) { return s[0].measure; }
+          return v.score.staves[0].measures[0];
+        } catch (e) { return null; }
+      }
+      function addKey(k)  { try { return inst().view.addKeySignature(k); } catch (e) {} }
+      function setTime(t) { try { return inst().view.setTimeSignature(window.Smo.SmoMeasure.convertLegacyTimeSignature(t)); } catch (e) {} }
+      function setTempo(bpm) {
+        try {
+          var S = window.Smo, m = curMeasure();
+          if (!m) { return; }
+          var tt = new S.SmoTempoText(S.SmoTempoText.defaults);
+          tt.bpm = bpm; tt.display = true;
+          return inst().view.updateTempoScore(m, tt, true, false);
+        } catch (e) {}
+      }
+
+      // Build a labelled fly-out menu.  navItem=true -> styled as a left sidebar item.
+      function buildMenu(id, label, items, navItem) {
+        var root = document.createElement(navItem ? 'li' : 'div');
+        root.id = id;
+        root.className = navItem ? 'nav-item simple-menu' : 'simple-menu top-menu';
+        var mbtn = document.createElement('button');
+        mbtn.id = id + '-btn';
+        if (navItem) {
+          mbtn.className = 'nav-link link-body-emphasis hover-text';
+          mbtn.innerHTML = '<span class="left-text"><span class="text-span">' + label + '</span></span>';
+        } else {
+          mbtn.className = 'top-menu-btn';
+          mbtn.textContent = label;
+        }
+        var menu = document.createElement('div');
+        menu.className = 'simple-dropdown';
+        items.forEach(function (it) {
+          var o = document.createElement('button');
+          o.className = 'simple-option';
+          o.textContent = it.label;
+          o.addEventListener('click', function (e) {
+            e.stopPropagation();
+            menu.classList.remove('open');
+            try { Promise.resolve(it.run()).catch(function(){}); } catch (err) {}
+          });
+          menu.appendChild(o);
+        });
+        mbtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          document.querySelectorAll('.simple-dropdown.open').forEach(function (m) { if (m !== menu) { m.classList.remove('open'); } });
+          menu.classList.toggle('open');
+        });
+        root.appendChild(mbtn);
+        root.appendChild(menu);
+        return root;
+      }
+
+      function buildLessonMenus() {
+        if (keyMenu) { return; }
+        keyMenu = buildMenu('key-menu', 'Raktas', [
+          { label: 'C-dur — be ženklų',   run: function(){ return addKey('C');  } },
+          { label: 'G-dur — 1 diezas',    run: function(){ return addKey('G');  } },
+          { label: 'D-dur — 2 diezai',    run: function(){ return addKey('D');  } },
+          { label: 'A-dur — 3 diezai',    run: function(){ return addKey('A');  } },
+          { label: 'F-dur — 1 bemolis',   run: function(){ return addKey('F');  } },
+          { label: 'B♭-dur — 2 bemoliai', run: function(){ return addKey('Bb'); } },
+          { label: 'E♭-dur — 3 bemoliai', run: function(){ return addKey('Eb'); } }
+        ], true);
+        timeMenu = buildMenu('time-menu', 'Laikas', [
+          { label: '4/4 — keturios ketvirtinės', run: function(){ return setTime('4/4'); } },
+          { label: '3/4 — valsas',               run: function(){ return setTime('3/4'); } },
+          { label: '2/4 — maršas',               run: function(){ return setTime('2/4'); } },
+          { label: '6/8',                        run: function(){ return setTime('6/8'); } },
+          { label: '3/8',                        run: function(){ return setTime('3/8'); } }
+        ], true);
+        tempoMenu = buildMenu('tempo-menu', 'Tempas', [
+          { label: 'Labai lėtai — 60',    run: function(){ return setTempo(60);  } },
+          { label: 'Lėtai — 80',          run: function(){ return setTempo(80);  } },
+          { label: 'Vidutiniškai — 100',  run: function(){ return setTempo(100); } },
+          { label: 'Greitai — 130',       run: function(){ return setTempo(130); } },
+          { label: 'Labai greitai — 160', run: function(){ return setTempo(160); } }
+        ], true);
+      }
+
+      var notesTool = document.getElementById('notes-tool');
+
+      // Build a note-editing toolbar (durations, accidentals, articulations, ...)
+      function buildNoteToolbar(top) {
+        if (document.getElementById('note-toolbar')) return;
+        function inst() { return window.Smo.SuiApplication.instance; }
+        function kc() { return inst().keyCommands; }
+        function selNote() {
+          var s = inst().view.tracker.selections;
+          return (s && s.length && s[0].note) ? s[0].note : null;
+        }
+        // Halve/double splits a note into 2 and selects BOTH halves, so without
+        // this the selection (and edits) would keep doubling.  Collapse back to
+        // just the first selected note between steps.
+        function collapseSelection() {
+          var t = inst().view.tracker;
+          if (t.selections && t.selections.length > 1) {
+            t._replaceSelection(t.selections[0].selector, true);
+          }
+        }
+        // The engine only doubles/halves duration, so reach an absolute value by
+        // stepping on a SINGLE note (the remainder of the bar becomes rests).
+        async function setDur(target) {
+          var g = 0;
+          while (selNote() && selNote().dots > 0 && g < 4) { await kc().undotDuration(); collapseSelection(); g++; }
+          g = 0;
+          var c = selNote() ? selNote().tickCount : null;
+          while (c !== null && c !== target && g < 8) {
+            if (c > target) { await kc().halveDuration(); } else { await kc().doubleDuration(); }
+            collapseSelection();
+            var n = selNote();
+            var t = n ? n.tickCount : null;
+            if (t === c) break;
+            c = t; g++;
+          }
+        }
+        var groups = [
+          [ { t: '𝅝', c: 'nt-dur', title: 'Sveikoji nata', fn: function(){ return setDur(4096); } },
+            { t: '𝅗𝅥', c: 'nt-dur', title: 'Pusinė', fn: function(){ return setDur(2048); } },
+            { t: '♩',       c: 'nt-dur', title: 'Ketvirtinė', fn: function(){ return setDur(1024); } },
+            { t: '♪',       c: 'nt-dur', title: 'Aštuntinė', fn: function(){ return setDur(512); } },
+            { t: '𝅘𝅥𝅯', c: 'nt-dur', title: 'Šešioliktinė', fn: function(){ return setDur(256); } },
+            { t: '𝅘𝅥𝅰', c: 'nt-dur', title: '32-oji', fn: function(){ return setDur(128); } } ],
+          [ { i: 'icon-duration_grow_dot', title: 'Taškas', fn: function(){ return kc().dotDuration(); } } ],
+          [ { i: 'icon-rest', title: 'Pauzė', fn: function(){ return kc().makeRest(); } } ],
+          [ { i: 'icon-flat',  title: 'Bemolis (žemyn pustoniu)', fn: function(){ return kc().transposeDown(); } },
+            { i: 'icon-sharp', title: 'Diezas (aukštyn pustoniu)', fn: function(){ return kc().transposeUp(); } },
+            { i: 'icon-accident', title: 'Enharmonika', fn: function(){ return kc().toggleEnharmonic(); } } ],
+          [ { i: 'icon-accent', title: 'Akcentas', fn: function(){ return kc().addRemoveAccent(); } },
+            { i: 'icon-staccato_above', title: 'Stakatas', fn: function(){ return kc().addRemoveStaccato(); } },
+            { i: 'icon-tenuto_above', title: 'Tenuto', fn: function(){ return kc().addRemoveTenuto(); } },
+            { i: 'icon-marcato_above', title: 'Markatas', fn: function(){ return kc().addRemoveMarcato(); } } ],
+          [ { i: 'icon-triplet', title: 'Trioletas', fn: function(){ return kc().makeTupletCommand(3); } },
+            { i: 'icon-no_tuplet', title: 'Panaikinti trioletą', fn: function(){ return kc().unmakeTuplet(); } } ]
+        ];
+        var bar = document.createElement('div');
+        bar.id = 'note-toolbar';
+        groups.forEach(function(grp, gi) {
+          if (gi > 0) { var sep = document.createElement('span'); sep.className = 'nt-sep'; bar.appendChild(sep); }
+          grp.forEach(function(b) {
+            var btn = document.createElement('button');
+            btn.className = 'nt-btn' + (b.c ? (' ' + b.c) : '');
+            btn.title = b.title || '';
+            if (b.i) { var sp = document.createElement('span'); sp.className = 'icon ' + b.i; btn.appendChild(sp); }
+            else { btn.textContent = b.t; }
+            btn.addEventListener('click', function(e) {
+              e.preventDefault();
+              try { Promise.resolve(b.fn()).catch(function(){}); } catch (err) {}
+            });
+            bar.appendChild(btn);
+          });
+        });
+        top.appendChild(bar);
+      }
+
+      // Move custom tools into the top control bar once it is built.
+      function placeInControlsTop(attempt) {
+        var top = document.getElementById('controls-top');
+        if (top) {
+          top.insertBefore(notesTool, top.firstChild);
+          buildNoteToolbar(top);
+        } else if ((attempt || 0) < 40) {
+          setTimeout(function() { placeInControlsTop((attempt || 0) + 1); }, 100);
+        }
+      }
+
+      // The app builds the sidebar via $(controls-left).html(''), which wipes the
+      // container.  So wait until it has been populated with the menu buttons
+      // before appending the background selector, otherwise it gets erased.
+      function placeBgSelector(attempt) {
+        var left = document.getElementById('controls-left');
+        if (left && left.children.length) {
+          if (timeMenu) { left.insertBefore(timeMenu, left.firstChild); }
+          if (tempoMenu) { left.insertBefore(tempoMenu, left.firstChild); }
+          if (keyMenu) { left.insertBefore(keyMenu, left.firstChild); }
+          left.insertBefore(selector, left.firstChild);
+        } else if ((attempt || 0) < 80) {
+          setTimeout(function() { placeBgSelector((attempt || 0) + 1); }, 100);
+        }
+      }
+
+      // Move the piano left-control buttons (8va, transpose, add note, ...) into
+      // the notes-tool container once the piano has been built.
+      function moveKeyLeftCtrl(attempt) {
+        var src = document.querySelector('.key-left-ctrl');
+        if (src && src.children.length) {
+          // These three are dropped from the simplified UI.
+          var drop = { 'piano-xpose-up': 1, 'piano-xpose-down': 1, 'piano-add-note': 1 };
+          while (src.firstChild) {
+            var ch = src.firstChild;
+            if (ch.nodeType === 1 && drop[ch.id]) { src.removeChild(ch); }
+            else { notesTool.appendChild(ch); }
+          }
+        } else if ((attempt || 0) < 60) {
+          setTimeout(function() { moveKeyLeftCtrl((attempt || 0) + 1); }, 100);
+        }
+      }
+
+      // Scale the music down so the 2 rows always fit in the space left between
+      // the (now taller) top control bar and the piano - no scroll, no overlap.
+      // Must update partInfo.layoutManager too, else _mapPartFormatting() resets it.
+      function fitMusic(attempt) {
+        attempt = attempt || 0;
+        var I = window.Smo && window.Smo.SuiApplication && window.Smo.SuiApplication.instance;
+        var sr = document.getElementById('smo-scroll-region');
+        var piano = document.querySelector('.piano-container');
+        var staves = document.querySelectorAll('.vf-stave');
+        if (!I || !I.view || !sr || !piano || !staves.length) {
+          if (attempt < 80) setTimeout(function(){ fitMusic(attempt + 1); }, 150);
+          return;
+        }
+        var tops = [].map.call(staves, function(s){ return s.getBoundingClientRect().top; });
+        var bots = [].map.call(staves, function(s){ return s.getBoundingClientRect().bottom; });
+        var musicTop = Math.min.apply(null, tops);
+        var musicBottom = Math.max.apply(null, bots);
+        var clearance = piano.getBoundingClientRect().top - 12; // keep music above the piano
+        // Already fits: done. Remap the piano keys to their final positions so
+        // clicking a key registers (the initial _mapKeys ran before layout settled).
+        if (musicBottom <= clearance) { remapPianoKeys(); return; }
+        // Shrink with zoomScale: it scales the whole render uniformly WITHOUT
+        // changing the logical layout, so the 2 systems never split onto 2 pages.
+        var span = musicBottom - musicTop;
+        var targetSpan = clearance - musicTop;
+        if (span <= 0 || targetSpan <= 0) return;
+        var gl = I.view.score.layoutManager.getGlobalLayout();
+        gl.zoomScale = Math.max(0.2, gl.zoomScale * (targetSpan / span) * 0.97);
+        I.view.score.staves.forEach(function(st){
+          if (st.partInfo && st.partInfo.layoutManager) { st.partInfo.layoutManager.updateGlobalLayout(gl); }
+        });
+        I.view.setGlobalLayout(gl);
+        // iterate until it fits (positions shift as the render scales)
+        if (attempt < 5) { setTimeout(function(){ fitMusic(attempt + 1); }, 450); }
+        else { remapPianoKeys(); }
+      }
+
+      // Re-map the piano key hit-boxes to their current screen positions.  The
+      // piano caches key boxes on first render (before fonts/layout settle), so a
+      // resize event (bound to SuiPiano.handleResize) refreshes them.
+      function remapPianoKeys() {
+        try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+      }
+
+      // The app's native left menus (Kalba, Partitūra, ...) are dropped at a
+      // fixed top-left spot.  Reposition them to fly out next to their button,
+      // like the simple dropdowns (the dark styling is done in CSS).
+      var lastNavRect = null;
+      document.addEventListener('click', function (e) {
+        var li = (e.target && e.target.closest) ? e.target.closest('#controls-left li.nav-item') : null;
+        if (li && !li.querySelector('.simple-dropdown')) {
+          lastNavRect = li.getBoundingClientRect();
+        }
+      }, true);
+      function wireNativeMenus(attempt) {
+        var mc = document.querySelector('.menuContainer');
+        if (!mc) {
+          if ((attempt || 0) < 80) { setTimeout(function(){ wireNativeMenus((attempt || 0) + 1); }, 150); }
+          return;
+        }
+        new MutationObserver(function () {
+          var el = mc.querySelector('ul.menuElement');
+          if (el && lastNavRect) {
+            el.style.top = (lastNavRect.top + window.scrollY) + 'px';
+            el.style.left = (lastNavRect.right + window.scrollX + 6) + 'px';
+          }
+        }).observe(mc, { childList: true, subtree: true });
+      }
+
+      // Build the right-hand panel with 3 collapsible sections:
+      //   Žaidimai  -> game cards (icon + name)
+      //   Testai    -> plain test names
+      //   Pamokėlės -> plain lesson names
+      // It mirrors the size/look of the left sidebar and is appended to .media
+      // so it sits on the far right of the workspace.
+      function buildRightPanel(attempt) {
+        var media = document.querySelector('.media');
+        if (!media) {
+          if ((attempt || 0) < 80) { setTimeout(function(){ buildRightPanel((attempt || 0) + 1); }, 100); }
+          return;
+        }
+        if (document.getElementById('controls-right')) { return; }
+
+        var panel = document.createElement('div');
+        panel.id = 'controls-right';
+        panel.className = 'd-flex flex-column flex-shrink-0 p-3';
+        var ul = document.createElement('ul');
+        ul.className = 'nav nav-pills flex-column mb-auto';
+        panel.appendChild(ul);
+
+        // One collapsible section. bodyBuilder(body) fills the expandable area.
+        function section(title, bodyBuilder) {
+          var li = document.createElement('li');
+          li.className = 'nav-item right-acc';
+          var btn = document.createElement('button');
+          btn.className = 'nav-link link-body-emphasis hover-text right-acc-btn';
+          btn.innerHTML = '<span class="left-text"><span class="text-span">' + title + '</span></span>';
+          var body = document.createElement('div');
+          body.className = 'right-acc-body';
+          bodyBuilder(body);
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            li.classList.toggle('open');
+          });
+          li.appendChild(btn);
+          li.appendChild(body);
+          ul.appendChild(li);
+        }
+
+        // Rainbow accent stripe, same solfège palette used across the kids games
+        // (Do-red, Re-orange, Mi-yellow, Fa-green, Sol-blue, La-purple, Si-pink).
+        var ACCENTS = ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#ec407a'];
+        var accentIx = 0;
+        function nextAccent() { var c = ACCENTS[accentIx % ACCENTS.length]; accentIx++; return c; }
+
+        // --- Žaidimai: rectangular cards with an icon, each linking to a real page ---
+        section('Žaidimai', function (body) {
+          var grid = document.createElement('div');
+          grid.className = 'game-grid';
+          var games = [
+            { icon: '🎹', label: 'Rašyti natas',      href: 'rasymas.html' },
+            { icon: '💧', label: 'Klausos lašas',      href: 'lasas.html' },
+            { icon: '🎧', label: 'Klausymo žaidimai',  href: 'klausa.html' },
+            { icon: '🥁', label: 'Ritmo žaidimai',     href: 'ritmas.html' },
+            { icon: '🎵', label: 'Melodijos žaidimas', href: 'melodija.html' },
+            { icon: '🐄', label: 'Gyvūnų muzika',      href: 'gyvunai.html' },
+            { icon: '🧠', label: 'Natų atmintis',      href: 'atmintis.html' }
+          ];
+          games.forEach(function (g) {
+            var card = document.createElement('button');
+            card.className = 'game-card';
+            card.style.setProperty('--card-accent', nextAccent());
+            card.innerHTML = '<span class="game-ico">' + g.icon + '</span>' +
+                             '<span class="game-name">' + g.label + '</span>';
+            card.addEventListener('click', function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              location.href = g.href;
+            });
+            grid.appendChild(card);
+          });
+          body.appendChild(grid);
+        });
+
+        // --- Testai: opens the tests page (it has its own menu of 3 quizzes) ---
+        section('Testai', function (body) {
+          [
+            { icon: '📝', name: 'Testai', sub: 'Natos, ritmas, garsai', href: 'testai.html' }
+          ].forEach(function (t) {
+            var row = document.createElement('button');
+            row.className = 'right-text-row';
+            row.style.setProperty('--card-accent', nextAccent());
+            row.innerHTML = '<span class="row-ico">' + t.icon + '</span>' +
+              '<span class="row-text"><span class="row-name">' + t.name + '</span>' +
+              '<span class="row-sub">' + t.sub + '</span></span>';
+            row.addEventListener('click', function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              location.href = t.href;
+            });
+            body.appendChild(row);
+          });
+        });
+
+        // --- Pamokėlės: opens the lessons page (it has its own menu of lessons) ---
+        section('Pamokėlės', function (body) {
+          [
+            { icon: '📚', name: 'Pamokėlės', sub: 'Trumpos pamokos su garsais', href: 'pamokeles.html' }
+          ].forEach(function (t) {
+            var row = document.createElement('button');
+            row.className = 'right-text-row';
+            row.style.setProperty('--card-accent', nextAccent());
+            row.innerHTML = '<span class="row-ico">' + t.icon + '</span>' +
+              '<span class="row-text"><span class="row-name">' + t.name + '</span>' +
+              '<span class="row-sub">' + t.sub + '</span></span>';
+            row.addEventListener('click', function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              location.href = t.href;
+            });
+            body.appendChild(row);
+          });
+        });
+
+        media.appendChild(panel);
+
+        // The piano keyboard is fixed to the bottom of the viewport, so an
+        // expanded accordion section (esp. the 7-card Žaidimai grid) must
+        // never grow tall enough to render underneath it - it would still be
+        // visible but the piano's SVG sits on top and swallows the clicks.
+        // Compute the real gap between the panel and the piano instead of
+        // guessing a fixed pixel value.
+        function fitPanelHeight() {
+          var piano = document.querySelector('.piano-container');
+          var panelTop = panel.getBoundingClientRect().top;
+          var pianoRect = piano ? piano.getBoundingClientRect() : null;
+          var pianoTop = (pianoRect && pianoRect.height > 0) ? pianoRect.top : window.innerHeight;
+          var avail = pianoTop - panelTop - 12;
+          panel.style.maxHeight = Math.max(160, avail) + 'px';
+        }
+        fitPanelHeight();
+        window.addEventListener('resize', fitPanelHeight);
+        if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fitPanelHeight); }
+        window.addEventListener('load', fitPanelHeight);
+      }
+
+      function initTools() {
+        buildLessonMenus();
+        placeInControlsTop(0);
+        placeBgSelector(0);
+        buildRightPanel(0);
+        moveKeyLeftCtrl(0);
+        wireNativeMenus(0);
+        setTimeout(function(){ fitMusic(0); }, 2000);
+        // Backstop remap once everything has settled.
+        setTimeout(remapPianoKeys, 5000);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTools);
+      } else {
+        initTools();
+      }
+
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function() {
+        dropdown.classList.remove('open');
+        document.querySelectorAll('.simple-dropdown.open').forEach(function (m) { m.classList.remove('open'); });
+      });
+
+      // Background (season video / photo) orbs are wired centrally by
+      // seasonBg.js via [data-theme-orb] delegation — just close the
+      // dropdown after a pick.
+      document.querySelectorAll('#bg-dropdown [data-theme-orb]').forEach(function (opt) {
+        opt.addEventListener('click', function () { dropdown.classList.remove('open'); });
+      });
+    })();
+  </script>
   <!-- audio crossOrigin="anonymous" id="sample" src="https://smoosic.github.io/Smoosic/build/sound/piano_middle_C.mp3" / -->
 <div id="smoo">
   <div>

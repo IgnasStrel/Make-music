@@ -111,6 +111,7 @@ export class RibbonButtons {
         view: this.view,
         ctor: buttonData.ctor,
         id: buttonData.id,
+        anchorElement: buttonElement,
         startPromise: null,
         tracker: this.view.tracker
       };

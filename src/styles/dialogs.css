@@ -206,7 +206,8 @@ button.nav-link {
 }
 .attributeModal {
 	position:absolute;
-  min-width:380px;
+  width: fit-content;
+  min-width: 200px !important;  color: #000 !important;  max-width: fit-content;
 	background: #fff;
 	border-style: groove;
 	border-width: 2px;
@@ -214,6 +215,53 @@ button.nav-link {
   box-shadow: 9px 9px 9px rgba(127, 127, 127, 0.4);
   border-radius: 4px;
 	padding: 3px;
+}
+
+.smoControlContainer {
+  display: inline !important;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+}
+
+.smoControlContainer .smoControl {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 4px;
+  min-width: 0;
+}
+
+.smoControlContainer .smoControl label {
+  font-size: 0.82em;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.smoControlContainer .rockerControl input[type="text"],
+.smoControlContainer .rockerControl .rockerInput {
+  width: 25px !important;
+  padding: 1px 2px;
+  text-align: center;
+}
+
+.smoControlContainer .dropdownControl .btn.dropdown-toggle {
+  min-width: 25px !important;
+  margin-left: 0;
+  margin-right: 2px;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+}
+
+.smoControlContainer .rockerControl .increment,
+.smoControlContainer .rockerControl .decrement {
+  display: none !important;
+}
+
+.smoControlContainer .text-input {
+  display: none !important;
 }
 
 .attributeModal .buttonContainer {

@@ -1,0 +1,67 @@
+{
+  "name": "musication-desktop",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Desktop app wrapper for the MUSICATION kids' notation & ear-training games",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "release:win": "electron-builder --win --publish always"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.musication.app",
+    "productName": "MUSICATION",
+    "directories": {
+      "output": "dist-installer"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "../build",
+        "to": "build",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icon.png",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "icon.png"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "IgnasStrel",
+      "repo": "Make-music"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}

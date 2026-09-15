@@ -259,7 +259,7 @@ export class SuiApplication {
     // Initialize the midi writer library
     _MidiWriter();
     const queryString = new QueryParser();
-    const languageSelect = queryString.pairs.find((x) => x['language']) ?? {'language': 'en'}
+    const languageSelect = queryString.pairs.find((x) => x['language']) ?? {'language': 'lt'}
     if (this.config.mode === 'translate') {
       this._deferCreateTranslator();
       return;

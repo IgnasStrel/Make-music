@@ -96,7 +96,7 @@
 }
 #link-hdr {
   position: relative;
-  background: #aaa;
+  background: #fff;
   display: block;
   width: 100%;
   padding-left: 8px;
@@ -108,7 +108,7 @@
   position: absolute;
   right: 8px;
   border: 0;
-  background: #aaa;
+  background: #fff;
   color: #990808;
   cursor: pointer;
 }
@@ -140,7 +140,7 @@ h1 {
 }
 
 .dom-container {
-	background-color:#999;
+  background-color:#fff;
 }
 .bold-italic {
   font-weight: bold;
@@ -266,7 +266,7 @@ body.printing .media div.d-flex
         padding-top: 0;
         position:relative;
         padding-left: 0;
-        background: #999;
+      background: #fff;
     }
     iframe {
         border:0;
@@ -310,7 +310,7 @@ body.printing .printFrame {
   .workspace {
     padding-top: 2px;
     position:relative;
-    background: #999;
+    background: #fff;
     display:flex;
     flex-flow:row wrap;
   }
@@ -359,4 +359,52 @@ body.printing .printFrame {
   top:0;
   left:0;
   z-index:12;
+}
+
+/* Force flat white UI theme with no borders, including controls/buttons. */
+html,
+body,
+.workspace,
+.dom-container,
+.media,
+.musicRelief,
+.musicContainer,
+.control-bar,
+.controls-top,
+.controls-left,
+.attributeDialog,
+.attributeModal,
+.menuElement,
+.modal-content,
+#link-hdr,
+#link-hdr button,
+.piano-container,
+.piano-keys {
+  background: #fff !important;
+}
+
+button,
+.btn,
+.nav-link,
+input,
+select,
+textarea,
+.controls-top button,
+.controls-left button,
+.menuElement button,
+.piano-container button {
+  background: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.workspace *,
+.controls-top *,
+.controls-left *,
+.attributeDialog *,
+.attributeModal *,
+.menuElement *,
+.piano-container * {
+  border-width: 0 !important;
+  border-style: none !important;
 }

@@ -1,0 +1,7 @@
+{
+  "cleanUrls": true,
+  "directoryListing": false,
+  "redirects": [
+    { "source": "/", "destination": "/website/", "type": 302 }
+  ]
+}

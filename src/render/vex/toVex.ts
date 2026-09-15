@@ -15,6 +15,7 @@ import { StaffModifierBase, SmoStaffHairpin, SmoSlur, SmoTie, SmoStaffTextBracke
 import { toVexBarlineType, vexBarlineType, vexBarlinePosition, toVexBarlinePosition, leftConnectorVx, rightConnectorVx,
   toVexVolta, getVexChordBlocks } from '../../render/vex/smoAdapter';
 import {SmoTuplet} from "../../smo/data/tuplet";
+import { colorForPitch } from '../../smo/data/noteColors';
 
 
 
@@ -270,6 +271,10 @@ function createStaveNote(renderInfo: VexNoteRenderInfo, key: string, row: number
     strs.push(`${id}.setStyle({ fillStyle: "#115511" });`);
   } else if (smoNote.isHidden()) {
     strs.push(`${id}.setStyle({ fillStyle: "#ffffff00" });`);
+  } else if (!smoNote.isRest() && smoNote.pitches.length) {
+    // Kids' notation aid: color the notehead by pitch (Do=red .. Si=pink),
+    // matching the palette used across the ear-training mini-games.
+    strs.push(`${id}.setStyle({ fillStyle: '${colorForPitch(smoNote.pitches[0].letter)}' });`);
   }
   if (smoNote.noteType === 'n') {
     smoNote.pitches.forEach((pitch, ix) => {

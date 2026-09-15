@@ -13,6 +13,7 @@
     "@types/qunit": "^2.19.11",
     "midi-parser-js": "^4.0.4",
     "midi-writer-js": "^1.7.5",
+    "phaser": "^4.2.1",
     "ts-loader": "^9.2.5",
     "typedoc": "^0.25.0",
     "typescript": "^5.2.2",
@@ -27,7 +28,9 @@
     "test": "exit 0",
     "build": "node ./build/build.js",
     "types": "node ./build/build.js types",
-    "typedoc": "node ./node_modules/typedoc/bin/typedoc"
+    "typedoc": "node ./node_modules/typedoc/bin/typedoc",
+    "serve": "serve build/html",
+    "site": "serve ."
   },
   "repository": {
     "type": "git",

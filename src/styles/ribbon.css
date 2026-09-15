@@ -15,6 +15,42 @@
   align-content: center;
 }
 
+.piano-ctrl-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+}
+.piano-ctrl-bar-buttons {
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+.piano-ctrl-bar.expanded .piano-ctrl-bar-buttons {
+  display: flex;
+}
+.piano-ctrl-bar button,
+.piano-ctrl-toggle {
+  width: 35px;
+  height: 40px;
+  border: 0;
+  background: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.piano-ctrl-bar button:hover,
+.piano-ctrl-toggle:hover {
+  opacity: 0.7;
+}
+.piano-ctrl-toggle.expanded {
+  background: #ddd;
+}
+.piano-ctrl-bar button.close-piano {
+  color: #c00;
+}
+
 .control-bar .titleText {
   display: flex;
   flex: 60px;

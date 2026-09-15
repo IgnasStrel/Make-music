@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>MUSICATION — Rašyk natas 🎵</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Shared kids engine (mascot, stars, audio helpers) - loaded before our
+       own <style> below so any of its rules our markup happens to share a
+       class name with (only .topbar) get cleanly overridden by us. -->
+  <link rel="stylesheet" href="../styles/kids.css">
+  <style>
+    /* kids.css's .topbar sets a max-width meant for its own centered layout;
+       neutralize that here so our (different) topbar keeps its own sizing. */
+    .topbar { width: auto !important; gap: 0 !important; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow-x: hidden; }
+
+    :root {
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --ink: #1f2430;
+      --ink-soft: #626b7a;
+      --accent: #2f6fed;
+      --accent-dark: #1d4fc4;
+      --panel: rgba(255,255,255,0.97);
+      --panel-border: rgba(15,23,42,0.09);
+    }
+
+    body {
+      font-family: var(--font);
+      background: #222;
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+      /* kids.css (loaded above for the mascot) sets its own body padding/gap
+         meant for its centered-column layout - reset those back to ours. */
+      padding: 0; gap: 0;
+    }
+
+    /* ── Page shell ── */
+    .page {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 2000px;
+      padding: 8px 10px 170px;
+      display: flex; flex-direction: column; gap: 8px;
+      min-height: 100vh;
+    }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; }
+    .back-link {
+      text-decoration: none; color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px; padding: 7px 14px;
+      font-size: 14px; font-weight: 600; font-family: var(--font);
+      box-shadow: 0 1px 3px rgba(15,23,42,0.08);
+      transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+    }
+    .back-link:hover { background: #fff; border-color: rgba(15,23,42,0.18); box-shadow: 0 2px 6px rgba(15,23,42,0.12); }
+
+    /* ── Main area: just the center content ── */
+    .main-area {
+      display: flex; gap: 12px; align-items: flex-start; flex: 1;
+      padding-left: 86px; /* leave room for fixed left circles */
+    }
+
+    /* ── Left column: 4 settings circles — fixed to left edge of screen ── */
+    .left-col {
+      position: fixed;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 200;
+    }
+
+    .circle-wrap { position: relative; }
+
+    .scircle {
+      width: 62px; height: 62px; border-radius: 14px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.10);
+      transition: box-shadow 0.12s, border-color 0.12s, background 0.12s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .scircle .ico { font-size: 21px; line-height: 1; }
+    .scircle .lbl { font-size: 10px; font-weight: 600; color: var(--ink-soft); font-family: var(--font); }
+    .scircle:hover { box-shadow: 0 4px 14px rgba(15,23,42,0.16); border-color: rgba(15,23,42,0.18); }
+    .scircle.open {
+      border-color: var(--accent);
+      background: rgba(47,111,237,0.10);
+      box-shadow: 0 4px 16px rgba(47,111,237,0.30);
+    }
+    .scircle.open .lbl { color: var(--accent-dark); }
+
+    /* Popup opens to the RIGHT of the circle */
+    .popup {
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%; transform: translateY(-50%);
+      background: #fff;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px; padding: 8px;
+      z-index: 300;
+      box-shadow: 0 8px 28px rgba(15,23,42,0.18);
+      display: none; flex-direction: column; gap: 3px;
+      min-width: 148px;
+      white-space: nowrap;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .popup.open { display: flex; }
+    .pop-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--ink-soft); text-align: center;
+      margin-bottom: 4px; font-family: var(--font);
+    }
+    .pop-btn {
+      background: transparent;
+      border: 1px solid transparent; border-radius: 7px;
+      padding: 7px 10px;
+      font-family: var(--font); font-size: 13.5px; font-weight: 500; color: var(--ink);
+      cursor: pointer; text-align: left; transition: 0.12s;
+      white-space: nowrap;
+    }
+    .pop-btn:hover { background: rgba(47,111,237,0.08); }
+    .pop-btn.sel { border-color: var(--accent); background: rgba(47,111,237,0.12); color: var(--accent-dark); font-weight: 600; }
+
+    /* ── Lesson library modal ── */
+    .lib-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(15,23,42,0.45);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .lib-overlay[hidden] { display: none; }
+    .lib-modal {
+      background: #fff; border-radius: 16px; padding: 20px;
+      width: 100%; max-width: 420px; max-height: 80vh;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: 0 20px 50px rgba(15,23,42,0.35);
+      font-family: var(--font);
+    }
+    .lib-modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 17px; font-weight: 700; color: var(--ink);
+    }
+    .lib-close {
+      border: none; background: transparent; font-size: 22px; line-height: 1;
+      color: var(--ink-soft); cursor: pointer;
+    }
+    .lib-close:hover { color: var(--accent-dark); }
+    .lib-search {
+      border: 1.5px solid var(--panel-border); border-radius: 10px;
+      padding: 9px 12px; font-family: var(--font); font-size: 14px;
+    }
+    .lib-search:focus { outline: none; border-color: var(--accent); }
+    .lib-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .lib-empty { color: var(--ink-soft); font-size: 14px; text-align: center; padding: 16px 0; }
+    .lib-row {
+      display: flex; align-items: center; gap: 10px;
+      border: 1px solid var(--panel-border); border-radius: 10px; padding: 10px 12px;
+    }
+    .lib-row-info { flex: 1; min-width: 0; }
+    .lib-row-title { font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lib-row-date { font-size: 12px; color: var(--ink-soft); }
+    .lib-row-btn {
+      border: none; border-radius: 7px; padding: 7px 10px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: var(--font);
+    }
+    .lib-row-open { background: rgba(47,111,237,0.12); color: var(--accent-dark); }
+    .lib-row-open:hover { background: rgba(47,111,237,0.2); }
+    .lib-row-del { background: rgba(192,57,43,0.10); color: #c0392b; }
+    .lib-row-del:hover { background: rgba(192,57,43,0.18); }
+
+    /* ── Center column: note-bar + staff ── */
+    .center-col {
+      flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    }
+
+    /* Note type bar */
+    .note-bar {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px; padding: 6px 10px;
+      display: flex; gap: 2px; align-items: center; justify-content: center;
+      box-shadow: 0 2px 10px rgba(15,23,42,0.08); flex-wrap: nowrap;
+    }
+    .nbar-btn {
+      min-width: 42px; height: 54px;
+      border: 1px solid transparent; background: transparent;
+      border-radius: 6px; cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px;
+      padding: 0 4px;
+      transition: background 0.12s, border-color 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nbar-btn:hover { background: rgba(15,23,42,0.05); }
+    .nbar-btn.active { border-color: var(--accent); background: rgba(47,111,237,0.12); }
+    .nbar-btn .nl { font-size: 10px; font-weight: 600; color: var(--ink-soft); font-family: var(--font); }
+    .nbar-btn.active .nl { color: var(--accent-dark); }
+    .nbar-sep { width: 1px; height: 36px; background: rgba(15,23,42,0.10); margin: 0 3px; flex-shrink: 0; }
+
+    /* Staff panel */
+    .staff-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 16px 20px 14px;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.10);
+      overflow-x: auto;
+    }
+    /* SVG is vector, so scaling it up to fill the wider page stays crisp (HD)
+       instead of stretching a raster image - the viewBox keeps everything
+       (staff, clef, notes) proportional at any size. */
+    #staffSvg, #staffSvg2 { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 130; min-width: 900px; }
+    .staff-actions { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+    .sbtn {
+      font-family: var(--font); font-size: 14px; font-weight: 600;
+      padding: 9px 20px; border: 1px solid transparent; border-radius: 8px;
+      cursor: pointer; transition: background 0.13s, border-color 0.13s, transform 0.08s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .sbtn:hover { transform: translateY(-1px); }
+    .sbtn:active { transform: translateY(1px); }
+    .sbtn-play  { background: var(--accent); color: #fff; box-shadow: 0 1px 3px rgba(47,111,237,0.4); }
+    .sbtn-play:hover { background: var(--accent-dark); box-shadow: 0 3px 8px rgba(47,111,237,0.45); }
+    .sbtn-del   { background: #fff; color: var(--ink); border-color: var(--panel-border); }
+    .sbtn-del:hover { background: #f4f6f9; border-color: rgba(15,23,42,0.2); }
+    .sbtn-clear { background: #fff; color: #c0392b; border-color: rgba(192,57,43,0.3); }
+    .sbtn-clear:hover { background: rgba(192,57,43,0.06); }
+
+    /* ── Piano ── */
+    .piano-wrap {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1b0e07; padding: 8px 0 4px;
+      display: flex; justify-content: center;
+      overflow-x: auto; z-index: 10;
+      box-shadow: 0 -5px 22px rgba(0,0,0,0.5);
+    }
+    .piano-inner { position: relative; display: flex; flex-shrink: 0; height: 140px; }
+
+    .wk {
+      flex-shrink: 0; height: 140px;
+      background: linear-gradient(175deg, #f6f6f2 75%, #e0e0da 100%);
+      border: 1px solid #bbb; border-radius: 0 0 8px 8px;
+      cursor: pointer;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: 5px;
+      font-size: 10px; font-weight: 700; color: #bbb; font-family: var(--font);
+      user-select: none; transition: background 0.06s, transform 0.07s;
+      transform-origin: top center;
+      box-shadow: inset 0 -3px 5px rgba(0,0,0,0.09), 2px 4px 8px rgba(0,0,0,0.28);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wk:active, .wk.lit { background: linear-gradient(175deg, #c8e4ff 75%, #a8c8ee 100%); transform: scaleY(0.97) translateY(2px); }
+
+    .bk {
+      position: absolute; top: 0; height: 86px;
+      background: linear-gradient(175deg, #3d3d3d 0%, #111 100%);
+      border-radius: 0 0 5px 5px;
+      cursor: pointer; z-index: 2;
+      transition: background 0.06s, transform 0.07s;
+      transform-origin: top center;
+      box-shadow: 2px 5px 10px rgba(0,0,0,0.5);
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .bk:active, .bk.lit { background: linear-gradient(175deg, #6090cc 0%, #336 100%); transform: scaleY(0.97) translateY(2px); }
+
+    .clef-hover-bg { transition: fill 0.15s; }
+    #clefGroupRow1:hover .clef-hover-bg,
+    #clefGroupRow2:hover .clef-hover-bg { fill: rgba(70,142,224,0.15); }
+
+    /* ── Right column: games & other activities ── */
+    .right-col {
+      width: 320px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 10px;
+      overflow-y: auto;
+    }
+    .nav-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px; padding: 16px 12px;
+      box-shadow: 0 4px 18px rgba(15,23,42,0.10);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .nav-panel-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--ink-soft); font-family: var(--font);
+      text-align: left; margin: 14px 6px 4px;
+    }
+    .nav-panel-title:first-child { margin-top: 2px; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; background: transparent;
+      border: 1px solid transparent; border-left: 4px solid var(--nav-accent, #2f6fed);
+      border-radius: 8px; padding: 11px 14px;
+      font-family: var(--font); font-size: 14.5px; font-weight: 600; color: var(--ink);
+      text-decoration: none;
+      cursor: pointer; transition: background 0.12s, transform 0.08s; user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-btn .nb-ico { font-size: 22px; line-height: 1; }
+    .nav-btn:hover { background: rgba(15,23,42,0.045); transform: translateX(2px); }
+    .nav-btn:active { transform: scale(0.99); }
+
+    /* ── Motion polish: notes pop in, panels ease in on load ── */
+    @keyframes notePop {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .note-pop { transform-box: fill-box; transform-origin: center; animation: notePop 0.28s cubic-bezier(.34,1.56,.64,1); }
+
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .note-bar, .staff-panel, .right-col .nav-panel {
+      animation: panelIn 0.4s cubic-bezier(.16,1,.3,1) both;
+    }
+    .staff-panel:nth-of-type(2) { animation-delay: 0.06s; }
+    .right-col .nav-panel { animation-delay: 0.1s; }
+  </style>
+</head>
+<body>
+
+
+
+
+<div class="page">
+  <div class="topbar">
+    <span class="back-link" style="cursor:default;">🎵 MUSICATION</span>
+    <button class="back-link" id="btnNew" style="border:none;background:none;cursor:pointer;">🆕 Nauja</button>
+  </div>
+
+  <div class="main-area">
+
+    <!-- ── Center: note-bar + staff ── -->
+    <div class="center-col">
+
+      <!-- Note type bar -->
+      <div class="note-bar" id="noteBar">
+
+        <!-- Whole -->
+        <button class="nbar-btn" data-type="whole">
+          <svg width="36" height="26" viewBox="0 0 36 26">
+            <ellipse cx="18" cy="17" rx="14" ry="8.5" fill="none" stroke="#333" stroke-width="3"/>
+          </svg>
+          <span class="nl">visa</span>
+        </button>
+
+        <!-- Half -->
+        <button class="nbar-btn" data-type="half">
+          <svg width="32" height="44" viewBox="0 0 32 44">
+            <ellipse cx="12" cy="34" rx="11" ry="7" fill="none" stroke="#333" stroke-width="3" transform="rotate(-12 12 34)"/>
+            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
+          </svg>
+          <span class="nl">pusė</span>
+        </button>
+
+        <!-- Quarter (default active) -->
+        <button class="nbar-btn active" data-type="quarter">
+          <svg width="32" height="44" viewBox="0 0 32 44">
+            <ellipse cx="12" cy="34" rx="11" ry="7" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 12 34)"/>
+            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
+          </svg>
+          <span class="nl">ketv</span>
+        </button>
+
+        <!-- Eighth -->
+        <button class="nbar-btn" data-type="eighth">
+          <svg width="36" height="44" viewBox="0 0 36 44">
+            <ellipse cx="11" cy="34" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 34)"/>
+            <line x1="21" y1="32" x2="21" y2="5" stroke="#333" stroke-width="2.8"/>
+            <path d="M21 5 C33 9 35 21 26 29" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+          <span class="nl">ašt</span>
+        </button>
+
+        <!-- Sixteenth -->
+        <button class="nbar-btn" data-type="sixteenth">
+          <svg width="36" height="50" viewBox="0 0 36 50">
+            <ellipse cx="11" cy="42" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 42)"/>
+            <line x1="21" y1="40" x2="21" y2="4" stroke="#333" stroke-width="2.8"/>
+            <path d="M21 4 C33 8 34 18 25 24" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
+            <path d="M21 13 C33 17 34 27 25 33" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
+          </svg>
+          <span class="nl">16oji</span>
+        </button>
+
+        <div class="nbar-sep"></div>
+
+        <!-- Rest quarter -->
+        <button class="nbar-btn" data-type="rest-quarter">
+          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄽</span>
+          <span class="nl">pz ♩</span>
+        </button>
+
+        <!-- Rest eighth -->
+        <button class="nbar-btn" data-type="rest-eighth">
+          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄾</span>
+          <span class="nl">pz ♪</span>
+        </button>
+
+        <!-- Rest half -->
+        <button class="nbar-btn" data-type="rest-half">
+          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄼</span>
+          <span class="nl">pz ½</span>
+        </button>
+
+        <!-- Rest whole -->
+        <button class="nbar-btn" data-type="rest-whole">
+          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄻</span>
+          <span class="nl">pz v</span>
+        </button>
+
+        <div class="nbar-sep"></div>
+
+        <!-- Sharp -->
+        <button class="nbar-btn" data-acc="sharp" title="Diez (♯)">
+          <span style="font-family:serif;font-size:26px;line-height:1.1;display:block;margin-bottom:1px">♯</span>
+          <span class="nl">diez</span>
+        </button>
+
+        <!-- Flat -->
+        <button class="nbar-btn" data-acc="flat" title="Bemol (♭)">
+          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">♭</span>
+          <span class="nl">bemol</span>
+        </button>
+
+      </div><!-- /note-bar -->
+
+      <!-- Staff row 1 -->
+      <div class="staff-panel">
+        <svg id="staffSvg" height="130" viewBox="0 -24 1280 130" preserveAspectRatio="xMinYMid meet">
+          <line x1="58" y1="20" x2="1260" y2="20" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="34" x2="1260" y2="34" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="48" x2="1260" y2="48" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="62" x2="1260" y2="62" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="76" x2="1260" y2="76" stroke="#888" stroke-width="1.5"/>
+          <line x1="58"   y1="20" x2="58"   y2="76" stroke="#888" stroke-width="2"/>
+          <line x1="1260" y1="20" x2="1260" y2="76" stroke="#888" stroke-width="2"/>
+          <g id="clefGroupRow1" style="cursor:pointer">
+            <title>Spausti – keisti raktą</title>
+            <rect x="58" y="-20" width="72" height="120" rx="6" fill="rgba(0,0,0,0)" pointer-events="all" class="clef-hover-bg"/>
+            <text id="clefRow1" x="62" y="88" font-size="88" font-family="serif" fill="#555">𝄞</text>
+          </g>
+          <g id="placedNotes"></g>
+          <g id="playHead" style="display:none">
+            <rect id="playHeadRect" x="64" y="12" width="36" height="72" rx="8"
+                  fill="rgba(80,210,100,0.28)" stroke="#2ecc71" stroke-width="2.5"
+                  pointer-events="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Staff row 2 -->
+      <div class="staff-panel">
+        <svg id="staffSvg2" height="130" viewBox="0 -24 1280 130" preserveAspectRatio="xMinYMid meet">
+          <line x1="58" y1="20" x2="1260" y2="20" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="34" x2="1260" y2="34" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="48" x2="1260" y2="48" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="62" x2="1260" y2="62" stroke="#888" stroke-width="1.5"/>
+          <line x1="58" y1="76" x2="1260" y2="76" stroke="#888" stroke-width="1.5"/>
+          <line x1="58"   y1="20" x2="58"   y2="76" stroke="#888" stroke-width="2"/>
+          <line x1="1260" y1="20" x2="1260" y2="76" stroke="#888" stroke-width="2"/>
+          <g id="clefGroupRow2" style="cursor:pointer">
+            <title>Spausti – keisti raktą</title>
+            <rect x="58" y="-20" width="72" height="120" rx="6" fill="rgba(0,0,0,0)" pointer-events="all" class="clef-hover-bg"/>
+            <text id="clefRow2" x="62" y="88" font-size="88" font-family="serif" fill="#555">𝄞</text>
+          </g>
+          <g id="placedNotes2"></g>
+          <g id="playHead2" style="display:none">
+            <rect id="playHeadRect2" x="64" y="12" width="36" height="72" rx="8"
+                  fill="rgba(80,210,100,0.28)" stroke="#2ecc71" stroke-width="2.5"
+                  pointer-events="none"/>
+          </g>
+        </svg>
+        <div class="staff-actions">
+          <button class="sbtn sbtn-play"  id="btnPlay">▶ Groti</button>
+          <button class="sbtn sbtn-del"   id="btnDeleteNote" title="Pasirink natą penklinėje, tada spauski čia">✂ Natą</button>
+          <button class="sbtn sbtn-clear" id="btnClear">🗑 Išvalyti</button>
+        </div>
+      </div>
+
+    </div><!-- /center-col -->
+
+    <!-- ── Right: games & other activities ── -->
+    <div class="right-col">
+      <div class="nav-panel">
+        <div class="nav-panel-title">🎮 Žaidimai</div>
+        <a class="nav-btn" href="klausa.html" style="--nav-accent:#fb8c00"><span class="nb-ico">🎧</span>Klausymo žaidimai</a>
+        <a class="nav-btn" href="ritmas.html" style="--nav-accent:#43a047"><span class="nb-ico">🥁</span>Ritmo žaidimai</a>
+        <a class="nav-btn" href="melodija.html" style="--nav-accent:#1e88e5"><span class="nb-ico">🎵</span>Melodijos žaidimas</a>
+        <a class="nav-btn" href="atmintis.html" style="--nav-accent:#8e24aa"><span class="nb-ico">🧠</span>Natų atmintis</a>
+        <a class="nav-btn" href="gyvunai.html" style="--nav-accent:#ec407a"><span class="nb-ico">🐄</span>Gyvūnų muzika</a>
+        <a class="nav-btn" href="lasas.html" style="--nav-accent:#1e88e5"><span class="nb-ico">💧</span>Klausos lašas</a>
+        <div class="nav-panel-title">📚 Mokymasis</div>
+        <a class="nav-btn" href="pamokeles.html" style="--nav-accent:#fdd835"><span class="nb-ico">📚</span>Pamokėlės</a>
+        <a class="nav-btn" href="testai.html" style="--nav-accent:#e53935"><span class="nb-ico">📝</span>Testai</a>
+        <div class="nav-panel-title">🗂️ Pamokos</div>
+        <button class="nav-btn" id="btnSaveLesson" style="--nav-accent:#16a34a"><span class="nb-ico">💾</span>Išsaugoti</button>
+        <button class="nav-btn" id="btnOpenLibrary" style="--nav-accent:#2f6fed"><span class="nb-ico">📂</span>Mano pamokos</button>
+      </div>
+    </div><!-- /right-col -->
+
+    <!-- ── Lesson library modal ── -->
+    <div class="lib-overlay" id="libOverlay" hidden>
+      <div class="lib-modal">
+        <div class="lib-modal-head">
+          <span>📂 Mano pamokos</span>
+          <button class="lib-close" id="libClose" aria-label="Uždaryti">&times;</button>
+        </div>
+        <input type="text" id="libSearch" class="lib-search" placeholder="🔍 Ieškoti..." />
+        <div class="lib-list" id="libList"></div>
+      </div>
+    </div>
+
+  </div><!-- /main-area -->
+</div><!-- /page -->
+
+<!-- ── Fixed left: 4 settings circles ── -->
+<div class="left-col">
+
+  <!-- Circle 1: Instrumentas -->
+  <div class="circle-wrap">
+    <button class="scircle" data-popup="sound">
+      <span class="ico">🎹</span>
+      <span class="lbl">Garsas</span>
+    </button>
+    <div class="popup" id="pop-sound">
+      <div class="pop-title">Instrumentas</div>
+      <button class="pop-btn sel" data-sound="piano">🎹 Pianinas</button>
+      <button class="pop-btn" data-sound="violin">🎻 Smuikas</button>
+      <button class="pop-btn" data-sound="flute">🪈 Fleita</button>
+      <button class="pop-btn" data-sound="clarinet">🎷 Klarnetas</button>
+      <button class="pop-btn" data-sound="trumpet">🎺 Trimitas</button>
+      <button class="pop-btn" data-sound="guitar">🎸 Gitara</button>
+      <button class="pop-btn" data-sound="harp">🎼 Arfa</button>
+      <button class="pop-btn" data-sound="drums">🥁 Būgnai</button>
+      <button class="pop-btn" data-sound="marimba">🪘 Marimba</button>
+      <button class="pop-btn" data-sound="bells">🔔 Varpeliai</button>
+      <button class="pop-btn" data-sound="strings">🎻 Styginių ansamblis</button>
+      <button class="pop-btn" data-sound="organ">🎵 Vargonai</button>
+      <button class="pop-btn" data-sound="choir">🎤 Choras</button>
+      <button class="pop-btn" data-sound="childvoice">🧒 Vaikiškas balsas</button>
+    </div>
+  </div>
+
+  <!-- Circle 2: Tempas -->
+  <div class="circle-wrap">
+    <button class="scircle" data-popup="tempo">
+      <span class="ico">⏱️</span>
+      <span class="lbl">Tempas</span>
+    </button>
+    <div class="popup" id="pop-tempo" style="min-width:90px;align-items:center;">
+      <div class="pop-title">Greitis</div>
+      <span style="font-size:18px">🐇</span>
+      <input type="range" id="tempoSlider"
+             min="0.4" max="2.0" step="0.05" value="1.0"
+             orient="vertical"
+             style="-webkit-appearance:slider-vertical;appearance:slider-vertical;writing-mode:vertical-lr;direction:rtl;width:32px;height:120px;cursor:pointer;accent-color:#4a8ee0;">
+      <span style="font-size:18px">🐢</span>
+      <div id="tempoVal" style="font-size:12px;font-weight:600;color:var(--ink-soft);font-family:var(--font);margin-top:2px;text-align:center;">🚶 Vidutiniškai</div>
+    </div>
+  </div>
+
+  <!-- Circle 3: Klaviatūra -->
+  <div class="circle-wrap">
+    <button class="scircle" data-popup="keys">
+      <span class="ico">🎼</span>
+      <span class="lbl">Klavišai</span>
+    </button>
+    <div class="popup" id="pop-keys">
+      <div class="pop-title">Klaviatūra</div>
+      <button class="pop-btn sel" data-keys="3,4,5">Pilna (3 okt)</button>
+      <button class="pop-btn" data-keys="4,5">Vidurinė (2 okt)</button>
+      <button class="pop-btn" data-keys="4">Tik 4 oktava</button>
+    </div>
+  </div>
+
+  <!-- Circle 4: Pagalba / Valyti -->
+  <div class="circle-wrap">
+    <button class="scircle" data-popup="more">
+      <span class="ico">⚙️</span>
+      <span class="lbl">Daugiau</span>
+    </button>
+    <div class="popup" id="pop-more">
+      <div class="pop-title">Veiksmai</div>
+      <button class="pop-btn" id="popClear">🗑 Valyti viską</button>
+      <button class="pop-btn" id="popHelp">❓ Pagalba</button>
+    </div>
+  </div>
+
+  <!-- Circle 5: Fonas -->
+  <div class="circle-wrap">
+    <button class="scircle" data-popup="bg">
+      <span class="ico">🌅</span>
+      <span class="lbl">Fonas</span>
+    </button>
+    <div class="popup" id="pop-bg">
+      <div class="pop-title">Fonas</div>
+      <div class="bg-orb-row">
+        <button type="button" class="bg-orb" data-theme-orb="none" title="Be fono">⬜</button>
+        <button type="button" class="bg-orb" data-theme-orb="pavasaris" title="Pavasaris" style="--orb-grad:linear-gradient(135deg,#ffc1e3,#7ee8a2)">🌸</button>
+        <button type="button" class="bg-orb" data-theme-orb="vasara" title="Vasara" style="--orb-grad:linear-gradient(135deg,#ffe066,#4fc3f7)">☀️</button>
+        <button type="button" class="bg-orb" data-theme-orb="ruduo" title="Ruduo" style="--orb-grad:linear-gradient(135deg,#ffb46e,#8b5e34)">🍂</button>
+        <button type="button" class="bg-orb" data-theme-orb="ziema" title="Žiema" style="--orb-grad:linear-gradient(135deg,#eaf7ff,#4a76a8)">❄️</button>
+        <button type="button" class="bg-orb" data-theme-orb="beach" title="Paplūdimys" style="--orb-grad:linear-gradient(135deg,#4fc3f7,#0288d1)">🌊</button>
+        <button type="button" class="bg-orb" data-theme-orb="desert" title="Dykuma" style="--orb-grad:linear-gradient(135deg,#ffd27a,#c9862c)">🏜️</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /left-col -->
+
+<!-- Fixed piano keyboard -->
+<div class="piano-wrap">
+  <div class="piano-inner" id="piano"></div>
+</div>
+
+<script src="kids.js"></script>
+<script>window.SEASON_BG_NO_FLOATING = true; window.SEASON_BG_DEFAULT = 'vasara';</script>
+<script src="seasonBg.js"></script>
+<script src="lessonLibrary.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+
+  // ── Audio context ────────────────────────────────────────────────────────────
+  var PIANO_CTX  = null;
+  var PIANO_COMP = null;
+
+  function getCtx() {
+    if (!PIANO_CTX) {
+      PIANO_CTX = new (window.AudioContext || window.webkitAudioContext)();
+      PIANO_COMP = PIANO_CTX.createDynamicsCompressor();
+      PIANO_COMP.threshold.value = -14;
+      PIANO_COMP.knee.value      = 6;
+      PIANO_COMP.ratio.value     = 4;
+      PIANO_COMP.attack.value    = 0.003;
+      PIANO_COMP.release.value   = 0.22;
+      PIANO_COMP.connect(PIANO_CTX.destination);
+    }
+    return PIANO_CTX;
+  }
+
+  var PIANO_FREQ = {
+    'C2': 65.41,'Cs2': 69.30,'D2': 73.42,'Ds2': 77.78,'E2': 82.41,
+    'F2': 87.31,'Fs2': 92.50,'G2': 98.00,'Gs2':103.83,'A2':110.00,'As2':116.54,'B2':123.47,
+    'C3':130.81,'Cs3':138.59,'D3':146.83,'Ds3':155.56,'E3':164.81,
+    'F3':174.61,'Fs3':185.00,'G3':196.00,'Gs3':207.65,'A3':220.00,'As3':233.08,'B3':246.94,
+    'C4':261.63,'Cs4':277.18,'D4':293.66,'Ds4':311.13,'E4':329.63,
+    'F4':349.23,'Fs4':369.99,'G4':392.00,'Gs4':415.30,'A4':440.00,'As4':466.16,'B4':493.88,
+    'C5':523.25,'Cs5':554.37,'D5':587.33,'Ds5':622.25,'E5':659.26,
+    'F5':698.46,'Fs5':739.99,'G5':783.99,'Gs5':830.61,'A5':880.00,'As5':932.33,'B5':987.77,
+    'C6':1046.50
+  };
+
+  var BETA = 0.00018;
+
+  // ── Piano synthesis (realistic) ──────────────────────────────────────────────
+  function synthPiano(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var decayScale = Math.max(0.35, 1.0 - (freq - 130.0) / 1800.0);
+    var sustainEnd = now + durSecs;
+    var releaseEnd = now + durSecs + 0.55 * decayScale;
+
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.001, now);
+    master.gain.linearRampToValueAtTime(0.52, now + 0.006);
+    master.gain.exponentialRampToValueAtTime(0.20, now + 0.08);
+    master.gain.setValueAtTime(0.20, sustainEnd - 0.01);
+    master.gain.exponentialRampToValueAtTime(0.001, releaseEnd);
+    master.connect(comp);
+
+    var harms  = [1,    2,    3,    4,    5,    6,    7,    8   ];
+    var amps   = [1.00, 0.42, 0.20, 0.11, 0.066,0.038,0.022,0.012];
+    var dFracs = [1.00, 0.87, 0.74, 0.62, 0.52, 0.44, 0.37, 0.31];
+
+    harms.forEach(function (h, i) {
+      var osc = ctx.createOscillator();
+      var g   = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq * h * Math.sqrt(1.0 + BETA * h * h);
+      var t1 = now + (durSecs + 0.6) * dFracs[i] * decayScale;
+      g.gain.setValueAtTime(amps[i], now);
+      g.gain.exponentialRampToValueAtTime(0.001, t1);
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(t1 + 0.05);
+    });
+  }
+
+  // ── Organ synthesis ──────────────────────────────────────────────────────────
+  function synthOrgan(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.001, now);
+    master.gain.linearRampToValueAtTime(0.32, now + 0.015);
+    master.gain.setValueAtTime(0.32, now + durSecs);
+    master.gain.exponentialRampToValueAtTime(0.001, now + durSecs + 0.06);
+    master.connect(comp);
+
+    [1, 2, 3, 4].forEach(function (h, i) {
+      var osc = ctx.createOscillator();
+      var g   = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq * h;
+      g.gain.value = [1.0, 0.5, 0.25, 0.12][i];
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(now + durSecs + 0.1);
+    });
+  }
+
+  // ── Marimba/xylophone synthesis ──────────────────────────────────────────────
+  function synthMarimba(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var decay = Math.min(durSecs, 0.55);
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.6, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + decay);
+    master.connect(comp);
+
+    [1, 2, 3.5, 5.5].forEach(function (h, i) {
+      var osc = ctx.createOscillator();
+      var g   = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq * h;
+      g.gain.value = [1.0, 0.4, 0.15, 0.05][i];
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(now + decay + 0.08);
+    });
+  }
+
+  // ── Dispatch ─────────────────────────────────────────────────────────────────
+  var SOUND_TYPE   = 'piano';
+  var TEMPO_SCALE  = 1.0;
+
+  function playNote(noteName, durSecs) {
+    var freq = PIANO_FREQ[noteName];
+    if (!freq) { return; }
+    var ctx = getCtx();
+    if (ctx.state !== 'running') { ctx.resume(); }
+    if      (SOUND_TYPE === 'organ')   { synthOrgan(freq, durSecs, ctx, PIANO_COMP); }
+    else if (SOUND_TYPE === 'marimba') { synthMarimba(freq, durSecs, ctx, PIANO_COMP); }
+    else                               { synthPiano(freq, durSecs, ctx, PIANO_COMP); }
+  }
+
+  // ── Settings circles (popups) ────────────────────────────────────────────────
+  function closeAllPopups() {
+    document.querySelectorAll('.popup.open').forEach(function (p) { p.classList.remove('open'); });
+    document.querySelectorAll('.scircle.open').forEach(function (b) { b.classList.remove('open'); });
+  }
+
+  document.addEventListener('click', closeAllPopups);
+
+  document.querySelectorAll('.scircle').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var wasOpen = btn.classList.contains('open');
+      closeAllPopups();
+      if (!wasOpen) {
+        var pop = document.getElementById('pop-' + btn.dataset.popup);
+        if (pop) { pop.classList.add('open'); btn.classList.add('open'); }
+      }
+    });
+  });
+
+  // Sound buttons
+  document.querySelectorAll('[data-sound]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      SOUND_TYPE = btn.dataset.sound;
+      document.querySelectorAll('[data-sound]').forEach(function (b) { b.classList.remove('sel'); });
+      btn.classList.add('sel');
+      closeAllPopups();
+      playNote('G4', 0.5);
+    });
+  });
+
+  // Tempo slider
+  var tempoSlider = document.getElementById('tempoSlider');
+  var tempoVal    = document.getElementById('tempoVal');
+  function updateTempoLabel() {
+    var v = TEMPO_SCALE;
+    tempoVal.textContent = v < 0.7 ? '🐢 Lėtai' : v > 1.3 ? '🐇 Greitai' : '🚶 Vidutiniškai';
+  }
+  tempoSlider.addEventListener('input', function (e) {
+    e.stopPropagation();
+    TEMPO_SCALE = parseFloat(tempoSlider.value);
+    updateTempoLabel();
+  });
+  tempoSlider.addEventListener('click', function (e) { e.stopPropagation(); });
+
+  // Keyboard range buttons
+  var CURRENT_OCTAVES = [3, 4, 5];
+  document.querySelectorAll('[data-keys]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      CURRENT_OCTAVES = btn.dataset.keys.split(',').map(Number);
+      document.querySelectorAll('[data-keys]').forEach(function (b) { b.classList.remove('sel'); });
+      btn.classList.add('sel');
+      closeAllPopups();
+      rebuildPiano();
+    });
+  });
+
+  // Background (season video / photo) orbs are wired centrally by seasonBg.js
+  // via [data-theme-orb] delegation — just close the popup after a pick.
+  document.querySelectorAll('#pop-bg [data-theme-orb]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) { e.stopPropagation(); closeAllPopups(); });
+  });
+
+  document.getElementById('popClear').addEventListener('click', function (e) {
+    e.stopPropagation();
+    noteList = []; placedEl1.innerHTML = ''; placedEl2.innerHTML = '';
+    selectedNoteIdx = null;
+    closeAllPopups();
+  });
+
+  document.getElementById('popHelp').addEventListener('click', function (e) {
+    e.stopPropagation();
+    closeAllPopups();
+    if (K && K.mascot) { K.mascot('happy', 'Spausk klavišus ir rašyk natas! 🎵'); }
+  });
+
+  // ── Note type bar ────────────────────────────────────────────────────────────
+  var selectedType = 'quarter';
+  document.querySelectorAll('.nbar-btn[data-type]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.nbar-btn[data-type]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      selectedType = btn.dataset.type;
+    });
+  });
+
+  // ── Accidentals ──────────────────────────────────────────────────────────────
+  var selectedAccidental = null;
+  var SHARP_EQUIV = { 'C':'Cs','D':'Ds','F':'Fs','G':'Gs','A':'As' };
+  var FLAT_EQUIV  = { 'D':'Cs','E':'Ds','G':'Fs','A':'Gs','B':'As' };
+
+  function getPlayNote(noteName, acc) {
+    if (!acc || !noteName) { return noteName; }
+    var letter = noteName.charAt(0);
+    var oct    = noteName.slice(1);
+    var equiv  = acc === 'sharp' ? SHARP_EQUIV[letter] : FLAT_EQUIV[letter];
+    return equiv ? (equiv + oct) : noteName;
+  }
+
+  document.querySelectorAll('[data-acc]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var acc = btn.dataset.acc;
+      if (selectedAccidental === acc) {
+        selectedAccidental = null;
+        btn.classList.remove('active');
+      } else {
+        selectedAccidental = acc;
+        document.querySelectorAll('[data-acc]').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+      }
+    });
+  });
+
+  // SVG clef click: toggle clef
+  var CLEF_FS  = { treble: '88', bass: '44' };
+  var CLEF_Y   = { treble: '88', bass: '62' };
+  var CLEF_CHR = { treble: '𝄞', bass: '𝄢' };
+
+  function toggleClef(e) {
+    e.stopPropagation();
+    rowClef = rowClef === 'treble' ? 'bass' : 'treble';
+    ['clefRow1', 'clefRow2'].forEach(function (id) {
+      var clefEl = document.getElementById(id);
+      clefEl.textContent = CLEF_CHR[rowClef];
+      clefEl.setAttribute('font-size', CLEF_FS[rowClef]);
+      clefEl.setAttribute('y', CLEF_Y[rowClef]);
+    });
+    noteList = []; redrawAllNotes();
+    CURRENT_OCTAVES = rowClef === 'treble' ? [3, 4, 5] : [2, 3, 4];
+    rebuildPiano();
+  }
+  document.getElementById('clefGroupRow1').addEventListener('click', toggleClef);
+  document.getElementById('clefGroupRow2').addEventListener('click', toggleClef);
+
+  // ── Staff ────────────────────────────────────────────────────────────────────
+  var NOTE_COLOR = {
+    'C': '#e53935', 'D': '#fb8c00', 'E': '#fdd835',
+    'F': '#43a047', 'G': '#1e88e5', 'A': '#8e24aa', 'B': '#ec407a'
+  };
+
+  var NOTE_Y_TREBLE = {
+    'C3':139, 'D3':132, 'E3':125, 'F3':118, 'G3':111, 'A3':104, 'B3': 97,
+    'C4': 90, 'D4': 83,
+    'E4': 76, 'F4': 69, 'G4': 62, 'A4': 55, 'B4': 48,
+    'C5': 41, 'D5': 34, 'E5': 27, 'F5': 20,
+    'G5': 13, 'A5':  6, 'B5': -1, 'C6': -8
+  };
+  var NOTE_Y_BASS = {
+    'G1':125, 'A1':118, 'B1':111,
+    'C2':104, 'D2': 97, 'E2': 90, 'F2': 83,
+    'G2': 76, 'A2': 69, 'B2': 62,
+    'C3': 55, 'D3': 48, 'E3': 41, 'F3': 34, 'G3': 27, 'A3': 20,
+    'B3': 13, 'C4':  6, 'D4': -1, 'E4': -8
+  };
+  var ROW_NOTE_Y = [NOTE_Y_TREBLE, NOTE_Y_BASS];
+
+  var svgNS     = 'http://www.w3.org/2000/svg';
+  var placedEl1 = document.getElementById('placedNotes');
+  var placedEl2 = document.getElementById('placedNotes2');
+  var noteList  = [];
+  var X_STEP    = 48;
+  var X_MAX     = 1240;
+  var rowClef   = 'treble';
+  // How many notes fit on one staff row before overflowing onto row 2.
+  var NOTES_PER_ROW = Math.floor((X_MAX - 120) / X_STEP) + 1;
+
+  function getRowNoteY() {
+    return rowClef === 'treble' ? NOTE_Y_TREBLE : NOTE_Y_BASS;
+  }
+
+  // Where a note at a given index in noteList lives: which row/SVG and x position.
+  function notePos(idx) {
+    var row = idx < NOTES_PER_ROW ? 0 : 1;
+    var col = idx - row * NOTES_PER_ROW;
+    return { row: row, x: 120 + col * X_STEP, el: row === 0 ? placedEl1 : placedEl2 };
+  }
+
+  var DURS = {
+    'whole': 1.8, 'half': 0.9, 'quarter': 0.45, 'eighth': 0.22, 'sixteenth': 0.11,
+    'rest-whole': 1.8, 'rest-half': 0.9, 'rest-quarter': 0.45, 'rest-eighth': 0.22
+  };
+
+  function drawNoteGlyph(noteName, type, x, yOffset, noteYTable, acc) {
+    yOffset = yOffset || 0;
+    noteYTable = noteYTable || ROW_NOTE_Y[0];
+    var g = document.createElementNS(svgNS, 'g');
+
+    if (type.startsWith('rest-')) {
+      var rt = type.replace('rest-', '');
+      var yo = yOffset;
+      if (rt === 'quarter') {
+        var qt = document.createElementNS(svgNS, 'text');
+        qt.setAttribute('x', x); qt.setAttribute('y', 72 + yo);
+        qt.setAttribute('text-anchor', 'middle');
+        qt.setAttribute('font-family', 'serif');
+        qt.setAttribute('font-size', '52');
+        qt.setAttribute('fill', '#444');
+        qt.textContent = '𝄽';
+        g.appendChild(qt);
+      } else if (rt === 'eighth') {
+        var et = document.createElementNS(svgNS, 'text');
+        et.setAttribute('x', x); et.setAttribute('y', 68 + yo);
+        et.setAttribute('text-anchor', 'middle');
+        et.setAttribute('font-family', 'serif');
+        et.setAttribute('font-size', '48');
+        et.setAttribute('fill', '#444');
+        et.textContent = '𝄾';
+        g.appendChild(et);
+      } else if (rt === 'half') {
+        var r = document.createElementNS(svgNS, 'rect');
+        r.setAttribute('x', x - 12); r.setAttribute('y', 41 + yo);
+        r.setAttribute('width', 24); r.setAttribute('height', 7);
+        r.setAttribute('fill', '#444'); r.setAttribute('rx', '0');
+        g.appendChild(r);
+      } else {
+        var r2 = document.createElementNS(svgNS, 'rect');
+        r2.setAttribute('x', x - 12); r2.setAttribute('y', 34 + yo);
+        r2.setAttribute('width', 24); r2.setAttribute('height', 7);
+        r2.setAttribute('fill', '#444'); r2.setAttribute('rx', '0');
+        g.appendChild(r2);
+      }
+      return g;
+    }
+
+    var y = noteYTable[noteName];
+    if (y == null) { return null; }
+    y += yOffset;
+
+    var noteColor = NOTE_COLOR[noteName.charAt(0)] || '#222';
+
+    var STAF_TOP = 20 + yOffset, STAF_BOT = 76 + yOffset, LGAP = 14;
+    if (y < STAF_TOP) {
+      for (var ly = STAF_TOP - LGAP; ly >= y; ly -= LGAP) {
+        var ll = document.createElementNS(svgNS, 'line');
+        ll.setAttribute('x1', x - 13); ll.setAttribute('x2', x + 13);
+        ll.setAttribute('y1', ly); ll.setAttribute('y2', ly);
+        ll.setAttribute('stroke', '#777'); ll.setAttribute('stroke-width', '1.5');
+        g.appendChild(ll);
+      }
+    } else if (y > STAF_BOT) {
+      for (var ly = STAF_BOT + LGAP; ly <= y; ly += LGAP) {
+        var ll = document.createElementNS(svgNS, 'line');
+        ll.setAttribute('x1', x - 13); ll.setAttribute('x2', x + 13);
+        ll.setAttribute('y1', ly); ll.setAttribute('y2', ly);
+        ll.setAttribute('stroke', '#777'); ll.setAttribute('stroke-width', '1.5');
+        g.appendChild(ll);
+      }
+    }
+
+    var filled = (type !== 'whole' && type !== 'half');
+    var el = document.createElementNS(svgNS, 'ellipse');
+    el.setAttribute('cx', x); el.setAttribute('cy', y);
+    el.setAttribute('rx', 10); el.setAttribute('ry', 6.5);
+    el.setAttribute('fill', filled ? noteColor : 'none');
+    el.setAttribute('stroke', noteColor); el.setAttribute('stroke-width', filled ? '2' : '2.5');
+    el.setAttribute('transform', 'rotate(-12,' + x + ',' + y + ')');
+    g.appendChild(el);
+
+    if (acc) {
+      var accEl = document.createElementNS(svgNS, 'text');
+      accEl.setAttribute('x', x - 14);
+      accEl.setAttribute('y', y + 5);
+      accEl.setAttribute('text-anchor', 'middle');
+      accEl.setAttribute('font-family', 'serif');
+      accEl.setAttribute('font-size', '16');
+      accEl.setAttribute('fill', noteColor);
+      accEl.textContent = acc === 'sharp' ? '♯' : '♭';
+      g.appendChild(accEl);
+    }
+
+
+    if (type === 'whole') { return g; }
+
+    var stemUp = y >= 48 + yOffset;
+    var sx  = stemUp ? x + 9  : x - 9;
+    var sy1 = y + (stemUp ? -3 : 3);
+    var sy2 = stemUp ? y - 32 : y + 32;
+
+    var stem = document.createElementNS(svgNS, 'line');
+    stem.setAttribute('x1', sx); stem.setAttribute('x2', sx);
+    stem.setAttribute('y1', sy1); stem.setAttribute('y2', sy2);
+    stem.setAttribute('stroke', noteColor); stem.setAttribute('stroke-width', '2.2');
+    g.appendChild(stem);
+
+    function addFlag(fy) {
+      var d = stemUp ? 1 : -1;
+      var fp = document.createElementNS(svgNS, 'path');
+      fp.setAttribute('d',
+        'M' + sx + ',' + fy +
+        ' C' + (sx + 14*d) + ',' + (fy + 6*d) +
+        ' '  + (sx + 16*d) + ',' + (fy + 14*d) +
+        ' '  + (sx + 6*d)  + ',' + (fy + 22*d));
+      fp.setAttribute('fill', 'none');
+      fp.setAttribute('stroke', noteColor); fp.setAttribute('stroke-width', '2.2');
+      fp.setAttribute('stroke-linecap', 'round');
+      g.appendChild(fp);
+    }
+
+    if (type === 'eighth' || type === 'sixteenth') { addFlag(sy2); }
+    if (type === 'sixteenth') { addFlag(stemUp ? sy2 + 9 : sy2 - 9); }
+
+    return g;
+  }
+
+  function addNote(noteName) {
+    if (noteList.length >= NOTES_PER_ROW * 2) {
+      if (K && K.mascot) { K.mascot('sad', 'Daugiau natų netelpa! 🎵'); }
+      return;
+    }
+    var isRest = selectedType.startsWith('rest-');
+    var noteY = getRowNoteY();
+    if (!isRest && noteY[noteName] == null) { return; }
+    var acc = isRest ? null : selectedAccidental;
+    var idx = noteList.length;
+    var pos = notePos(idx);
+    var el = drawNoteGlyph(noteName, selectedType, pos.x, 0, noteY, acc);
+    if (!el) { return; }
+    el.classList.add('note-pop');
+    noteList.push({ note: isRest ? null : noteName, type: selectedType, acc: acc });
+    var yCtr = isRest ? 48 : noteY[noteName];
+    attachNoteClick(el, idx, pos.x, yCtr);
+    pos.el.appendChild(el);
+  }
+
+  // ── Note selection & single-note deletion ────────────────────────────────────
+  var selectedNoteIdx = null;
+
+  function clearNoteSelection() {
+    selectedNoteIdx = null;
+    document.querySelectorAll('.note-sel').forEach(function (r) { r.remove(); });
+  }
+
+  function attachNoteClick(el, idx, x, yCtr) {
+    var hit = document.createElementNS(svgNS, 'rect');
+    hit.setAttribute('x', x - 18); hit.setAttribute('y', yCtr - 36);
+    hit.setAttribute('width', 36);  hit.setAttribute('height', 72);
+    hit.setAttribute('fill', 'transparent');
+    el.appendChild(hit);
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (selectedNoteIdx === idx) { clearNoteSelection(); return; }
+      clearNoteSelection();
+      selectedNoteIdx = idx;
+      var ring = document.createElementNS(svgNS, 'rect');
+      ring.setAttribute('x', x - 18); ring.setAttribute('y', yCtr - 36);
+      ring.setAttribute('width', 36);  ring.setAttribute('height', 72);
+      ring.setAttribute('rx', '8');
+      ring.setAttribute('fill', 'rgba(255,140,0,0.22)');
+      ring.setAttribute('stroke', '#f4a027');
+      ring.setAttribute('stroke-width', '2.5');
+      ring.setAttribute('class', 'note-sel');
+      ring.setAttribute('pointer-events', 'none');
+      el.insertBefore(ring, el.firstChild);
+    });
+  }
+
+  function redrawAllNotes() {
+    placedEl1.innerHTML = '';
+    placedEl2.innerHTML = '';
+    selectedNoteIdx = null;
+    var noteY = getRowNoteY();
+    noteList.forEach(function (n, i) {
+      var pos = notePos(i);
+      var yCtr = n.note ? noteY[n.note] : 48;
+      var el = drawNoteGlyph(n.note || 'C4', n.type, pos.x, 0, noteY, n.acc);
+      if (el) { attachNoteClick(el, i, pos.x, yCtr); pos.el.appendChild(el); }
+    });
+  }
+
+  function deleteSelectedNote() {
+    if (selectedNoteIdx === null) { return; }
+    noteList.splice(selectedNoteIdx, 1);
+    redrawAllNotes();
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNoteIdx !== null) {
+      e.preventDefault(); deleteSelectedNote();
+    }
+  });
+
+  document.getElementById('staffSvg').addEventListener('click', function () { clearNoteSelection(); });
+  document.getElementById('staffSvg2').addEventListener('click', function () { clearNoteSelection(); });
+
+  function clearCanvas() {
+    noteList = []; placedEl1.innerHTML = ''; placedEl2.innerHTML = '';
+    selectedNoteIdx = null;
+  }
+  document.getElementById('btnClear').addEventListener('click', clearCanvas);
+  document.getElementById('btnNew').addEventListener('click', function () {
+    if (noteList.length && !confirm('Pradėti naują pamoką? Neišsaugoti pakeitimai bus prarasti.')) { return; }
+    clearCanvas();
+  });
+
+  // ── Pamokų išsaugojimas ir biblioteka (localStorage) ────────────────────────
+  document.getElementById('btnSaveLesson').addEventListener('click', function () {
+    if (!noteList.length) { alert('Prieš išsaugant įrašykite bent vieną natą.'); return; }
+    var title = prompt('Pamokos pavadinimas:', 'Pamoka ' + new Date().toLocaleDateString('lt-LT'));
+    if (!title) { return; }
+    LessonLibrary.save(title, { notes: noteList, sound: SOUND_TYPE, tempo: TEMPO_SCALE });
+    alert('Pamoka „' + title + '“ išsaugota.');
+  });
+
+  var libOverlay = document.getElementById('libOverlay');
+  var libSearch  = document.getElementById('libSearch');
+  var libList    = document.getElementById('libList');
+
+  function fmtDate(ts) {
+    return new Date(ts).toLocaleDateString('lt-LT') + ' ' + new Date(ts).toLocaleTimeString('lt-LT', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderLibrary(query) {
+    var records = LessonLibrary.search(query);
+    libList.innerHTML = '';
+    if (!records.length) {
+      var empty = document.createElement('div');
+      empty.className = 'lib-empty';
+      empty.textContent = query ? 'Nieko nerasta.' : 'Kol kas nėra išsaugotų pamokų.';
+      libList.appendChild(empty);
+      return;
+    }
+    records.forEach(function (rec) {
+      var row = document.createElement('div');
+      row.className = 'lib-row';
+      row.innerHTML =
+        '<div class="lib-row-info">' +
+          '<div class="lib-row-title"></div>' +
+          '<div class="lib-row-date"></div>' +
+        '</div>' +
+        '<button class="lib-row-btn lib-row-open">Atidaryti</button>' +
+        '<button class="lib-row-btn lib-row-del">🗑</button>';
+      row.querySelector('.lib-row-title').textContent = rec.title;
+      row.querySelector('.lib-row-date').textContent = fmtDate(rec.updatedAt);
+      row.querySelector('.lib-row-open').addEventListener('click', function () {
+        var state = LessonLibrary.load(rec.id);
+        if (!state) { return; }
+        noteList = state.notes || [];
+        redrawAllNotes();
+        if (state.sound) {
+          SOUND_TYPE = state.sound;
+          document.querySelectorAll('[data-sound]').forEach(function (b) {
+            b.classList.toggle('sel', b.dataset.sound === state.sound);
+          });
+        }
+        if (state.tempo) {
+          TEMPO_SCALE = state.tempo;
+          tempoSlider.value = state.tempo;
+          updateTempoLabel();
+        }
+        libOverlay.hidden = true;
+      });
+      row.querySelector('.lib-row-del').addEventListener('click', function () {
+        if (!confirm('Ištrinti pamoką „' + rec.title + '“?')) { return; }
+        LessonLibrary.remove(rec.id);
+        renderLibrary(libSearch.value);
+      });
+      libList.appendChild(row);
+    });
+  }
+
+  document.getElementById('btnOpenLibrary').addEventListener('click', function () {
+    libSearch.value = '';
+    renderLibrary('');
+    libOverlay.hidden = false;
+  });
+  document.getElementById('libClose').addEventListener('click', function () { libOverlay.hidden = true; });
+  libOverlay.addEventListener('click', function (e) { if (e.target === libOverlay) { libOverlay.hidden = true; } });
+  libSearch.addEventListener('input', function () { renderLibrary(libSearch.value); });
+
+  document.getElementById('btnDeleteNote').addEventListener('click', deleteSelectedNote);
+
+  var playbackId = 0;
+
+  document.getElementById('btnPlay').addEventListener('click', function () {
+    if (!noteList.length) { return; }
+    playbackId++;
+    var pid = playbackId;
+    var playHeads = [
+      { g: document.getElementById('playHead'),  rect: document.getElementById('playHeadRect') },
+      { g: document.getElementById('playHead2'), rect: document.getElementById('playHeadRect2') }
+    ];
+    playHeads.forEach(function (p) { p.g.style.display = 'none'; });
+
+    var t = 0;
+    var noteY = getRowNoteY();
+    noteList.forEach(function (n, i) {
+      var pos = notePos(i);
+      var dur = (DURS[n.type] || 0.45) / TEMPO_SCALE;
+
+      if (n.note) {
+        (function (note, delay, d) {
+          setTimeout(function () { if (playbackId === pid) playNote(note, d * 1.6); }, delay * 1000);
+        })(getPlayNote(n.note, n.acc), t, dur);
+      }
+
+      (function (px2, pyCtr, delay, row) {
+        setTimeout(function () {
+          if (playbackId !== pid) { return; }
+          var active = playHeads[row], other = playHeads[row === 0 ? 1 : 0];
+          other.g.style.display = 'none';
+          active.rect.setAttribute('x', px2 - 18);
+          active.rect.setAttribute('y', pyCtr - 36);
+          active.g.style.display = 'block';
+        }, delay * 1000);
+      })(pos.x, n.note ? noteY[n.note] : 48, t, pos.row);
+
+      t += dur + 0.04;
+    });
+
+    setTimeout(function () { if (playbackId === pid) { playHeads.forEach(function (p) { p.g.style.display = 'none'; }); } }, t * 1000);
+  });
+
+  // ── Piano keyboard ───────────────────────────────────────────────────────────
+  var SOLF_NAMES   = { 'C':'C','D':'D','E':'E','F':'F','G':'G','A':'A','B':'H' };
+  var WHITE_NOTES  = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  var BLACK_AFTER  = [true, true, false, true, true, true, false];
+  var BLACK_PREFIX = ['Cs', 'Ds', null, 'Fs', 'Gs', 'As', null];
+  var pianoEl = document.getElementById('piano');
+
+  function makePianoKey(noteName, gIdx, isBlack, kw, bkw) {
+    var div = document.createElement('div');
+    div.className = isBlack ? 'bk' : 'wk';
+    div.style.width = (isBlack ? bkw : kw) + 'px';
+    if (isBlack) {
+      div.style.left = (gIdx * kw + kw - bkw / 2) + 'px';
+    } else {
+      var letter = noteName.charAt(0);
+      var label = SOLF_NAMES[letter] + (letter === 'C' ? noteName.slice(1) : '');
+      var span = document.createElement('span');
+      span.textContent = label;
+      span.style.color = NOTE_COLOR[letter] || '#888';
+      span.style.fontWeight = 'bold';
+      span.style.fontSize = Math.max(9, Math.min(14, Math.floor(kw * 0.18))) + 'px';
+      div.appendChild(span);
+    }
+    div.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      div.classList.add('lit');
+      var dur = (DURS[selectedType] || 0.45) * 1.6;
+      playNote(noteName, dur);
+      if (!isBlack) { addNote(noteName); }
+      setTimeout(function () { div.classList.remove('lit'); }, 300);
+    });
+    return div;
+  }
+
+  function rebuildPiano() {
+    var octaves    = CURRENT_OCTAVES;
+    var totalWhite = octaves.length * 7 + 1;
+    var kw  = Math.max(16, Math.floor(window.innerWidth / totalWhite));
+    var bkw = Math.round(kw * 0.6);
+
+    pianoEl.innerHTML = '';
+    pianoEl.style.width = (totalWhite * kw) + 'px';
+
+    var whites = [], blacks = [];
+    octaves.forEach(function (oct, oIdx) {
+      WHITE_NOTES.forEach(function (n, wIdx) {
+        var gIdx = oIdx * 7 + wIdx;
+        whites.push(makePianoKey(n + oct, gIdx, false, kw, bkw));
+        if (BLACK_AFTER[wIdx] && BLACK_PREFIX[wIdx]) {
+          blacks.push(makePianoKey(BLACK_PREFIX[wIdx] + oct, gIdx, true, kw, bkw));
+        }
+      });
+    });
+    var lastGIdx = octaves.length * 7;
+    whites.push(makePianoKey('C' + (octaves[octaves.length - 1] + 1), lastGIdx, false, kw, bkw));
+    whites.forEach(function (w) { pianoEl.appendChild(w); });
+    blacks.forEach(function (b) { pianoEl.appendChild(b); });
+  }
+
+  rebuildPiano();
+  window.addEventListener('resize', rebuildPiano);
+
+  // The games sidebar now has much bigger cards - cap its height so it never
+  // grows down behind the fixed piano keyboard and becomes unclickable there.
+  function fitRightCol() {
+    var col = document.querySelector('.right-col');
+    var pianoWrap = document.querySelector('.piano-wrap');
+    if (!col || !pianoWrap) { return; }
+    var colTop = col.getBoundingClientRect().top;
+    var pianoTop = pianoWrap.getBoundingClientRect().top;
+    var avail = pianoTop - colTop - 12;
+    col.style.maxHeight = Math.max(200, avail) + 'px';
+  }
+  fitRightCol();
+  window.addEventListener('resize', fitRightCol);
+  // Re-measure once the 'Inter' webfont finishes swapping in (it loads async
+  // and can reflow text height after our first measurement) and once more
+  // after full page load, so the cap always matches the real layout.
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fitRightCol); }
+  window.addEventListener('load', fitRightCol);
+
+  setTimeout(function () {
+    if (K && K.mascot) { K.mascot('happy', 'Spausk klavišus ir rašyk natas! 🎵'); }
+  }, 600);
+
+})();
+</script>
+</body>
+</html>
