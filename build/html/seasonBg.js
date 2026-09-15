@@ -54,9 +54,11 @@
         'opacity:0;transition:opacity .6s ease;}' +
       /* The source clips are a portrait recording padded with black bars into
          a 16:9 frame — object-fit:cover alone can't remove baked-in pixels,
-         so stretch the video horizontally (only) around its center to push
-         those bars out past the edges. Tune via --season-bg-zoom-x. */
-      '#season-bg-video{--season-bg-zoom-x:1.3;transform:scaleX(var(--season-bg-zoom-x));transform-origin:center center;}' +
+         so this can stretch the video horizontally (only) around its center
+         to push those bars out past the edges by raising --season-bg-zoom-x
+         above 1. Left at 1 (no stretch) by default since that distortion
+         visibly hurt picture quality more than the bars it hid. */
+      '#season-bg-video{--season-bg-zoom-x:1;transform:scaleX(var(--season-bg-zoom-x));transform-origin:center center;}' +
       '#season-bg-video.on,#season-bg-photo.on{opacity:var(--season-bg-opacity);}' +
       '.bg-orb-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}' +
       '.bg-orb{width:38px;height:38px;border-radius:50%;flex:none;cursor:pointer;position:relative;' +
