@@ -333,7 +333,7 @@
 
 <div class="page">
   <div class="topbar">
-    <a class="back-link" href="zaidimai.html">← Atgal</a>
+    <span class="back-link" style="cursor:default;">🎵 MUSICATION</span>
     <button class="back-link" id="btnNew" style="border:none;background:none;cursor:pointer;">🆕 Nauja</button>
   </div>
 
@@ -1303,7 +1303,8 @@
   function rebuildPiano() {
     var octaves    = CURRENT_OCTAVES;
     var totalWhite = octaves.length * 7 + 1;
-    var kw  = Math.max(16, Math.floor(window.innerWidth / totalWhite));
+    // A bit thinner than a full window-width fill - same octave range, narrower keys.
+    var kw  = Math.max(14, Math.floor((window.innerWidth / totalWhite) * 0.8));
     var bkw = Math.round(kw * 0.6);
 
     pianoEl.innerHTML = '';

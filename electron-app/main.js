@@ -3,16 +3,17 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
 function getIndexPath() {
-  // Packaged app: the "build" folder is copied next to the app under resources/.
-  // Dev mode (npm start): read straight from the project's own build/ folder.
-  // Opens straight into the full notation editor - the games (incl. the
-  // "Klausyk - atspėk" listening game) live one click away, in the
-  // "🎮 Žaidimai" button in the editor's right-hand sidebar, which pops
-  // them out into their own window (see setWindowOpenHandler below).
+  // Opens straight into rasymas.html - the simple kids' note-writing screen,
+  // which already has its own right-hand sidebar with Žaidimai (games),
+  // Mano pamokos (saved lessons) and Išsaugoti (save). Games open in the
+  // same window via plain links there; setWindowOpenHandler below still
+  // covers the separate zaidimai.html pop-out used from smoosic.html
+  // (the full notation editor), which stays reachable but isn't the home
+  // screen anymore.
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'build', 'html', 'smoosic.html');
+    return path.join(process.resourcesPath, 'build', 'html', 'rasymas.html');
   }
-  return path.join(__dirname, '..', 'build', 'html', 'smoosic.html');
+  return path.join(__dirname, '..', 'build', 'html', 'rasymas.html');
 }
 
 function createWindow() {
