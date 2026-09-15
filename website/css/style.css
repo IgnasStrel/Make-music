@@ -1,23 +1,29 @@
 :root {
-  --purple: #7c3aed;
-  --purple-dark: #5b21b6;
-  --purple-darker: #3b0f78;
-  --purple-light: #ede9fe;
-  --purple-soft: #f5f3ff;
-  --ink: #1f1330;
-  --ink-soft: #5f5570;
-  --border: #e7e1f5;
+  /* brand palette sampled straight from the MUSICATION logo */
+  --purple: #0c2b5c;        /* navy — brand anchor color (was purple) */
+  --purple-dark: #081d40;
+  --purple-darker: #061634;
+  --purple-light: #dde6f3;
+  --purple-soft: #eef3fa;
+  --ink: #16223b;
+  --ink-soft: #57607a;
+  --border: #e3e8f2;
   --white: #ffffff;
   --success: #16a34a;
   --danger: #dc2626;
-  --shadow: 0 10px 30px rgba(124, 58, 237, 0.12);
+  --shadow: 0 10px 30px rgba(209, 20, 95, 0.14);
   --radius: 20px;
-  /* playful accent palette used for icon badges, confetti and highlights */
-  --candy-pink: #ff6fb5;
-  --candy-orange: #ff9f43;
-  --candy-yellow: #ffd23f;
-  --candy-teal: #22c8b8;
-  --candy-blue: #4da3ff;
+  /* the logo's rainbow of letter colors, used for playful accents */
+  --candy-teal: #00a19d;
+  --candy-lime: #a3b808;
+  --candy-amber: #fbad05;
+  --candy-tomato: #ea5727;
+  --candy-pink: #d1145f;
+  --candy-violet: #5a2f80;
+  /* aliases kept for the accents already wired up below */
+  --candy-orange: var(--candy-amber);
+  --candy-yellow: var(--candy-amber);
+  --candy-blue: var(--candy-teal);
   --heading-font: "Baloo 2", "Segoe UI", sans-serif;
   font-size: 16px;
 }
@@ -32,13 +38,24 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--white);
   color: var(--ink);
   font-family: "Nunito", "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
   scroll-behavior: smooth;
 }
 
-h1, h2, h3, .brand-name, .stat-num, .price span, .modal h3 {
+body {
+  background-color: var(--white);
+  background-image:
+    radial-gradient(520px circle at 6% 0%, rgba(0, 161, 157, 0.10), transparent 60%),
+    radial-gradient(560px circle at 96% 6%, rgba(209, 20, 95, 0.09), transparent 60%),
+    radial-gradient(600px circle at 12% 60%, rgba(251, 173, 5, 0.08), transparent 55%),
+    radial-gradient(640px circle at 100% 65%, rgba(90, 47, 128, 0.08), transparent 55%),
+    radial-gradient(560px circle at 40% 100%, rgba(163, 184, 8, 0.08), transparent 55%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+h1, h2, h3, .stat-num, .price span, .modal h3 {
   font-family: var(--heading-font);
 }
 
@@ -76,15 +93,12 @@ img { max-width: 100%; display: block; }
 }
 .brand:hover { text-decoration: none; }
 .brand-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: var(--shadow);
+  height: 38px;
+  width: auto;
+  object-fit: contain;
   transition: transform 0.25s ease;
 }
-.brand:hover .brand-logo { transform: rotate(-8deg) scale(1.08); }
-.brand-name { background: linear-gradient(90deg, var(--purple-dark), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand:hover .brand-logo { transform: rotate(-4deg) scale(1.06); }
 
 .tabs {
   display: flex;
@@ -106,7 +120,7 @@ img { max-width: 100%; display: block; }
 }
 .tab-btn { font-family: var(--heading-font); }
 .tab-btn:hover { background: var(--purple-soft); color: var(--purple-dark); }
-.tab-btn.active { background: linear-gradient(90deg, var(--purple), #a855f7); color: var(--white); }
+.tab-btn.active { background: linear-gradient(90deg, var(--purple), var(--candy-teal)); color: var(--white); }
 
 .auth-area {
   display: flex;
@@ -143,7 +157,7 @@ img { max-width: 100%; display: block; }
   color: var(--white);
   box-shadow: var(--shadow);
 }
-.btn-primary:hover { text-decoration: none; box-shadow: 0 14px 34px rgba(124, 58, 237, 0.28); }
+.btn-primary:hover { text-decoration: none; box-shadow: 0 14px 34px rgba(12, 43, 92, 0.28); }
 
 .btn-outline {
   background: var(--white);
@@ -221,7 +235,10 @@ main {
 }
 
 .hero h1 { font-family: var(--heading-font); font-size: 42px; line-height: 1.15; margin: 12px 0 18px; position: relative; z-index: 1; }
-.accent { background: linear-gradient(90deg, var(--purple), #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.accent {
+  background: linear-gradient(90deg, var(--candy-teal), var(--candy-lime), var(--candy-amber), var(--candy-tomato), var(--candy-pink), var(--candy-violet));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
 .lead { color: var(--ink-soft); font-size: 17px; line-height: 1.6; margin-bottom: 26px; }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .hero-note { font-size: 13px; color: var(--ink-soft); }
@@ -230,7 +247,10 @@ main {
 .hero-card-glow {
   position: absolute;
   inset: -20px;
-  background: radial-gradient(circle at 30% 20%, rgba(124,58,237,0.25), transparent 60%);
+  background:
+    radial-gradient(circle at 25% 15%, rgba(209, 20, 95, 0.22), transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(0, 161, 157, 0.20), transparent 55%),
+    radial-gradient(circle at 50% 90%, rgba(251, 173, 5, 0.16), transparent 55%);
   filter: blur(10px);
   z-index: 0;
 }
@@ -305,13 +325,13 @@ main {
   transition: transform 0.2s ease;
 }
 .feature-card:hover .feature-ico { transform: scale(1.12) rotate(6deg); }
-/* a little rainbow of badge colors so the grid feels playful, not corporate */
-.feature-card:nth-child(6n+1) .feature-ico { background: #fde3ee; }
-.feature-card:nth-child(6n+2) .feature-ico { background: #fff2d9; }
-.feature-card:nth-child(6n+3) .feature-ico { background: #e0f7f2; }
-.feature-card:nth-child(6n+4) .feature-ico { background: #e6f0ff; }
-.feature-card:nth-child(6n+5) .feature-ico { background: var(--purple-soft); }
-.feature-card:nth-child(6n+6) .feature-ico { background: #fdeee0; }
+/* a little rainbow of badge colors, tinted from the logo's own letter colors */
+.feature-card:nth-child(6n+1) .feature-ico { background: #e0f7f2; }
+.feature-card:nth-child(6n+2) .feature-ico { background: #fdeee0; }
+.feature-card:nth-child(6n+3) .feature-ico { background: #fdf6d9; }
+.feature-card:nth-child(6n+4) .feature-ico { background: #fbe3ea; }
+.feature-card:nth-child(6n+5) .feature-ico { background: #efe6f3; }
+.feature-card:nth-child(6n+6) .feature-ico { background: var(--purple-soft); }
 .feature-card h3 { margin: 0 0 8px; font-size: 17px; }
 .feature-card p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; }
 
@@ -350,7 +370,7 @@ main {
   top: -13px;
   left: 50%;
   transform: translateX(-50%) rotate(-2deg);
-  background: linear-gradient(90deg, var(--candy-orange), var(--candy-pink));
+  background: linear-gradient(90deg, var(--candy-tomato), var(--candy-pink));
   color: var(--white);
   font-size: 12px;
   font-family: var(--heading-font);
@@ -413,7 +433,7 @@ main {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(59, 15, 120, 0.35);
+  background: rgba(8, 29, 64, 0.45);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
@@ -427,7 +447,7 @@ main {
   padding: 32px;
   width: 100%;
   max-width: 380px;
-  box-shadow: 0 25px 60px rgba(59, 15, 120, 0.35);
+  box-shadow: 0 25px 60px rgba(8, 29, 64, 0.35);
   position: relative;
   text-align: center;
 }
