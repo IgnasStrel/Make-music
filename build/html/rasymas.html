@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MUSICATION — Rašyk natas 🎵</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Shared kids engine (mascot, stars, audio helpers) - loaded before our
        own <style> below so any of its rules our markup happens to share a
        class name with (only .topbar) get cleanly overridden by us. -->
@@ -18,12 +18,19 @@
 
     :root {
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --heading-font: 'Baloo 2', var(--font);
       --ink: #1f2430;
       --ink-soft: #626b7a;
       --accent: #2f6fed;
       --accent-dark: #1d4fc4;
       --panel: rgba(255,255,255,0.97);
       --panel-border: rgba(15,23,42,0.09);
+      /* Frosted-glass chrome: translucent + blurred, so the colourful
+         season background stays visible behind the UI instead of being
+         hidden behind near-solid white panels. */
+      --glass: rgba(255,255,255,0.6);
+      --glass-strong: rgba(255,255,255,0.86);
+      --glass-border: rgba(255,255,255,0.55);
     }
 
     body {
@@ -48,14 +55,15 @@
     .topbar { display: flex; align-items: center; justify-content: space-between; }
     .back-link {
       text-decoration: none; color: var(--ink);
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 8px; padding: 7px 14px;
-      font-size: 14px; font-weight: 600; font-family: var(--font);
-      box-shadow: 0 1px 3px rgba(15,23,42,0.08);
-      transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+      background: var(--glass);
+      backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px; padding: 8px 16px;
+      font-size: 15px; font-weight: 700; font-family: var(--heading-font);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.10);
+      transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.12s;
     }
-    .back-link:hover { background: #fff; border-color: rgba(15,23,42,0.18); box-shadow: 0 2px 6px rgba(15,23,42,0.12); }
+    .back-link:hover { background: var(--glass-strong); box-shadow: 0 4px 14px rgba(15,23,42,0.16); transform: translateY(-1px); }
 
     /* ── Main area: just the center content ── */
     .main-area {
@@ -76,23 +84,24 @@
     .circle-wrap { position: relative; }
 
     .scircle {
-      width: 62px; height: 62px; border-radius: 14px;
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
+      width: 62px; height: 62px; border-radius: 18px;
+      background: var(--glass);
+      backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+      border: 1px solid var(--glass-border);
       cursor: pointer;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 2px;
-      box-shadow: 0 2px 8px rgba(15,23,42,0.10);
-      transition: box-shadow 0.12s, border-color 0.12s, background 0.12s;
+      box-shadow: 0 3px 10px rgba(15,23,42,0.12);
+      transition: box-shadow 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
       user-select: none; -webkit-tap-highlight-color: transparent;
     }
-    .scircle .ico { font-size: 21px; line-height: 1; }
-    .scircle .lbl { font-size: 10px; font-weight: 600; color: var(--ink-soft); font-family: var(--font); }
-    .scircle:hover { box-shadow: 0 4px 14px rgba(15,23,42,0.16); border-color: rgba(15,23,42,0.18); }
+    .scircle .ico { font-size: 22px; line-height: 1; }
+    .scircle .lbl { font-size: 10px; font-weight: 700; color: var(--ink-soft); font-family: var(--heading-font); }
+    .scircle:hover { box-shadow: 0 6px 18px rgba(15,23,42,0.18); border-color: rgba(255,255,255,0.8); transform: translateY(-2px) scale(1.04); }
     .scircle.open {
       border-color: var(--accent);
-      background: rgba(47,111,237,0.10);
-      box-shadow: 0 4px 16px rgba(47,111,237,0.30);
+      background: rgba(47,111,237,0.22);
+      box-shadow: 0 6px 20px rgba(47,111,237,0.35);
     }
     .scircle.open .lbl { color: var(--accent-dark); }
 
@@ -101,11 +110,12 @@
       position: absolute;
       left: calc(100% + 10px);
       top: 50%; transform: translateY(-50%);
-      background: #fff;
-      border: 1px solid var(--panel-border);
-      border-radius: 10px; padding: 8px;
+      background: var(--glass-strong);
+      backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 8px;
       z-index: 300;
-      box-shadow: 0 8px 28px rgba(15,23,42,0.18);
+      box-shadow: 0 10px 32px rgba(15,23,42,0.22);
       display: none; flex-direction: column; gap: 3px;
       min-width: 148px;
       white-space: nowrap;
@@ -183,11 +193,12 @@
 
     /* Note type bar */
     .note-bar {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 10px; padding: 6px 10px;
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px; padding: 6px 10px;
       display: flex; gap: 2px; align-items: center; justify-content: center;
-      box-shadow: 0 2px 10px rgba(15,23,42,0.08); flex-wrap: nowrap;
+      box-shadow: 0 3px 14px rgba(15,23,42,0.10); flex-wrap: nowrap;
     }
     .nbar-btn {
       min-width: 42px; height: 54px;
@@ -207,10 +218,13 @@
 
     /* Staff panel */
     .staff-panel {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 12px; padding: 16px 20px 14px;
-      box-shadow: 0 4px 18px rgba(15,23,42,0.10);
+      /* Kept nearly-opaque (unlike the glass chrome elsewhere) so the
+         written notes always stay crisp and readable over any background. */
+      background: var(--glass-strong);
+      backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px; padding: 16px 20px 14px;
+      box-shadow: 0 6px 24px rgba(15,23,42,0.14);
       overflow-x: auto;
     }
     /* SVG is vector, so scaling it up to fill the wider page stays crisp (HD)
@@ -277,37 +291,66 @@
     /* ── Right column: games & other activities ── */
     .right-col {
       width: 320px; flex-shrink: 0;
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex; flex-direction: column; gap: 12px;
       overflow-y: auto;
     }
-    .nav-panel {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 14px; padding: 16px 12px;
-      box-shadow: 0 4px 18px rgba(15,23,42,0.10);
-      display: flex; flex-direction: column; gap: 4px;
+
+    /* Each nav group (Žaidimai / Mokymasis / Pamokos) is its own glass card
+       with a clickable header that expands/collapses its body - a smooth,
+       dependency-free "unfold" using the CSS grid-rows trick (0fr -> 1fr)
+       instead of a JS height hack or an animation library. */
+    .nav-card {
+      background: var(--glass);
+      backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      box-shadow: 0 6px 22px rgba(15,23,42,0.12);
+      overflow: hidden;
     }
-    .nav-panel-title {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-      color: var(--ink-soft); font-family: var(--font);
-      text-align: left; margin: 14px 6px 4px;
+    .nav-card-head {
+      width: 100%; display: flex; align-items: center; gap: 10px;
+      background: transparent; border: none; cursor: pointer;
+      padding: 14px 16px;
+      font-family: var(--heading-font); font-weight: 700; font-size: 15.5px; color: var(--ink);
+      text-align: left; -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s;
     }
-    .nav-panel-title:first-child { margin-top: 2px; }
+    .nav-card-head:hover { background: rgba(15,23,42,0.04); }
+    .nch-ico { font-size: 20px; line-height: 1; }
+    .nch-title { flex: 1; }
+    .nch-chev { font-size: 13px; color: var(--ink-soft); transition: transform 0.25s cubic-bezier(.16,1,.3,1); }
+    .nav-card.open .nch-chev { transform: rotate(180deg); }
+    .nav-card-body {
+      display: grid; grid-template-rows: 0fr;
+      transition: grid-template-rows 0.32s cubic-bezier(.16,1,.3,1);
+    }
+    .nav-card.open .nav-card-body { grid-template-rows: 1fr; }
+    .nav-card-inner {
+      min-height: 0; overflow: hidden;
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 0 10px 10px;
+    }
+
     .nav-btn {
       display: flex; align-items: center; gap: 12px;
-      width: 100%; background: transparent;
-      border: 1px solid transparent; border-left: 4px solid var(--nav-accent, #2f6fed);
-      border-radius: 8px; padding: 11px 14px;
+      width: 100%; background: rgba(255,255,255,0.4);
+      border: 1px solid transparent;
+      border-radius: 14px; padding: 10px 12px;
       font-family: var(--font); font-size: 14.5px; font-weight: 600; color: var(--ink);
       text-decoration: none;
-      cursor: pointer; transition: background 0.12s, transform 0.08s; user-select: none;
+      cursor: pointer; transition: background 0.15s, transform 0.15s, box-shadow 0.15s; user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-btn .nb-ico { font-size: 22px; line-height: 1; }
-    .nav-btn:hover { background: rgba(15,23,42,0.045); transform: translateX(2px); }
-    .nav-btn:active { transform: scale(0.99); }
+    .nav-btn .nb-ico {
+      font-size: 19px; line-height: 1; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--nav-accent, #2f6fed); background: color-mix(in srgb, var(--nav-accent, #2f6fed) 20%, white);
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.75); transform: translateX(3px) translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,0.12); }
+    .nav-btn:active { transform: scale(0.98); }
 
-    /* ── Motion polish: notes pop in, panels ease in on load ── */
+    /* ── Motion polish: notes pop in, panels + nav items unfold on load ── */
     @keyframes notePop {
       0%   { transform: scale(0.3); opacity: 0; }
       60%  { transform: scale(1.15); opacity: 1; }
@@ -319,11 +362,27 @@
       from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .note-bar, .staff-panel, .right-col .nav-panel {
+    @keyframes navBtnIn {
+      from { opacity: 0; transform: translateX(-10px) scale(0.96); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    .note-bar, .staff-panel, .right-col .nav-card {
       animation: panelIn 0.4s cubic-bezier(.16,1,.3,1) both;
     }
     .staff-panel:nth-of-type(2) { animation-delay: 0.06s; }
-    .right-col .nav-panel { animation-delay: 0.1s; }
+    .right-col .nav-card:nth-child(1) { animation-delay: 0.08s; }
+    .right-col .nav-card:nth-child(2) { animation-delay: 0.14s; }
+    .right-col .nav-card:nth-child(3) { animation-delay: 0.2s; }
+    /* Buttons "unfold" into place just after their card lands. */
+    .nav-card-inner .nav-btn {
+      animation: navBtnIn 0.32s cubic-bezier(.16,1,.3,1) both;
+    }
+    .nav-card-inner .nav-btn:nth-child(1) { animation-delay: 0.3s; }
+    .nav-card-inner .nav-btn:nth-child(2) { animation-delay: 0.35s; }
+    .nav-card-inner .nav-btn:nth-child(3) { animation-delay: 0.4s; }
+    .nav-card-inner .nav-btn:nth-child(4) { animation-delay: 0.45s; }
+    .nav-card-inner .nav-btn:nth-child(5) { animation-delay: 0.5s; }
+    .nav-card-inner .nav-btn:nth-child(6) { animation-delay: 0.55s; }
   </style>
 </head>
 <body>
@@ -491,20 +550,38 @@
 
     <!-- ── Right: games & other activities ── -->
     <div class="right-col">
-      <div class="nav-panel">
-        <div class="nav-panel-title">🎮 Žaidimai</div>
-        <a class="nav-btn" href="klausa.html" style="--nav-accent:#fb8c00"><span class="nb-ico">🎧</span>Klausymo žaidimai</a>
-        <a class="nav-btn" href="ritmas.html" style="--nav-accent:#43a047"><span class="nb-ico">🥁</span>Ritmo žaidimai</a>
-        <a class="nav-btn" href="melodija.html" style="--nav-accent:#1e88e5"><span class="nb-ico">🎵</span>Melodijos žaidimas</a>
-        <a class="nav-btn" href="atmintis.html" style="--nav-accent:#8e24aa"><span class="nb-ico">🧠</span>Natų atmintis</a>
-        <a class="nav-btn" href="gyvunai.html" style="--nav-accent:#ec407a"><span class="nb-ico">🐄</span>Gyvūnų muzika</a>
-        <a class="nav-btn" href="lasas.html" style="--nav-accent:#1e88e5"><span class="nb-ico">💧</span>Klausos lašas</a>
-        <div class="nav-panel-title">📚 Mokymasis</div>
-        <a class="nav-btn" href="pamokeles.html" style="--nav-accent:#fdd835"><span class="nb-ico">📚</span>Pamokėlės</a>
-        <a class="nav-btn" href="testai.html" style="--nav-accent:#e53935"><span class="nb-ico">📝</span>Testai</a>
-        <div class="nav-panel-title">🗂️ Pamokos</div>
-        <button class="nav-btn" id="btnSaveLesson" style="--nav-accent:#16a34a"><span class="nb-ico">💾</span>Išsaugoti</button>
-        <button class="nav-btn" id="btnOpenLibrary" style="--nav-accent:#2f6fed"><span class="nb-ico">📂</span>Mano pamokos</button>
+      <div class="nav-card open">
+        <button type="button" class="nav-card-head" data-nav-toggle>
+          <span class="nch-ico">🎮</span><span class="nch-title">Žaidimai</span><span class="nch-chev">▾</span>
+        </button>
+        <div class="nav-card-body"><div class="nav-card-inner">
+          <a class="nav-btn" href="klausa.html" style="--nav-accent:#fb8c00"><span class="nb-ico">🎧</span>Klausymo žaidimai</a>
+          <a class="nav-btn" href="ritmas.html" style="--nav-accent:#43a047"><span class="nb-ico">🥁</span>Ritmo žaidimai</a>
+          <a class="nav-btn" href="melodija.html" style="--nav-accent:#1e88e5"><span class="nb-ico">🎵</span>Melodijos žaidimas</a>
+          <a class="nav-btn" href="atmintis.html" style="--nav-accent:#8e24aa"><span class="nb-ico">🧠</span>Natų atmintis</a>
+          <a class="nav-btn" href="gyvunai.html" style="--nav-accent:#ec407a"><span class="nb-ico">🐄</span>Gyvūnų muzika</a>
+          <a class="nav-btn" href="lasas.html" style="--nav-accent:#1e88e5"><span class="nb-ico">💧</span>Klausos lašas</a>
+        </div></div>
+      </div>
+
+      <div class="nav-card open">
+        <button type="button" class="nav-card-head" data-nav-toggle>
+          <span class="nch-ico">📚</span><span class="nch-title">Mokymasis</span><span class="nch-chev">▾</span>
+        </button>
+        <div class="nav-card-body"><div class="nav-card-inner">
+          <a class="nav-btn" href="pamokeles.html" style="--nav-accent:#fdd835"><span class="nb-ico">📚</span>Pamokėlės</a>
+          <a class="nav-btn" href="testai.html" style="--nav-accent:#e53935"><span class="nb-ico">📝</span>Testai</a>
+        </div></div>
+      </div>
+
+      <div class="nav-card open">
+        <button type="button" class="nav-card-head" data-nav-toggle>
+          <span class="nch-ico">🗂️</span><span class="nch-title">Pamokos</span><span class="nch-chev">▾</span>
+        </button>
+        <div class="nav-card-body"><div class="nav-card-inner">
+          <button class="nav-btn" id="btnSaveLesson" style="--nav-accent:#16a34a"><span class="nb-ico">💾</span>Išsaugoti</button>
+          <button class="nav-btn" id="btnOpenLibrary" style="--nav-accent:#2f6fed"><span class="nb-ico">📂</span>Mano pamokos</button>
+        </div></div>
       </div>
     </div><!-- /right-col -->
 
@@ -1347,6 +1424,16 @@
   // after full page load, so the cap always matches the real layout.
   if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fitRightCol); }
   window.addEventListener('load', fitRightCol);
+
+  // Collapsible sidebar cards (Žaidimai / Mokymasis / Pamokos) - the smooth
+  // open/close "unfold" itself is pure CSS (grid-template-rows 0fr -> 1fr in
+  // the stylesheet above), this just flips the .open class per card.
+  document.querySelectorAll('[data-nav-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.nav-card');
+      if (card) { card.classList.toggle('open'); fitRightCol(); }
+    });
+  });
 
   setTimeout(function () {
     if (K && K.mascot) { K.mascot('happy', 'Spausk klavišus ir rašyk natas! 🎵'); }
