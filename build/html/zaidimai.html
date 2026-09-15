@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUSICATION — Visi žaidimai</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: 'Chewy', 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, #fef6ff 0%, #f2fbff 100%);
+      color: #2a2340;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 20px 40px; }
+    .top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    h1 { font-size: 28px; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .close-btn {
+      border: none; border-radius: 999px; padding: 10px 18px;
+      background: #fff; box-shadow: 0 3px 0 rgba(0,0,0,0.12);
+      font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+      color: #5f5570;
+    }
+    .close-btn:hover { background: #f2eefc; }
+    .close-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 18px;
+    }
+    .tile {
+      aspect-ratio: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px;
+      border: none;
+      border-radius: 22px;
+      background: #fff;
+      border-top: 7px solid var(--accent, #ec407a);
+      box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .tile:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 8px 0 rgba(0,0,0,0.12); }
+    .tile:active { transform: translateY(1px) scale(0.99); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+    .tile-ico { font-size: 44px; line-height: 1; }
+    .tile-name { font-size: 15px; font-weight: 700; text-align: center; padding: 0 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>🎮 Visi žaidimai</h1>
+      <button class="close-btn" id="closeBtn">✕ Uždaryti</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <script>
+    // Same rainbow accent palette used across the kids games and the
+    // notation editor's sidebar, so the whole app feels like one system.
+    var ACCENTS = ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#ec407a', '#00acc1', '#6d4c41'];
+
+    var GAMES = [
+      { icon: '🎹', label: 'Rašyti natas',      href: 'rasymas.html' },
+      { icon: '💧', label: 'Klausos lašas',      href: 'lasas.html' },
+      { icon: '🎧', label: 'Klausymo žaidimai',  href: 'klausa.html' },
+      { icon: '🥁', label: 'Ritmo žaidimai',     href: 'ritmas.html' },
+      { icon: '🎵', label: 'Melodijos žaidimas', href: 'melodija.html' },
+      { icon: '🐄', label: 'Gyvūnų muzika',      href: 'gyvunai.html' },
+      { icon: '🧠', label: 'Natų atmintis',      href: 'atmintis.html' },
+      { icon: '📝', label: 'Testai',             href: 'testai.html' },
+      { icon: '📚', label: 'Pamokėlės',          href: 'pamokeles.html' }
+    ];
+
+    var grid = document.getElementById('grid');
+    GAMES.forEach(function (g, i) {
+      var tile = document.createElement('button');
+      tile.className = 'tile';
+      tile.style.setProperty('--accent', ACCENTS[i % ACCENTS.length]);
+      tile.innerHTML = '<span class="tile-ico">' + g.icon + '</span><span class="tile-name">' + g.label + '</span>';
+      tile.addEventListener('click', function () {
+        // Navigate this same pop-out window to the chosen game, so the
+        // main notation editor behind it is never disturbed.
+        location.href = g.href;
+      });
+      grid.appendChild(tile);
+    });
+
+    document.getElementById('closeBtn').addEventListener('click', function () {
+      window.close();
+    });
+  </script>
+</body>
+</html>

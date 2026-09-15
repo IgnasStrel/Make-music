@@ -5,10 +5,14 @@ const { autoUpdater } = require('electron-updater');
 function getIndexPath() {
   // Packaged app: the "build" folder is copied next to the app under resources/.
   // Dev mode (npm start): read straight from the project's own build/ folder.
+  // Opens straight into the full notation editor - the games (incl. the
+  // "Klausyk - atspėk" listening game) live one click away, in the
+  // "🎮 Žaidimai" button in the editor's right-hand sidebar, which pops
+  // them out into their own window (see setWindowOpenHandler below).
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'build', 'html', 'klausa.html');
+    return path.join(process.resourcesPath, 'build', 'html', 'smoosic.html');
   }
-  return path.join(__dirname, '..', 'build', 'html', 'klausa.html');
+  return path.join(__dirname, '..', 'build', 'html', 'smoosic.html');
 }
 
 function createWindow() {
@@ -25,6 +29,24 @@ function createWindow() {
     }
   });
   win.loadFile(getIndexPath());
+
+  // The "🎮 Žaidimai" button (and any game page's own links) call
+  // window.open(...) to pop the games hub / a game out into its own window.
+  // Electron denies popups by default unless a handler explicitly allows
+  // them, so without this the button would silently do nothing.
+  win.webContents.setWindowOpenHandler(() => ({
+    action: 'allow',
+    overrideBrowserWindowOptions: {
+      width: 900,
+      height: 760,
+      autoHideMenuBar: true,
+      icon: path.join(__dirname, 'icon.png'),
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false
+      }
+    }
+  }));
 }
 
 function checkForUpdates() {
