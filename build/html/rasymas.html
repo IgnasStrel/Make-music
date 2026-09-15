@@ -213,6 +213,12 @@
     .nbar-btn:hover { background: rgba(15,23,42,0.05); }
     .nbar-btn.active { border-color: var(--accent); background: rgba(47,111,237,0.12); }
     .nbar-btn .nl { font-size: 10px; font-weight: 600; color: var(--ink-soft); font-family: var(--font); }
+    /* Icon-only note/rest/accidental glyphs (spec: "aiškios ikonos be žodžių") */
+    .glyph-serif { font-family:serif; font-size:28px; line-height:1.1; display:block; }
+    /* Markings keep an icon + the music term (spec's explicit exception), so
+       they need a bit more room than the icon-only buttons. */
+    .nbar-mark { min-width: 62px; }
+    .nbar-mark .nl { font-size: 9.5px; }
     .nbar-btn.active .nl { color: var(--accent-dark); }
     .nbar-sep { width: 1px; height: 36px; background: rgba(15,23,42,0.10); margin: 0 3px; flex-shrink: 0; }
 
@@ -246,6 +252,10 @@
     .sbtn-del:hover { background: #f4f6f9; border-color: rgba(15,23,42,0.2); }
     .sbtn-clear { background: #fff; color: #c0392b; border-color: rgba(192,57,43,0.3); }
     .sbtn-clear:hover { background: rgba(192,57,43,0.06); }
+    .sbtn-stop  { background: #fff; color: #c0392b; border-color: rgba(192,57,43,0.3); }
+    .sbtn-stop:hover { background: rgba(192,57,43,0.06); }
+    .sbtn-zoom  { background: #fff; color: var(--ink); border-color: var(--panel-border); padding: 9px 14px; }
+    .sbtn-zoom:hover { background: #f4f6f9; }
 
     /* ── Piano ── */
     .piano-wrap {
@@ -393,7 +403,10 @@
 <div class="page">
   <div class="topbar">
     <span class="back-link" style="cursor:default;">🎵 MUSICATION</span>
-    <button class="back-link" id="btnNew" style="border:none;background:none;cursor:pointer;">🆕 Nauja</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="back-link" id="btnNew" style="border:none;background:none;cursor:pointer;">🆕 <span data-i18n="newLesson">Nauja</span></button>
+      <button class="back-link" id="btnUser" title="Naudotojas">👤 <span id="userModeLabel">Mokytojas</span></button>
+    </div>
   </div>
 
   <div class="main-area">
@@ -405,90 +418,150 @@
       <div class="note-bar" id="noteBar">
 
         <!-- Whole -->
-        <button class="nbar-btn" data-type="whole">
+        <button class="nbar-btn" data-type="whole" title="Visa nata">
           <svg width="36" height="26" viewBox="0 0 36 26">
             <ellipse cx="18" cy="17" rx="14" ry="8.5" fill="none" stroke="#333" stroke-width="3"/>
           </svg>
-          <span class="nl">visa</span>
         </button>
 
         <!-- Half -->
-        <button class="nbar-btn" data-type="half">
+        <button class="nbar-btn" data-type="half" title="Pusinė nata">
           <svg width="32" height="44" viewBox="0 0 32 44">
             <ellipse cx="12" cy="34" rx="11" ry="7" fill="none" stroke="#333" stroke-width="3" transform="rotate(-12 12 34)"/>
             <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
           </svg>
-          <span class="nl">pusė</span>
+        </button>
+
+        <!-- Dotted half -->
+        <button class="nbar-btn" data-type="half-dot" title="Pusinė nata su tašku">
+          <svg width="40" height="44" viewBox="0 0 40 44">
+            <ellipse cx="12" cy="34" rx="11" ry="7" fill="none" stroke="#333" stroke-width="3" transform="rotate(-12 12 34)"/>
+            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
+            <circle cx="31" cy="31" r="2.4" fill="#333"/>
+          </svg>
         </button>
 
         <!-- Quarter (default active) -->
-        <button class="nbar-btn active" data-type="quarter">
+        <button class="nbar-btn active" data-type="quarter" title="Ketvirtinė nata">
           <svg width="32" height="44" viewBox="0 0 32 44">
             <ellipse cx="12" cy="34" rx="11" ry="7" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 12 34)"/>
             <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
           </svg>
-          <span class="nl">ketv</span>
+        </button>
+
+        <!-- Dotted quarter -->
+        <button class="nbar-btn" data-type="quarter-dot" title="Ketvirtinė nata su tašku">
+          <svg width="40" height="44" viewBox="0 0 40 44">
+            <ellipse cx="12" cy="34" rx="11" ry="7" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 12 34)"/>
+            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
+            <circle cx="31" cy="31" r="2.4" fill="#333"/>
+          </svg>
         </button>
 
         <!-- Eighth -->
-        <button class="nbar-btn" data-type="eighth">
+        <button class="nbar-btn" data-type="eighth" title="Aštuntinė nata">
           <svg width="36" height="44" viewBox="0 0 36 44">
             <ellipse cx="11" cy="34" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 34)"/>
             <line x1="21" y1="32" x2="21" y2="5" stroke="#333" stroke-width="2.8"/>
             <path d="M21 5 C33 9 35 21 26 29" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
           </svg>
-          <span class="nl">ašt</span>
+        </button>
+
+        <!-- Dotted eighth -->
+        <button class="nbar-btn" data-type="eighth-dot" title="Aštuntinė nata su tašku">
+          <svg width="42" height="44" viewBox="0 0 42 44">
+            <ellipse cx="11" cy="34" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 34)"/>
+            <line x1="21" y1="32" x2="21" y2="5" stroke="#333" stroke-width="2.8"/>
+            <path d="M21 5 C33 9 35 21 26 29" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
+            <circle cx="30" cy="31" r="2.4" fill="#333"/>
+          </svg>
         </button>
 
         <!-- Sixteenth -->
-        <button class="nbar-btn" data-type="sixteenth">
+        <button class="nbar-btn" data-type="sixteenth" title="Šešioliktinė nata">
           <svg width="36" height="50" viewBox="0 0 36 50">
             <ellipse cx="11" cy="42" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 42)"/>
             <line x1="21" y1="40" x2="21" y2="4" stroke="#333" stroke-width="2.8"/>
             <path d="M21 4 C33 8 34 18 25 24" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
             <path d="M21 13 C33 17 34 27 25 33" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
           </svg>
-          <span class="nl">16oji</span>
         </button>
 
         <div class="nbar-sep"></div>
 
-        <!-- Rest quarter -->
-        <button class="nbar-btn" data-type="rest-quarter">
-          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄽</span>
-          <span class="nl">pz ♩</span>
-        </button>
-
-        <!-- Rest eighth -->
-        <button class="nbar-btn" data-type="rest-eighth">
-          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄾</span>
-          <span class="nl">pz ♪</span>
+        <!-- Rest whole -->
+        <button class="nbar-btn" data-type="rest-whole" title="Visos natos pauzė">
+          <span class="glyph-serif">𝄻</span>
         </button>
 
         <!-- Rest half -->
-        <button class="nbar-btn" data-type="rest-half">
-          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄼</span>
-          <span class="nl">pz ½</span>
+        <button class="nbar-btn" data-type="rest-half" title="Pusinės natos pauzė">
+          <span class="glyph-serif">𝄼</span>
         </button>
 
-        <!-- Rest whole -->
-        <button class="nbar-btn" data-type="rest-whole">
-          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">𝄻</span>
-          <span class="nl">pz v</span>
+        <!-- Rest quarter -->
+        <button class="nbar-btn" data-type="rest-quarter" title="Ketvirtinės natos pauzė">
+          <span class="glyph-serif">𝄽</span>
+        </button>
+
+        <!-- Rest eighth -->
+        <button class="nbar-btn" data-type="rest-eighth" title="Aštuntinės natos pauzė">
+          <span class="glyph-serif">𝄾</span>
+        </button>
+
+        <!-- Rest sixteenth -->
+        <button class="nbar-btn" data-type="rest-sixteenth" title="Šešioliktinės natos pauzė">
+          <span class="glyph-serif">𝄿</span>
         </button>
 
         <div class="nbar-sep"></div>
 
         <!-- Sharp -->
-        <button class="nbar-btn" data-acc="sharp" title="Diez (♯)">
-          <span style="font-family:serif;font-size:26px;line-height:1.1;display:block;margin-bottom:1px">♯</span>
-          <span class="nl">diez</span>
+        <button class="nbar-btn" data-acc="sharp" title="Diezas (♯)">
+          <span class="glyph-serif">♯</span>
+        </button>
+
+        <!-- Double sharp -->
+        <button class="nbar-btn" data-acc="doublesharp" title="Dublis diezas (𝄪)">
+          <span class="glyph-serif">𝄪</span>
         </button>
 
         <!-- Flat -->
-        <button class="nbar-btn" data-acc="flat" title="Bemol (♭)">
-          <span style="font-family:serif;font-size:28px;line-height:1.1;display:block;margin-bottom:1px">♭</span>
-          <span class="nl">bemol</span>
+        <button class="nbar-btn" data-acc="flat" title="Bemolis (♭)">
+          <span class="glyph-serif">♭</span>
+        </button>
+
+        <!-- Double flat -->
+        <button class="nbar-btn" data-acc="doubleflat" title="Dublis bemolis (𝄫)">
+          <span class="glyph-serif">𝄫</span>
+        </button>
+
+        <!-- Natural -->
+        <button class="nbar-btn" data-acc="natural" title="Bekaras (♮)">
+          <span class="glyph-serif">♮</span>
+        </button>
+
+        <div class="nbar-sep"></div>
+
+        <!-- Additional markings - icon + music term, per spec these keep a label -->
+        <button class="nbar-btn nbar-mark" data-mark="slur" title="Pridėti prie pažymėtos natos">
+          <svg width="30" height="22" viewBox="0 0 30 22"><path d="M2 4 Q15 20 28 4" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round"/></svg>
+          <span class="nl">Legato</span>
+        </button>
+        <button class="nbar-btn nbar-mark" data-mark="cresc" title="Pridėti prie pažymėtos natos">
+          <svg width="30" height="20" viewBox="0 0 30 20"><path d="M2 10 L26 2 M2 10 L26 18" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round"/></svg>
+          <span class="nl">Crescendo</span>
+        </button>
+        <button class="nbar-btn nbar-mark" data-mark="dim" title="Pridėti prie pažymėtos natos">
+          <svg width="30" height="20" viewBox="0 0 30 20"><path d="M4 2 L28 10 M4 18 L28 10" fill="none" stroke="#333" stroke-width="2.6" stroke-linecap="round"/></svg>
+          <span class="nl">Diminuendo</span>
+        </button>
+
+        <div class="nbar-sep"></div>
+
+        <!-- Lyrics/text under a selected note -->
+        <button class="nbar-btn" id="btnAddLyric" title="Pridėti tekstą po pažymėta nata">
+          <span style="font-family:var(--font);font-weight:800;font-size:20px;line-height:1;">Aa</span>
         </button>
 
       </div><!-- /note-bar -->
@@ -540,9 +613,12 @@
           </g>
         </svg>
         <div class="staff-actions">
-          <button class="sbtn sbtn-play"  id="btnPlay">▶ Groti</button>
-          <button class="sbtn sbtn-del"   id="btnDeleteNote" title="Pasirink natą penklinėje, tada spauski čia">✂ Natą</button>
-          <button class="sbtn sbtn-clear" id="btnClear">🗑 Išvalyti</button>
+          <button class="sbtn sbtn-zoom"  id="btnZoomOut" title="Atitolinti penklinę">🔎−</button>
+          <button class="sbtn sbtn-zoom"  id="btnZoomIn"  title="Priartinti penklinę">🔎+</button>
+          <button class="sbtn sbtn-play"  id="btnPlay">▶ <span data-i18n="play">Groti</span></button>
+          <button class="sbtn sbtn-stop"  id="btnStop" title="Sustabdyti">⏹ Stop</button>
+          <button class="sbtn sbtn-del"   id="btnDeleteNote" title="Pasirink natą penklinėje, tada spauski čia">✂ <span data-i18n="cutNote">Natą</span></button>
+          <button class="sbtn sbtn-clear" id="btnClear">🗑 <span data-i18n="clearAll">Išvalyti</span></button>
         </div>
       </div>
 
@@ -552,7 +628,7 @@
     <div class="right-col">
       <div class="nav-card open">
         <button type="button" class="nav-card-head" data-nav-toggle>
-          <span class="nch-ico">🎮</span><span class="nch-title">Žaidimai</span><span class="nch-chev">▾</span>
+          <span class="nch-ico">🎮</span><span class="nch-title" data-i18n="games">Žaidimai</span><span class="nch-chev">▾</span>
         </button>
         <div class="nav-card-body"><div class="nav-card-inner">
           <a class="nav-btn" href="klausa.html" style="--nav-accent:#fb8c00"><span class="nb-ico">🎧</span>Klausymo žaidimai</a>
@@ -566,7 +642,7 @@
 
       <div class="nav-card open">
         <button type="button" class="nav-card-head" data-nav-toggle>
-          <span class="nch-ico">📚</span><span class="nch-title">Mokymasis</span><span class="nch-chev">▾</span>
+          <span class="nch-ico">📚</span><span class="nch-title" data-i18n="learning">Mokymasis</span><span class="nch-chev">▾</span>
         </button>
         <div class="nav-card-body"><div class="nav-card-inner">
           <a class="nav-btn" href="pamokeles.html" style="--nav-accent:#fdd835"><span class="nb-ico">📚</span>Pamokėlės</a>
@@ -576,11 +652,16 @@
 
       <div class="nav-card open">
         <button type="button" class="nav-card-head" data-nav-toggle>
-          <span class="nch-ico">🗂️</span><span class="nch-title">Pamokos</span><span class="nch-chev">▾</span>
+          <span class="nch-ico">🗂️</span><span class="nch-title" data-i18n="lessons">Pamokos</span><span class="nch-chev">▾</span>
         </button>
         <div class="nav-card-body"><div class="nav-card-inner">
-          <button class="nav-btn" id="btnSaveLesson" style="--nav-accent:#16a34a"><span class="nb-ico">💾</span>Išsaugoti</button>
-          <button class="nav-btn" id="btnOpenLibrary" style="--nav-accent:#2f6fed"><span class="nb-ico">📂</span>Mano pamokos</button>
+          <button class="nav-btn" id="btnSaveLesson" style="--nav-accent:#16a34a"><span class="nb-ico">💾</span><span data-i18n="save">Išsaugoti</span></button>
+          <button class="nav-btn" id="btnOpenLibrary" style="--nav-accent:#2f6fed"><span class="nb-ico">📂</span><span data-i18n="myLessons">Mano pamokos</span></button>
+          <button class="nav-btn" id="btnPrint" style="--nav-accent:#9e9e9e;opacity:0.62;cursor:not-allowed" title="Netrukus"><span class="nb-ico">🖨️</span><span data-i18n="print">Spausdinti</span></button>
+          <button class="nav-btn" id="btnSettings" style="--nav-accent:#607d8b"><span class="nb-ico">⚙️</span><span data-i18n="settings">Nustatymai</span></button>
+          <button class="nav-btn" id="btnRightHelp" style="--nav-accent:#00acc1"><span class="nb-ico">❓</span><span data-i18n="help">Pagalba</span></button>
+          <button class="nav-btn" id="btnGlossary" style="--nav-accent:#7b1fa2"><span class="nb-ico">📖</span><span data-i18n="glossary">Reikšmės</span></button>
+          <button class="nav-btn" id="btnMisc" style="--nav-accent:#795548"><span class="nb-ico">❔</span><span data-i18n="misc">Kita</span></button>
         </div></div>
       </div>
     </div><!-- /right-col -->
@@ -594,6 +675,17 @@
         </div>
         <input type="text" id="libSearch" class="lib-search" placeholder="🔍 Ieškoti..." />
         <div class="lib-list" id="libList"></div>
+      </div>
+    </div>
+
+    <!-- ── Generic info modal, reused by Nustatymai / Reikšmės / Kita ── -->
+    <div class="lib-overlay" id="infoOverlay" hidden>
+      <div class="lib-modal">
+        <div class="lib-modal-head">
+          <span id="infoTitle"></span>
+          <button class="lib-close" id="infoClose" aria-label="Uždaryti">&times;</button>
+        </div>
+        <div id="infoBody" style="font-family:var(--font);font-size:14px;color:var(--ink);display:flex;flex-direction:column;gap:10px;overflow-y:auto;"></div>
       </div>
     </div>
 
@@ -619,6 +711,9 @@
       <button class="pop-btn" data-sound="guitar">🎸 Gitara</button>
       <button class="pop-btn" data-sound="harp">🎼 Arfa</button>
       <button class="pop-btn" data-sound="drums">🥁 Būgnai</button>
+      <button class="pop-btn" data-sound="shaker">🪇 Barškučiai</button>
+      <button class="pop-btn" data-sound="triangle">📐 Trikampis</button>
+      <button class="pop-btn" data-sound="cymbal">💿 Lėkštės</button>
       <button class="pop-btn" data-sound="marimba">🪘 Marimba</button>
       <button class="pop-btn" data-sound="bells">🔔 Varpeliai</button>
       <button class="pop-btn" data-sound="strings">🎻 Styginių ansamblis</button>
@@ -635,7 +730,7 @@
       <span class="lbl">Tempas</span>
     </button>
     <div class="popup" id="pop-tempo" style="min-width:90px;align-items:center;">
-      <div class="pop-title">Greitis</div>
+      <div class="pop-title" data-i18n="tempoTitle">Greitis</div>
       <span style="font-size:18px">🐇</span>
       <input type="range" id="tempoSlider"
              min="0.4" max="2.0" step="0.05" value="1.0"
@@ -643,6 +738,24 @@
              style="-webkit-appearance:slider-vertical;appearance:slider-vertical;writing-mode:vertical-lr;direction:rtl;width:32px;height:120px;cursor:pointer;accent-color:#4a8ee0;">
       <span style="font-size:18px">🐢</span>
       <div id="tempoVal" style="font-size:12px;font-weight:600;color:var(--ink-soft);font-family:var(--font);margin-top:2px;text-align:center;">🚶 Vidutiniškai</div>
+    </div>
+  </div>
+
+  <!-- Circle: Garsumas -->
+  <div class="circle-wrap">
+    <button class="scircle" data-popup="volume">
+      <span class="ico">🔊</span>
+      <span class="lbl">Garsas</span>
+    </button>
+    <div class="popup" id="pop-volume" style="min-width:90px;align-items:center;">
+      <div class="pop-title" data-i18n="volumeTitle">Garsumas</div>
+      <span style="font-size:18px">🔊</span>
+      <input type="range" id="volumeSlider"
+             min="0" max="1" step="0.05" value="0.85"
+             orient="vertical"
+             style="-webkit-appearance:slider-vertical;appearance:slider-vertical;writing-mode:vertical-lr;direction:rtl;width:32px;height:120px;cursor:pointer;accent-color:#4a8ee0;">
+      <span style="font-size:18px">🔈</span>
+      <div id="volumeVal" style="font-size:12px;font-weight:600;color:var(--ink-soft);font-family:var(--font);margin-top:2px;text-align:center;">Garsiai</div>
     </div>
   </div>
 
@@ -712,6 +825,8 @@
   // ── Audio context ────────────────────────────────────────────────────────────
   var PIANO_CTX  = null;
   var PIANO_COMP = null;
+  var MASTER_GAIN = null;
+  var VOLUME_LEVEL = 0.85; // 0..1, controlled by the "Garsumas" circle
 
   function getCtx() {
     if (!PIANO_CTX) {
@@ -722,7 +837,10 @@
       PIANO_COMP.ratio.value     = 4;
       PIANO_COMP.attack.value    = 0.003;
       PIANO_COMP.release.value   = 0.22;
-      PIANO_COMP.connect(PIANO_CTX.destination);
+      MASTER_GAIN = PIANO_CTX.createGain();
+      MASTER_GAIN.gain.value = VOLUME_LEVEL;
+      PIANO_COMP.connect(MASTER_GAIN);
+      MASTER_GAIN.connect(PIANO_CTX.destination);
     }
     return PIANO_CTX;
   }
@@ -814,18 +932,206 @@
     });
   }
 
+  // ── Bowed strings (violin) — sawtooth core, slow bow attack + gentle vibrato ──
+  function synthViolin(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var end = now + durSecs;
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.34, now + 0.09);
+    master.gain.setValueAtTime(0.34, Math.max(now + 0.09, end - 0.05));
+    master.gain.exponentialRampToValueAtTime(0.0001, end + 0.12);
+    master.connect(comp);
+
+    var vibrato = ctx.createOscillator();
+    vibrato.type = 'sine'; vibrato.frequency.value = 5.2;
+    var vibGain = ctx.createGain(); vibGain.gain.value = freq * 0.006;
+    vibrato.connect(vibGain);
+    vibrato.start(now); vibrato.stop(end + 0.15);
+
+    [1, 2, 3, 4, 5].forEach(function (h, i) {
+      var osc = ctx.createOscillator(); var g = ctx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.value = freq * h;
+      vibGain.connect(osc.frequency);
+      g.gain.value = [0.5, 0.24, 0.14, 0.07, 0.04][i];
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(end + 0.15);
+    });
+  }
+
+  // ── Flute — mostly-sine core with a breath of filtered noise ────────────────
+  function synthFlute(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var end = now + durSecs;
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.4, now + 0.05);
+    master.gain.setValueAtTime(0.4, Math.max(now + 0.05, end - 0.04));
+    master.gain.exponentialRampToValueAtTime(0.0001, end + 0.08);
+    master.connect(comp);
+
+    [1, 2, 3].forEach(function (h, i) {
+      var osc = ctx.createOscillator(); var g = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq * h;
+      g.gain.value = [1.0, 0.16, 0.06][i];
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(end + 0.1);
+    });
+
+    var noise = makeNoiseSource(ctx, durSecs + 0.1);
+    var breathFilter = ctx.createBiquadFilter();
+    breathFilter.type = 'bandpass'; breathFilter.frequency.value = freq * 1.5; breathFilter.Q.value = 0.6;
+    var breathGain = ctx.createGain(); breathGain.gain.value = 0.05;
+    noise.connect(breathFilter); breathFilter.connect(breathGain); breathGain.connect(master);
+    noise.start(now); noise.stop(end + 0.1);
+  }
+
+  // ── Trumpet — brighter sawtooth, fast attack, slightly nasal ────────────────
+  function synthTrumpet(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var end = now + durSecs;
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.3, now + 0.02);
+    master.gain.setValueAtTime(0.3, Math.max(now + 0.02, end - 0.05));
+    master.gain.exponentialRampToValueAtTime(0.0001, end + 0.1);
+    master.connect(comp);
+
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass'; filter.frequency.value = freq * 3; filter.Q.value = 1.1;
+    filter.connect(master);
+
+    [1, 2, 3, 4, 5, 6].forEach(function (h, i) {
+      var osc = ctx.createOscillator(); var g = ctx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.value = freq * h;
+      g.gain.value = [0.5, 0.32, 0.24, 0.16, 0.1, 0.06][i];
+      osc.connect(g); g.connect(filter);
+      osc.start(now); osc.stop(end + 0.12);
+    });
+  }
+
+  // ── Guitar — plucked string: fast attack, quick exponential decay ───────────
+  function synthGuitar(freq, durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var decay = Math.min(durSecs + 0.4, 1.1);
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.55, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + decay);
+    master.connect(comp);
+
+    [1, 2, 3, 4].forEach(function (h, i) {
+      var osc = ctx.createOscillator(); var g = ctx.createGain();
+      osc.type = 'triangle'; osc.frequency.value = freq * h;
+      var t1 = now + decay * [1, 0.7, 0.45, 0.3][i];
+      g.gain.setValueAtTime([1.0, 0.5, 0.22, 0.1][i], now);
+      g.gain.exponentialRampToValueAtTime(0.001, t1);
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(t1 + 0.05);
+    });
+  }
+
+  // ── Shared: a short burst of white noise, as a raw un-gained buffer source ──
+  var NOISE_BUFFER = null;
+  function makeNoiseSource(ctx, durSecs) {
+    if (!NOISE_BUFFER || NOISE_BUFFER.sampleRate !== ctx.sampleRate) {
+      var len = ctx.sampleRate * 2;
+      NOISE_BUFFER = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = NOISE_BUFFER.getChannelData(0);
+      for (var i = 0; i < len; i++) { data[i] = Math.random() * 2 - 1; }
+    }
+    var src = ctx.createBufferSource();
+    src.buffer = NOISE_BUFFER;
+    src.loop = true;
+    return src;
+  }
+
+  // ── Percussion: drums/shaker/triangle/cymbal are unpitched - they ignore
+  // the piano key's frequency and just play their own fixed hit. ─────────────
+  function synthDrum(durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.9, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    master.connect(comp);
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(48, now + 0.22);
+    osc.connect(master);
+    osc.start(now); osc.stop(now + 0.3);
+
+    var noise = makeNoiseSource(ctx, 0.05);
+    var nf = ctx.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = 400;
+    var ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.5, now);
+    ng.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    noise.connect(nf); nf.connect(ng); ng.connect(comp);
+    noise.start(now); noise.stop(now + 0.07);
+  }
+
+  function synthShaker(durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var noise = makeNoiseSource(ctx, 0.14);
+    var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 6500; f.Q.value = 0.7;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.5, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+    noise.connect(f); f.connect(g); g.connect(comp);
+    noise.start(now); noise.stop(now + 0.15);
+  }
+
+  function synthTriangleInst(durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0.5, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+    master.connect(comp);
+    [1, 2.76, 5.4, 8.9].forEach(function (h, i) {
+      var osc = ctx.createOscillator(); var g = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = 2800 * h / 4;
+      g.gain.value = [1.0, 0.5, 0.28, 0.12][i];
+      osc.connect(g); g.connect(master);
+      osc.start(now); osc.stop(now + 1.5);
+    });
+  }
+
+  function synthCymbal(durSecs, ctx, comp) {
+    var now = ctx.currentTime;
+    var noise = makeNoiseSource(ctx, 1.4);
+    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 5000;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.4, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+    noise.connect(f); f.connect(g); g.connect(comp);
+    noise.start(now); noise.stop(now + 1.4);
+  }
+
   // ── Dispatch ─────────────────────────────────────────────────────────────────
   var SOUND_TYPE   = 'piano';
   var TEMPO_SCALE  = 1.0;
 
+  var UNPITCHED = { drums: 1, shaker: 1, triangle: 1, cymbal: 1 };
+
   function playNote(noteName, durSecs) {
     var freq = PIANO_FREQ[noteName];
-    if (!freq) { return; }
+    if (!freq && !UNPITCHED[SOUND_TYPE]) { return; }
     var ctx = getCtx();
     if (ctx.state !== 'running') { ctx.resume(); }
-    if      (SOUND_TYPE === 'organ')   { synthOrgan(freq, durSecs, ctx, PIANO_COMP); }
-    else if (SOUND_TYPE === 'marimba') { synthMarimba(freq, durSecs, ctx, PIANO_COMP); }
-    else                               { synthPiano(freq, durSecs, ctx, PIANO_COMP); }
+    switch (SOUND_TYPE) {
+      case 'organ':    synthOrgan(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'marimba':  synthMarimba(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'violin':
+      case 'strings':  synthViolin(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'flute':    synthFlute(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'clarinet': synthFlute(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'trumpet':  synthTrumpet(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'guitar':   synthGuitar(freq, durSecs, ctx, PIANO_COMP); break;
+      case 'drums':    synthDrum(durSecs, ctx, PIANO_COMP); break;
+      case 'shaker':   synthShaker(durSecs, ctx, PIANO_COMP); break;
+      case 'triangle': synthTriangleInst(durSecs, ctx, PIANO_COMP); break;
+      case 'cymbal':   synthCymbal(durSecs, ctx, PIANO_COMP); break;
+      default:         synthPiano(freq, durSecs, ctx, PIANO_COMP); // piano, harp, bells, organ-ish extras, choir, childvoice
+    }
   }
 
   // ── Settings circles (popups) ────────────────────────────────────────────────
@@ -874,6 +1180,20 @@
   });
   tempoSlider.addEventListener('click', function (e) { e.stopPropagation(); });
 
+  // Volume slider (spec: "garsumas: garsiau - tyliau")
+  var volumeSlider = document.getElementById('volumeSlider');
+  var volumeVal    = document.getElementById('volumeVal');
+  function updateVolumeLabel() {
+    volumeVal.textContent = VOLUME_LEVEL < 0.3 ? 'Tyliai' : VOLUME_LEVEL > 0.7 ? 'Garsiai' : 'Vidutiniškai';
+  }
+  volumeSlider.addEventListener('input', function (e) {
+    e.stopPropagation();
+    VOLUME_LEVEL = parseFloat(volumeSlider.value);
+    if (MASTER_GAIN) { MASTER_GAIN.gain.value = VOLUME_LEVEL; }
+    updateVolumeLabel();
+  });
+  volumeSlider.addEventListener('click', function (e) { e.stopPropagation(); });
+
   // Keyboard range buttons
   var CURRENT_OCTAVES = [3, 4, 5];
   document.querySelectorAll('[data-keys]').forEach(function (btn) {
@@ -906,6 +1226,136 @@
     if (K && K.mascot) { K.mascot('happy', 'Spausk klavišus ir rašyk natas! 🎵'); }
   });
 
+  // ── Generic info modal, reused by Nustatymai / Reikšmės / Kita ──────────────
+  var infoOverlay = document.getElementById('infoOverlay');
+  var infoTitleEl = document.getElementById('infoTitle');
+  var infoBodyEl  = document.getElementById('infoBody');
+  function showInfo(title, bodyHtml) {
+    infoTitleEl.textContent = title;
+    infoBodyEl.innerHTML = bodyHtml;
+    infoOverlay.hidden = false;
+  }
+  document.getElementById('infoClose').addEventListener('click', function () { infoOverlay.hidden = true; });
+  infoOverlay.addEventListener('click', function (e) { if (e.target === infoOverlay) { infoOverlay.hidden = true; } });
+
+  // ── Language (LT/EN) — only the app's own chrome (buttons, titles); music
+  // and instrument names are never translated, per spec. Persisted locally so
+  // it follows this browser/installation, same pattern as the season theme. ──
+  var LANG_KEY = 'musication.rasymas.lang';
+  var CURRENT_LANG = (function () { try { return localStorage.getItem(LANG_KEY) || 'lt'; } catch (e) { return 'lt'; } })();
+  var I18N = {
+    lt: {
+      newLesson: 'Nauja', save: 'Išsaugoti', myLessons: 'Mano pamokos',
+      print: 'Spausdinti', settings: 'Nustatymai', help: 'Pagalba',
+      glossary: 'Reikšmės', misc: 'Kita', play: 'Groti', cutNote: 'Natą', clearAll: 'Išvalyti',
+      games: 'Žaidimai', learning: 'Mokymasis', lessons: 'Pamokos',
+      tempoTitle: 'Greitis', volumeTitle: 'Garsumas',
+      modeTeacher: 'Mokytojas', modeStudent: 'Mokinys'
+    },
+    en: {
+      newLesson: 'New', save: 'Save', myLessons: 'My lessons',
+      print: 'Print', settings: 'Settings', help: 'Help',
+      glossary: 'Glossary', misc: 'More', play: 'Play', cutNote: 'Note', clearAll: 'Clear',
+      games: 'Games', learning: 'Learning', lessons: 'Lessons',
+      tempoTitle: 'Tempo', volumeTitle: 'Volume',
+      modeTeacher: 'Teacher', modeStudent: 'Student'
+    }
+  };
+  function applyLanguage(lang) {
+    CURRENT_LANG = I18N[lang] ? lang : 'lt';
+    try { localStorage.setItem(LANG_KEY, CURRENT_LANG); } catch (e) {}
+    var dict = I18N[CURRENT_LANG];
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (dict[key]) { el.textContent = dict[key]; }
+    });
+    updateUserModeLabel();
+  }
+
+  // ── Teacher / Student mode — a visible, persisted switch (spec: "Pasirinkimas
+  // mokytojas - mokinys"). This first pass only changes the greeting/label;
+  // which buttons a "Mokinys" should or shouldn't see is a separate product
+  // decision this app doesn't guess at yet, so nothing is hidden for now. ─────
+  var MODE_KEY = 'musication.rasymas.mode';
+  var TEACHER_MODE = (function () { try { return localStorage.getItem(MODE_KEY) !== 'student'; } catch (e) { return true; } })();
+  function updateUserModeLabel() {
+    var dict = I18N[CURRENT_LANG];
+    document.getElementById('userModeLabel').textContent = TEACHER_MODE ? dict.modeTeacher : dict.modeStudent;
+  }
+  function setTeacherMode(isTeacher) {
+    TEACHER_MODE = isTeacher;
+    try { localStorage.setItem(MODE_KEY, isTeacher ? 'teacher' : 'student'); } catch (e) {}
+    updateUserModeLabel();
+  }
+
+  function renderSettingsModal() {
+    var dict = I18N[CURRENT_LANG];
+    showInfo('⚙️ ' + dict.settings,
+      '<div>' +
+        '<div style="font-weight:700;margin-bottom:6px;">👤 ' + (CURRENT_LANG === 'lt' ? 'Naudotojas' : 'User') + '</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="pop-btn' + (TEACHER_MODE ? ' sel' : '') + '" id="modeTeacherBtn">👩‍🏫 ' + dict.modeTeacher + '</button>' +
+          '<button class="pop-btn' + (!TEACHER_MODE ? ' sel' : '') + '" id="modeStudentBtn">🧒 ' + dict.modeStudent + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div style="font-weight:700;margin-bottom:6px;">🌐 ' + (CURRENT_LANG === 'lt' ? 'Kalba' : 'Language') + '</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="pop-btn' + (CURRENT_LANG === 'lt' ? ' sel' : '') + '" id="langLtBtn">🇱🇹 Lietuvių</button>' +
+          '<button class="pop-btn' + (CURRENT_LANG === 'en' ? ' sel' : '') + '" id="langEnBtn">🇬🇧 English</button>' +
+        '</div>' +
+      '</div>'
+    );
+    document.getElementById('modeTeacherBtn').addEventListener('click', function () { setTeacherMode(true); renderSettingsModal(); });
+    document.getElementById('modeStudentBtn').addEventListener('click', function () { setTeacherMode(false); renderSettingsModal(); });
+    document.getElementById('langLtBtn').addEventListener('click', function () { applyLanguage('lt'); renderSettingsModal(); });
+    document.getElementById('langEnBtn').addEventListener('click', function () { applyLanguage('en'); renderSettingsModal(); });
+  }
+  document.getElementById('btnUser').addEventListener('click', renderSettingsModal);
+  document.getElementById('btnSettings').addEventListener('click', renderSettingsModal);
+
+  document.getElementById('btnRightHelp').addEventListener('click', function () {
+    if (K && K.mascot) { K.mascot('happy', 'Spausk klavišus ir rašyk natas! 🎵'); }
+  });
+
+  document.getElementById('btnPrint').addEventListener('click', function () {
+    showInfo('🖨️ ' + I18N[CURRENT_LANG].print,
+      '<p>' + (CURRENT_LANG === 'lt'
+        ? 'Spausdinimo galimybė bus pridėta viename iš artimiausių atnaujinimų.'
+        : 'Printing will be added in one of the upcoming updates.') + '</p>');
+  });
+
+  document.getElementById('btnMisc').addEventListener('click', function () {
+    showInfo('❔ ' + I18N[CURRENT_LANG].misc,
+      '<p>' + (CURRENT_LANG === 'lt'
+        ? 'Čia atsiras dar daugiau galimybių ateities atnaujinimuose! 🚀'
+        : 'Even more features are coming here in future updates! 🚀') + '</p>');
+  });
+
+  // ── Reikšmės: a short bilingual glossary of the symbols/terms used above ───
+  var GLOSSARY = [
+    { lt: 'Diezas (♯)', en: 'Sharp (♯)', d: { lt: 'Pakelia natą pusę tono aukščiau.', en: 'Raises a note by a semitone.' } },
+    { lt: 'Bemolis (♭)', en: 'Flat (♭)', d: { lt: 'Nuleidžia natą pusę tono žemiau.', en: 'Lowers a note by a semitone.' } },
+    { lt: 'Bekaras (♮)', en: 'Natural (♮)', d: { lt: 'Panaikina ankstesnį diezą ar bemolį.', en: 'Cancels a previous sharp or flat.' } },
+    { lt: 'Taškas prie natos', en: 'Augmentation dot', d: { lt: 'Prailgina natos trukmę per pusę.', en: 'Extends a note\'s duration by half.' } },
+    { lt: 'Legato', en: 'Legato', d: { lt: 'Natos jungiamos švelniai, be pertrūkio.', en: 'Notes connected smoothly, without a break.' } },
+    { lt: 'Crescendo', en: 'Crescendo', d: { lt: 'Palaipsniui garsyn.', en: 'Gradually louder.' } },
+    { lt: 'Diminuendo', en: 'Diminuendo', d: { lt: 'Palaipsniui tyliau.', en: 'Gradually softer.' } },
+    { lt: 'G raktas / F raktas', en: 'Treble / Bass clef', d: { lt: 'Spausk ant rakto penklinės pradžioje, kad pakeistum.', en: 'Click the clef at the start of the staff to change it.' } }
+  ];
+  document.getElementById('btnGlossary').addEventListener('click', function () {
+    var lt = CURRENT_LANG === 'lt';
+    var rows = GLOSSARY.map(function (g) {
+      return '<div style="padding:8px 0;border-top:1px solid var(--panel-border);">' +
+        '<div style="font-weight:700;">' + (lt ? g.lt : g.en) + '</div>' +
+        '<div style="color:var(--ink-soft);font-size:13px;">' + (lt ? g.d.lt : g.d.en) + '</div>' +
+      '</div>';
+    }).join('');
+    showInfo('📖 ' + I18N[CURRENT_LANG].glossary, rows);
+  });
+
+  applyLanguage(CURRENT_LANG);
+
   // ── Note type bar ────────────────────────────────────────────────────────────
   var selectedType = 'quarter';
   document.querySelectorAll('.nbar-btn[data-type]').forEach(function (btn) {
@@ -917,16 +1367,25 @@
   });
 
   // ── Accidentals ──────────────────────────────────────────────────────────────
+  // Semitone-based so all 5 accidentals (sharp/double-sharp/flat/double-flat/
+  // natural) resolve to the correct pitch, including wrapping into the next
+  // or previous octave (e.g. B double-sharp -> Cs one octave up).
   var selectedAccidental = null;
-  var SHARP_EQUIV = { 'C':'Cs','D':'Ds','F':'Fs','G':'Gs','A':'As' };
-  var FLAT_EQUIV  = { 'D':'Cs','E':'Ds','G':'Fs','A':'Gs','B':'As' };
+  var LETTER_SEMI = { 'C':0,'D':2,'E':4,'F':5,'G':7,'A':9,'B':11 };
+  var SEMI_NAME   = ['C','Cs','D','Ds','E','F','Fs','G','Gs','A','As','B'];
+  var ACC_OFFSET  = { sharp:1, doublesharp:2, flat:-1, doubleflat:-2, natural:0 };
+  var ACC_GLYPH   = { sharp:'♯', doublesharp:'𝄪', flat:'♭', doubleflat:'𝄫', natural:'♮' };
 
   function getPlayNote(noteName, acc) {
     if (!acc || !noteName) { return noteName; }
+    var off = ACC_OFFSET[acc] || 0;
+    if (!off) { return noteName; }
     var letter = noteName.charAt(0);
-    var oct    = noteName.slice(1);
-    var equiv  = acc === 'sharp' ? SHARP_EQUIV[letter] : FLAT_EQUIV[letter];
-    return equiv ? (equiv + oct) : noteName;
+    var oct = parseInt(noteName.slice(1), 10);
+    var semi = LETTER_SEMI[letter] + off;
+    while (semi < 0) { semi += 12; oct -= 1; }
+    while (semi > 11) { semi -= 12; oct += 1; }
+    return SEMI_NAME[semi] + oct;
   }
 
   document.querySelectorAll('[data-acc]').forEach(function (btn) {
@@ -941,6 +1400,34 @@
         btn.classList.add('active');
       }
     });
+  });
+
+  // ── Additional markings + lyric text: applied to the currently selected
+  // note (click a note in the staff first, per the existing selection ring
+  // used for delete). ──────────────────────────────────────────────────────
+  document.querySelectorAll('[data-mark]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (selectedNoteIdx === null) {
+        if (K && K.mascot) { K.mascot('sad', 'Pirma pažymėk natą penklinėje 🎵'); }
+        return;
+      }
+      var mark = btn.dataset.mark;
+      var n = noteList[selectedNoteIdx];
+      n.mark = (n.mark === mark) ? null : mark;
+      redrawAllNotes();
+    });
+  });
+
+  document.getElementById('btnAddLyric').addEventListener('click', function () {
+    if (selectedNoteIdx === null) {
+      if (K && K.mascot) { K.mascot('sad', 'Pirma pažymėk natą penklinėje 🎵'); }
+      return;
+    }
+    var n = noteList[selectedNoteIdx];
+    var text = prompt('Tekstas po nata:', n.lyric || '');
+    if (text === null) { return; }
+    n.lyric = text.trim() || null;
+    redrawAllNotes();
   });
 
   // SVG clef click: toggle clef
@@ -1008,11 +1495,16 @@
   }
 
   var DURS = {
-    'whole': 1.8, 'half': 0.9, 'quarter': 0.45, 'eighth': 0.22, 'sixteenth': 0.11,
-    'rest-whole': 1.8, 'rest-half': 0.9, 'rest-quarter': 0.45, 'rest-eighth': 0.22
+    'whole': 1.8, 'half': 0.9, 'half-dot': 1.35, 'quarter': 0.45, 'quarter-dot': 0.675,
+    'eighth': 0.22, 'eighth-dot': 0.33, 'sixteenth': 0.11,
+    'rest-whole': 1.8, 'rest-half': 0.9, 'rest-quarter': 0.45, 'rest-eighth': 0.22, 'rest-sixteenth': 0.11
   };
+  // Beaming eligibility: plain (non-dotted) eighths/sixteenths only, matching
+  // the exact combinations the spec calls out (two eighths, two sixteenths,
+  // four sixteenths, eighth+2 sixteenths, 2 sixteenths+eighth, ...).
+  var BEAMABLE = { 'eighth': 1, 'sixteenth': 2 };
 
-  function drawNoteGlyph(noteName, type, x, yOffset, noteYTable, acc) {
+  function drawNoteGlyph(noteName, type, x, yOffset, noteYTable, acc, beamInfo, lyric, mark) {
     yOffset = yOffset || 0;
     noteYTable = noteYTable || ROW_NOTE_Y[0];
     var g = document.createElementNS(svgNS, 'g');
@@ -1038,6 +1530,15 @@
         et.setAttribute('fill', '#444');
         et.textContent = '𝄾';
         g.appendChild(et);
+      } else if (rt === 'sixteenth') {
+        var st = document.createElementNS(svgNS, 'text');
+        st.setAttribute('x', x); st.setAttribute('y', 64 + yo);
+        st.setAttribute('text-anchor', 'middle');
+        st.setAttribute('font-family', 'serif');
+        st.setAttribute('font-size', '44');
+        st.setAttribute('fill', '#444');
+        st.textContent = '𝄿';
+        g.appendChild(st);
       } else if (rt === 'half') {
         var r = document.createElementNS(svgNS, 'rect');
         r.setAttribute('x', x - 12); r.setAttribute('y', 41 + yo);
@@ -1059,6 +1560,8 @@
     y += yOffset;
 
     var noteColor = NOTE_COLOR[noteName.charAt(0)] || '#222';
+    var baseType  = type.replace('-dot', '');
+    var isDotted  = type.indexOf('-dot') >= 0;
 
     var STAF_TOP = 20 + yOffset, STAF_BOT = 76 + yOffset, LGAP = 14;
     if (y < STAF_TOP) {
@@ -1079,7 +1582,7 @@
       }
     }
 
-    var filled = (type !== 'whole' && type !== 'half');
+    var filled = (baseType !== 'whole' && baseType !== 'half');
     var el = document.createElementNS(svgNS, 'ellipse');
     el.setAttribute('cx', x); el.setAttribute('cy', y);
     el.setAttribute('rx', 10); el.setAttribute('ry', 6.5);
@@ -1088,25 +1591,69 @@
     el.setAttribute('transform', 'rotate(-12,' + x + ',' + y + ')');
     g.appendChild(el);
 
-    if (acc) {
+    if (acc && ACC_GLYPH[acc]) {
       var accEl = document.createElementNS(svgNS, 'text');
-      accEl.setAttribute('x', x - 14);
+      accEl.setAttribute('x', x - 16);
       accEl.setAttribute('y', y + 5);
       accEl.setAttribute('text-anchor', 'middle');
       accEl.setAttribute('font-family', 'serif');
-      accEl.setAttribute('font-size', '16');
+      accEl.setAttribute('font-size', acc === 'doublesharp' || acc === 'doubleflat' ? '14' : '16');
       accEl.setAttribute('fill', noteColor);
-      accEl.textContent = acc === 'sharp' ? '♯' : '♭';
+      accEl.textContent = ACC_GLYPH[acc];
       g.appendChild(accEl);
     }
 
+    // Augmentation dot, to the right of the notehead.
+    if (isDotted) {
+      var dot = document.createElementNS(svgNS, 'circle');
+      dot.setAttribute('cx', x + 15); dot.setAttribute('cy', y - 4);
+      dot.setAttribute('r', '2.3'); dot.setAttribute('fill', noteColor);
+      g.appendChild(dot);
+    }
 
-    if (type === 'whole') { return g; }
+    // A slur/legato/crescendo/diminuendo mark attached to this note (spec's
+    // "papildomi ženklai") is drawn just under the staff.
+    if (mark) {
+      var my = 84 + yOffset;
+      if (mark === 'slur') {
+        var sp = document.createElementNS(svgNS, 'path');
+        sp.setAttribute('d', 'M' + (x - 12) + ',' + my + ' Q' + x + ',' + (my + 9) + ' ' + (x + 12) + ',' + my);
+        sp.setAttribute('fill', 'none'); sp.setAttribute('stroke', '#555'); sp.setAttribute('stroke-width', '2');
+        sp.setAttribute('stroke-linecap', 'round');
+        g.appendChild(sp);
+      } else {
+        var hp = document.createElementNS(svgNS, 'path');
+        var d = mark === 'cresc'
+          ? 'M' + (x - 13) + ',' + (my + 4) + ' L' + (x + 13) + ',' + my + ' M' + (x - 13) + ',' + (my + 4) + ' L' + (x + 13) + ',' + (my + 8)
+          : 'M' + (x - 13) + ',' + my + ' L' + (x + 13) + ',' + (my + 4) + ' M' + (x - 13) + ',' + (my + 8) + ' L' + (x + 13) + ',' + (my + 4);
+        hp.setAttribute('d', d);
+        hp.setAttribute('fill', 'none'); hp.setAttribute('stroke', '#555'); hp.setAttribute('stroke-width', '2');
+        hp.setAttribute('stroke-linecap', 'round');
+        g.appendChild(hp);
+      }
+    }
 
-    var stemUp = y >= 48 + yOffset;
+    // A lyric/text syllable under this note (spec: "po penkline pridėti
+    // tekstą kiekvienai pasirinktai natai") - pushed a bit further down when
+    // a mark is already occupying the space just under the staff.
+    if (lyric) {
+      var lt = document.createElementNS(svgNS, 'text');
+      lt.setAttribute('x', x); lt.setAttribute('y', (mark ? 104 : 96) + yOffset);
+      lt.setAttribute('text-anchor', 'middle');
+      lt.setAttribute('font-family', 'var(--font)');
+      lt.setAttribute('font-size', '12');
+      lt.setAttribute('font-weight', '600');
+      lt.setAttribute('fill', '#444');
+      lt.textContent = lyric;
+      g.appendChild(lt);
+    }
+
+    if (baseType === 'whole') { return g; }
+
+    var stemUp = beamInfo ? beamInfo.stemUp : (y >= 48 + yOffset);
     var sx  = stemUp ? x + 9  : x - 9;
     var sy1 = y + (stemUp ? -3 : 3);
-    var sy2 = stemUp ? y - 32 : y + 32;
+    var sy2 = beamInfo ? beamInfo.beamY : (stemUp ? y - 32 : y + 32);
 
     var stem = document.createElementNS(svgNS, 'line');
     stem.setAttribute('x1', sx); stem.setAttribute('x2', sx);
@@ -1128,10 +1675,95 @@
       g.appendChild(fp);
     }
 
-    if (type === 'eighth' || type === 'sixteenth') { addFlag(sy2); }
-    if (type === 'sixteenth') { addFlag(stemUp ? sy2 + 9 : sy2 - 9); }
+    // Beamed notes share a straight beam bar (drawn separately by
+    // drawBeams) instead of their own curly flag.
+    if (!beamInfo) {
+      if (baseType === 'eighth')    { addFlag(sy2); }
+      if (baseType === 'sixteenth') { addFlag(sy2); addFlag(stemUp ? sy2 + 9 : sy2 - 9); }
+    }
 
     return g;
+  }
+
+  // ── Beaming: adjacent eighth/eighth-dot/sixteenth notes on the same row,
+  // with neither a rest nor a lyric in between, get straight connecting
+  // beam bars instead of individual flags — exactly the combinations named
+  // in the spec (two eighths, two/four sixteenths, eighth + 2 sixteenths, a
+  // dotted-eighth + sixteenth pair, ...). A note carrying its own lyric
+  // syllable breaks the group, per spec. ─────────────────────────────────────
+  function beamLevel(n) {
+    if (!n || !n.note || n.lyric) { return 0; }
+    if (n.type === 'eighth' || n.type === 'eighth-dot') { return 1; }
+    if (n.type === 'sixteenth') { return 2; }
+    return 0;
+  }
+
+  function computeBeamGroups() {
+    var groups = {};
+    var noteY = getRowNoteY();
+    var i = 0;
+    while (i < noteList.length) {
+      if (!beamLevel(noteList[i])) { i++; continue; }
+      var row = notePos(i).row;
+      var run = [i];
+      var j = i + 1;
+      while (j < noteList.length && beamLevel(noteList[j]) && notePos(j).row === row) { run.push(j); j++; }
+      if (run.length >= 2) {
+        var firstY = noteY[noteList[run[0]].note];
+        var stemUp = firstY >= 48;
+        var extreme = null;
+        run.forEach(function (idx) {
+          var yy = noteY[noteList[idx].note];
+          var sy2 = stemUp ? yy - 32 : yy + 32;
+          if (extreme === null || (stemUp ? sy2 < extreme : sy2 > extreme)) { extreme = sy2; }
+        });
+        run.forEach(function (idx) { groups[idx] = { members: run, stemUp: stemUp, beamY: extreme }; });
+      }
+      i = j;
+    }
+    return groups;
+  }
+
+  function drawBeams(groups) {
+    var done = {};
+    Object.keys(groups).forEach(function (key) {
+      var info = groups[key];
+      var gid = info.members[0];
+      if (done[gid]) { return; }
+      done[gid] = true;
+      var el = notePos(gid).el;
+      function beamRect(bx0, bx1, y, thick) {
+        var r = document.createElementNS(svgNS, 'rect');
+        var left = Math.min(bx0, bx1), w = Math.max(2, Math.abs(bx1 - bx0));
+        r.setAttribute('x', left); r.setAttribute('width', w);
+        r.setAttribute('y', info.stemUp ? y : y - thick);
+        r.setAttribute('height', thick);
+        r.setAttribute('fill', '#333');
+        el.appendChild(r);
+      }
+      var x0 = notePos(info.members[0]).x, x1 = notePos(info.members[info.members.length - 1]).x;
+      var sx0 = info.stemUp ? x0 + 9 : x0 - 9, sx1 = info.stemUp ? x1 + 9 : x1 - 9;
+      beamRect(sx0, sx1, info.beamY, 3.2);
+
+      var off = info.stemUp ? -9 : 9;
+      var k = 0;
+      while (k < info.members.length) {
+        if (beamLevel(noteList[info.members[k]]) === 2) {
+          var startK = k;
+          while (k + 1 < info.members.length && beamLevel(noteList[info.members[k + 1]]) === 2) { k++; }
+          var endK = k;
+          var xa = info.stemUp ? notePos(info.members[startK]).x + 9 : notePos(info.members[startK]).x - 9;
+          if (endK > startK) {
+            var xb = info.stemUp ? notePos(info.members[endK]).x + 9 : notePos(info.members[endK]).x - 9;
+            beamRect(xa, xb, info.beamY + off, 3.2);
+          } else {
+            var toward = startK < info.members.length - 1 ? 1 : -1;
+            beamRect(xa, xa + toward * 11, info.beamY + off, 3.2);
+          }
+        }
+        k++;
+      }
+    });
   }
 
   function addNote(noteName) {
@@ -1143,15 +1775,10 @@
     var noteY = getRowNoteY();
     if (!isRest && noteY[noteName] == null) { return; }
     var acc = isRest ? null : selectedAccidental;
-    var idx = noteList.length;
-    var pos = notePos(idx);
-    var el = drawNoteGlyph(noteName, selectedType, pos.x, 0, noteY, acc);
-    if (!el) { return; }
-    el.classList.add('note-pop');
     noteList.push({ note: isRest ? null : noteName, type: selectedType, acc: acc });
-    var yCtr = isRest ? 48 : noteY[noteName];
-    attachNoteClick(el, idx, pos.x, yCtr);
-    pos.el.appendChild(el);
+    // Redraw everything rather than just this one note: adding a note can
+    // change whether it - or its new neighbour - joins a beam group.
+    redrawAllNotes();
   }
 
   // ── Note selection & single-note deletion ────────────────────────────────────
@@ -1192,12 +1819,14 @@
     placedEl2.innerHTML = '';
     selectedNoteIdx = null;
     var noteY = getRowNoteY();
+    var beamGroups = computeBeamGroups();
     noteList.forEach(function (n, i) {
       var pos = notePos(i);
       var yCtr = n.note ? noteY[n.note] : 48;
-      var el = drawNoteGlyph(n.note || 'C4', n.type, pos.x, 0, noteY, n.acc);
-      if (el) { attachNoteClick(el, i, pos.x, yCtr); pos.el.appendChild(el); }
+      var el = drawNoteGlyph(n.note || 'C4', n.type, pos.x, 0, noteY, n.acc, beamGroups[i], n.lyric, n.mark);
+      if (el) { el.classList.add('note-pop'); attachNoteClick(el, i, pos.x, yCtr); pos.el.appendChild(el); }
     });
+    drawBeams(beamGroups);
   }
 
   function deleteSelectedNote() {
@@ -1302,7 +1931,34 @@
 
   document.getElementById('btnDeleteNote').addEventListener('click', deleteSelectedNote);
 
+  // ── Zoom the staff in/out (spec: "priartinti penklinę ar atitolinti") ──────
+  var staffZoom = 1;
+  function applyStaffZoom() {
+    document.querySelectorAll('.staff-panel').forEach(function (p) {
+      p.style.transform = 'scale(' + staffZoom + ')';
+      p.style.transformOrigin = 'top center';
+    });
+  }
+  document.getElementById('btnZoomIn').addEventListener('click', function () {
+    staffZoom = Math.min(1.6, +(staffZoom + 0.1).toFixed(2));
+    applyStaffZoom();
+  });
+  document.getElementById('btnZoomOut').addEventListener('click', function () {
+    staffZoom = Math.max(0.6, +(staffZoom - 0.1).toFixed(2));
+    applyStaffZoom();
+  });
+
   var playbackId = 0;
+
+  // ── Stop: invalidate the current playback so every still-pending
+  // scheduled note/play-head callback (guarded by `playbackId === pid`)
+  // becomes a no-op, and hide the play-heads immediately. ────────────────────
+  document.getElementById('btnStop').addEventListener('click', function () {
+    playbackId++;
+    var ph1 = document.getElementById('playHead'), ph2 = document.getElementById('playHead2');
+    if (ph1) { ph1.style.display = 'none'; }
+    if (ph2) { ph2.style.display = 'none'; }
+  });
 
   document.getElementById('btnPlay').addEventListener('click', function () {
     if (!noteList.length) { return; }
