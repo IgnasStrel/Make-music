@@ -12,8 +12,8 @@
     worker: { password: "worker123", role: "worker", label: "Darbuotojas" }
   };
 
-  var DOWNLOAD_PATH = "../electron-app/dist-installer/MUSICATION%20Setup%201.3.0.exe";
-  var DOWNLOAD_NAME = "MUSICATION Setup 1.3.0.exe";
+  var DOWNLOAD_PATH = "../electron-app/dist-installer/MUSICATION%20Setup%201.4.0.exe";
+  var DOWNLOAD_NAME = "MUSICATION Setup 1.4.0.exe";
   var SESSION_KEY = "mm_session";
 
   // ---------- Tabs ----------

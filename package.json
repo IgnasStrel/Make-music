@@ -30,6 +30,7 @@
     "types": "node ./build/build.js types",
     "typedoc": "node ./node_modules/typedoc/bin/typedoc",
     "serve": "serve build/html",
+    "app": "serve build -c ../serve-app.json -l 3000 -n",
     "site": "serve ."
   },
   "repository": {

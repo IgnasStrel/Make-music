@@ -3,97 +3,133 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MUSICATION — Visi žaidimai</title>
+  <title>MUSICATION — Žaidimai</title>
+  <script src="auth.js"></script>
+  <script>var SESSION = MusicationAuth.requireLogin();</script>
+  <link rel="stylesheet" href="../styles/pages.css">
   <style>
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0;
-      font-family: 'Chewy', 'Segoe UI', sans-serif;
-      background: linear-gradient(160deg, #fef6ff 0%, #f2fbff 100%);
-      color: #2a2340;
-      min-height: 100vh;
+    /* Colourful page: soft rainbow wash behind everything. */
+    body {
+      background:
+        radial-gradient(700px 420px at 0% 0%, rgba(0,157,157,0.28), transparent 60%),
+        radial-gradient(700px 420px at 100% 0%, rgba(209,18,100,0.24), transparent 60%),
+        radial-gradient(800px 500px at 0% 100%, rgba(166,185,8,0.26), transparent 60%),
+        radial-gradient(800px 500px at 100% 100%, rgba(251,173,4,0.28), transparent 60%),
+        #f7f1ff;
     }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 22px 20px 40px; }
-    .top {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 18px;
+
+    /* "ŽAIDIMAI" in the logo colours, one letter at a time. */
+    .big-title { text-align: center; font-size: clamp(48px, 8vw, 92px); font-weight: 800; letter-spacing: 6px; line-height: 1; margin: 4px 0 26px; }
+    .big-title span { display: inline-block; color: var(--c); text-shadow: 0 4px 0 rgba(0,0,0,0.08); animation: hop 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * 0.12s); }
+    @keyframes hop { 0%, 40%, 100% { transform: translateY(0); } 15% { transform: translateY(-10px) rotate(-4deg); } }
+
+    .levels { display: flex; flex-direction: column; gap: 18px; }
+    .level {
+      display: flex; align-items: center; gap: 22px;
+      background: rgba(255,255,255,0.7); border-radius: 30px; padding: 16px 20px;
+      box-shadow: 0 6px 20px rgba(35,38,74,0.06);
+      border-left: 12px solid var(--c);
     }
-    h1 { font-size: 28px; margin: 0; display: flex; align-items: center; gap: 10px; }
-    .close-btn {
-      border: none; border-radius: 999px; padding: 10px 18px;
-      background: #fff; box-shadow: 0 3px 0 rgba(0,0,0,0.12);
-      font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
-      color: #5f5570;
+    .level.mine { background: #fff; box-shadow: 0 0 0 4px var(--c), 0 10px 26px rgba(35,38,74,0.12); }
+    .level-name {
+      flex: none; width: 150px; text-align: center;
+      font-size: 30px; font-weight: 800; color: var(--c); line-height: 1.05;
     }
-    .close-btn:hover { background: #f2eefc; }
-    .close-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 18px;
+    .level-name small { display: block; font-size: 14px; color: var(--ink-soft); font-weight: 700; margin-top: 4px; }
+    .row { display: flex; gap: 18px; flex-wrap: wrap; flex: 1; }
+    .row .tile { width: 180px; }
+    .tile-pic img { width: 100%; height: 100%; object-fit: cover; }
+    .soon {
+      width: 180px; aspect-ratio: 1; border-radius: 26px; border: 3px dashed rgba(35,38,74,0.18);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      color: var(--ink-soft); font-weight: 700; font-size: 15px;
     }
-    .tile {
-      aspect-ratio: 1;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 10px;
-      border: none;
-      border-radius: 22px;
-      background: #fff;
-      border-top: 7px solid var(--accent, #ec407a);
-      box-shadow: 0 5px 0 rgba(0,0,0,0.1);
-      cursor: pointer;
-      font-family: inherit;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    .soon .big { font-size: 44px; opacity: 0.55; }
+
+    @media (max-width: 720px) {
+      .level { flex-direction: column; align-items: stretch; }
+      .level-name { width: auto; }
+      .row .tile, .soon { width: calc(50% - 9px); }
     }
-    .tile:hover { transform: translateY(-4px) scale(1.03); box-shadow: 0 8px 0 rgba(0,0,0,0.12); }
-    .tile:active { transform: translateY(1px) scale(0.99); box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
-    .tile-ico { font-size: 44px; line-height: 1; }
-    .tile-name { font-size: 15px; font-weight: 700; text-align: center; padding: 0 8px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
-      <h1>🎮 Visi žaidimai</h1>
-      <button class="close-btn" id="closeBtn">✕ Uždaryti</button>
+      <button class="btn" id="closeBtn">← Atgal</button>
+      <div class="grow"></div>
     </div>
-    <div class="grid" id="grid"></div>
+    <h1 class="big-title" id="bigTitle" aria-label="Žaidimai"></h1>
+    <div class="levels" id="levels"></div>
   </div>
 
   <script>
-    // Same rainbow accent palette used across the kids games and the
-    // notation editor's sidebar, so the whole app feels like one system.
-    var ACCENTS = ['#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#ec407a', '#00acc1', '#6d4c41'];
-
+    // The program's games, by level. level: 1, 2, 3 or 'all' (Visiems).
+    // pic: a picture for the tile (or icon: an emoji when there is none).
+    // To add a game, add one line here.
     var GAMES = [
-      { icon: '🎹', label: 'Rašyti natas',      href: 'rasymas.html' },
-      { icon: '💧', label: 'Klausos lašas',      href: 'lasas.html' },
-      { icon: '🎧', label: 'Klausymo žaidimai',  href: 'klausa.html' },
-      { icon: '🥁', label: 'Ritmo žaidimai',     href: 'ritmas.html' },
-      { icon: '🎵', label: 'Melodijos žaidimas', href: 'melodija.html' },
-      { icon: '🐄', label: 'Gyvūnų muzika',      href: 'gyvunai.html' },
-      { icon: '🐘', label: 'Atspėk kas?',        href: 'atspekkas.html' },
-      { icon: '🧠', label: 'Natų atmintis',      href: 'atmintis.html' },
-      { icon: '📝', label: 'Testai',             href: 'testai.html' },
-      { icon: '📚', label: 'Pamokėlės',          href: 'pamokeles.html' }
+      { label: 'Judėk kartu', icon: '💃', pic: 'media/judek/img/antis-varle.png', href: 'judek.html', level: 1 }
     ];
+    /* Hidden for now (pages still on disk) - give one a level and move it up:
+      { label: 'Klausos lašas',      icon: '💧', href: 'lasas.html' },
+      { label: 'Klausymo žaidimai',  icon: '🎧', href: 'klausa.html' },
+      { label: 'Ritmo žaidimai',     icon: '🥁', href: 'ritmas.html' },
+      { label: 'Melodijos žaidimas', icon: '🎵', href: 'melodija.html' },
+      { label: 'Gyvūnų muzika',      icon: '🐄', href: 'gyvunai.html' },
+      { label: 'Gyvūnų orkestras',   icon: '🎼', href: 'orkestras.html' },
+      { label: 'Natų atmintis',      icon: '🧠', href: 'atmintis.html' }
+    */
 
-    var grid = document.getElementById('grid');
-    GAMES.forEach(function (g, i) {
-      var tile = document.createElement('button');
-      tile.className = 'tile';
-      tile.style.setProperty('--accent', ACCENTS[i % ACCENTS.length]);
-      tile.innerHTML = '<span class="tile-ico">' + g.icon + '</span><span class="tile-name">' + g.label + '</span>';
-      tile.addEventListener('click', function () {
-        // Navigate this same pop-out window to the chosen game, so the
-        // main notation editor behind it is never disturbed.
-        location.href = g.href;
-      });
-      grid.appendChild(tile);
+    var LEVELS = [
+      { key: 1,     name: '1 lygis', color: '#009D9D' },
+      { key: 2,     name: '2 lygis', color: '#D11264' },
+      { key: 3,     name: '3 lygis', color: '#56317D' },
+      { key: 'all', name: 'Visiems', color: '#EA5223' }
+    ];
+    var MY_LEVEL = { I: 1, II: 2, III: 3 }[(SESSION && SESSION.level) || 'I'];
+
+    var title = document.getElementById('bigTitle');
+    var COLORS = ['#012A5F', '#009D9D', '#A6B908', '#FBAD04', '#EA5223', '#D11264', '#56317D', '#009D9D'];
+    'ŽAIDIMAI'.split('').forEach(function (ch, i) {
+      var s = document.createElement('span');
+      s.textContent = ch;
+      s.style.setProperty('--c', COLORS[i % COLORS.length]);
+      s.style.setProperty('--i', i);
+      title.appendChild(s);
     });
 
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    var box = document.getElementById('levels');
+    LEVELS.forEach(function (lv) {
+      var row = document.createElement('section');
+      row.className = 'level' + (lv.key === MY_LEVEL ? ' mine' : '');
+      row.style.setProperty('--c', lv.color);
+      row.innerHTML = '<div class="level-name">' + lv.name + (lv.key === MY_LEVEL ? '<small>⭐ tavo lygis</small>' : '') + '</div><div class="row"></div>';
+      var tiles = row.querySelector('.row');
+      var games = GAMES.filter(function (g) { return g.level === lv.key; });
+      games.forEach(function (g) {
+        var t = document.createElement('a');
+        t.className = 'tile';
+        t.href = g.href;
+        t.style.setProperty('--c', lv.color);
+        t.style.textDecoration = 'none'; t.style.color = 'inherit';
+        t.innerHTML = '<div class="tile-pic">' + (g.pic ? '<img alt="" src="' + g.pic + '">' : g.icon) + '</div>' +
+          '<div class="tile-name">' + g.icon + ' ' + esc(g.label) + '</div>';
+        tiles.appendChild(t);
+      });
+      if (!games.length) {
+        tiles.innerHTML = '<div class="soon"><span class="big">🎁</span>Netrukus</div>';
+      }
+      box.appendChild(row);
+    });
+
+    // Opened as a pop-out (from the full notation editor): close that window.
+    // Opened in the main window (from rasymas.html's "Žaidimai" button): go
+    // back to the main screen - window.close() there would do nothing in a
+    // browser and would shut the whole program in the desktop app.
     document.getElementById('closeBtn').addEventListener('click', function () {
-      window.close();
+      if (window.opener) { window.close(); } else { location.href = 'rasymas.html'; }
     });
   </script>
 </body>

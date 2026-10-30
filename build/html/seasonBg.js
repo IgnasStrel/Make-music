@@ -1,7 +1,10 @@
 /* Shared "season background" engine for MUSICATION.
-   Renders one of 7 backgrounds (4 looping season videos + 2 looping gif
-   photos + "none") behind (or as a translucent wash over) any page, keeps
-   the choice in localStorage so it follows the player from page to page,
+   Renders one background (6 colour pictures, 4 looping season videos,
+   2 looping gif photos, or "none") behind (or as a translucent wash over)
+   any page, keeps a background the player picked in localStorage so it
+   follows them from page to page (until they pick one, each page shows
+   its own default: window.SEASON_BG_DEFAULT; a page can also limit itself
+   to some of the backgrounds with window.SEASON_BG_ALLOWED = [keys]),
    and — unless a page opts out with window.SEASON_BG_NO_FLOATING — mounts
    a small floating "orb" button that expands into the full picker.
 
@@ -12,10 +15,22 @@
 (function (global) {
   'use strict';
 
-  var STORAGE_KEY = 'musication.bg.theme';
+  // ".v2": the first version saved the background on every page load, even
+  // when nobody had picked one, so every installation had the old default
+  // stored and a new default could never show. The new key starts clean;
+  // from now on only an actual pick (a click on an orb) is saved.
+  var STORAGE_KEY = 'musication.bg.theme.v2';
 
   var THEMES = [
     { key: 'none',      label: 'Be fono',    icon: '⬜', type: 'none' },
+    // The six colour backgrounds: one picture per colour, in uploads/fonai/
+    // and named after its colour (= the theme key).
+    { key: 'melynas',    label: 'Mėlyna',     icon: '', type: 'image', src: '../uploads/fonai/melynas.png',    gradient: 'linear-gradient(135deg,#9fd8f7,#62b6ea)' },
+    { key: 'rudas',      label: 'Ruda',       icon: '', type: 'image', src: '../uploads/fonai/rudas.png',      gradient: 'linear-gradient(135deg,#cfa77e,#a9794d)' },
+    { key: 'violetinis', label: 'Violetinė',  icon: '', type: 'image', src: '../uploads/fonai/violetinis.png', gradient: 'linear-gradient(135deg,#cdb0f7,#a583e6)' },
+    { key: 'zalias',     label: 'Žalia',      icon: '', type: 'image', src: '../uploads/fonai/zalias.png',     gradient: 'linear-gradient(135deg,#c6e557,#99c73b)' },
+    { key: 'geltonas',   label: 'Geltona',    icon: '', type: 'image', src: '../uploads/fonai/geltonas.png',   gradient: 'linear-gradient(135deg,#ffe870,#f2c82c)' },
+    { key: 'oranzinis',  label: 'Oranžinė',   icon: '', type: 'image', src: '../uploads/fonai/oranzinis.png',  gradient: 'linear-gradient(135deg,#ffbb6b,#f4963a)' },
     { key: 'pavasaris', label: 'Pavasaris',  icon: '🌸', type: 'video', src: '../uploads/pavasaris.mp4', gradient: 'linear-gradient(135deg,#ffc1e3,#7ee8a2)' },
     { key: 'vasara',    label: 'Vasara',     icon: '☀️', type: 'video', src: '../uploads/vasara.mp4',    gradient: 'linear-gradient(135deg,#ffe066,#4fc3f7)' },
     { key: 'ruduo',     label: 'Ruduo',      icon: '🍂', type: 'video', src: '../uploads/ruduo.mp4',     gradient: 'linear-gradient(135deg,#ffb46e,#8b5e34)' },
@@ -102,7 +117,9 @@
   }
 
   // --------------------------------------------------------------- Apply ---
-  function apply(key) {
+  // `opts.persist === false` shows a background without saving it as the
+  // player's choice (used for the page default on load).
+  function apply(key, opts) {
     var theme = byKey(key) || byKey('none');
     ensureLayers();
     var video = document.getElementById('season-bg-video');
@@ -128,7 +145,7 @@
       photo.classList.remove('on');
       photo.style.backgroundImage = '';
     }
-    persist(theme.key);
+    if (!opts || opts.persist !== false) { persist(theme.key); }
     updateSelectedUI(theme.key);
     listeners.forEach(function (cb) { try { cb(theme.key); } catch (e) {} });
   }
@@ -139,7 +156,15 @@
     });
   }
 
-  function current() { return load() || global.SEASON_BG_DEFAULT || 'vasara'; }
+  // The saved pick wins over the page default - unless this page only
+  // offers some of the backgrounds and the saved one is not among them.
+  function current() {
+    var fallback = global.SEASON_BG_DEFAULT || 'vasara';
+    var saved = load();
+    var allowed = global.SEASON_BG_ALLOWED;
+    if (!saved || (allowed && allowed.indexOf(saved) === -1)) { return fallback; }
+    return saved;
+  }
 
   // --------------------------------------------------------- Orb markup ---
   function orbHtml(theme, extraClass) {
@@ -180,7 +205,7 @@
 
   function init() {
     ensureLayers();
-    apply(current());
+    apply(current(), { persist: false });
     if (!global.SEASON_BG_NO_FLOATING) { mountFloatingPicker(); }
   }
 

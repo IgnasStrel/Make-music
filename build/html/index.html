@@ -1,11 +1,474 @@
 <!DOCTYPE html>
 <html lang="lt">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0; url=klausa.html" />
-  <title>MUSICATION</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MUSICATION — Prisijungimas</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Music&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lt-font.css">
+<script src="auth.js"></script>
+<script>
+  // Already logged in (e.g. the page was reloaded)? Go straight to the main screen.
+  if (MusicationAuth.getSession()) {
+    document.documentElement.style.visibility = 'hidden';
+    location.replace(MusicationAuth.HOME_PAGE);
+  }
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+    /* Dark violet over the whole screen. */
+    background: radial-gradient(ellipse at 50% 45%, #4c1d86 0%, #34106a 45%, #1d0640 100%) fixed;
+    background-color: #2a0b55;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Each step fills the whole screen; only one is shown at a time. */
+  .step {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 16px;
+    text-align: center;
+    animation: fadeIn 0.35s ease;
+  }
+  .step[hidden] { display: none; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* --- Background: coloured light + flowing staves --- */
+  .bg { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  /* Soft patches of light in the logo colours, drifting like an aurora. */
+  .aurora {
+    position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%;
+    mix-blend-mode: screen;
+    animation: float 28s ease-in-out infinite alternate;
+  }
+  /* Soft lighter-violet patches, so the purple is never flat. */
+  .a1 { background: radial-gradient(circle, rgba(150,90,255,0.30) 0%, transparent 62%); top: -22vmax; left: -18vmax; }
+  .a2 { background: radial-gradient(circle, rgba(200,90,255,0.24) 0%, transparent 62%); bottom: -26vmax; right: -18vmax; animation-duration: 34s; }
+  .a3 { background: radial-gradient(circle, rgba(110,70,230,0.28) 0%, transparent 62%); top: 20%; right: -30vmax; animation-duration: 40s; animation-direction: alternate-reverse; }
+  .a4 { background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 62%); bottom: -30vmax; left: 5%; animation-duration: 46s; }
+  @keyframes float {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(9vmax, 6vmax) scale(1.15); }
+    100% { transform: translate(-6vmax, 11vmax) scale(0.92); }
+  }
+  /* Wavy five-line staves that flow sideways, with notes riding on them. */
+  .staves { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .staves { filter: drop-shadow(0 0 4px rgba(200, 160, 255, 0.6)); }
+  .staves path { fill: none; stroke: #dcc6ff; stroke-width: 1.6; stroke-linecap: round; }
+  .drift { animation: drift linear infinite; }
+  @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-2400px); } }
+
+  /* --- Falling music symbols, behind everything --- */
+  .snow { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .flake {
+    position: absolute; top: -12vh;
+    font-family: 'Noto Music', 'Segoe UI Symbol', serif; line-height: 1;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(225, 200, 255, 0.95), 0 0 20px rgba(190, 140, 255, 0.7);
+    animation: fall linear infinite;
+    will-change: transform;
+  }
+  @keyframes fall {
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    25%  { transform: translate(var(--sway), 30vh) rotate(calc(var(--spin) * 0.25)); }
+    50%  { transform: translate(0, 60vh) rotate(calc(var(--spin) * 0.5)); }
+    75%  { transform: translate(calc(var(--sway) * -1), 90vh) rotate(calc(var(--spin) * 0.75)); }
+    100% { transform: translate(0, 125vh) rotate(var(--spin)); }
+  }
+  /* Some notes are dark, like ink on the purple. */
+  .flake.dark { color: #0e0320; text-shadow: none; }
+  .step { position: relative; z-index: 1; }
+
+  /* --- Step 1: big title + arrow --- */
+  /* Bright rainbow letters, each a little gradient from light (top) to
+     deep (bottom) with a soft drop shadow, and a white treble clef in place
+     of the O. drop-shadow (not text-shadow) because the letters are painted
+     with background-clip: text. The letters float in a gentle wave. */
+  .title {
+    font-size: clamp(48px, 12.5vw, 178px);
+    font-weight: 800; line-height: 1; letter-spacing: 1px;
+    white-space: nowrap;
+    display: flex; align-items: baseline; justify-content: center;
+  }
+  .title span {
+    display: inline-block;
+    background: linear-gradient(180deg, var(--c1) 10%, var(--c2) 90%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 0 rgba(20, 0, 45, 0.45)) drop-shadow(0 0 22px var(--glow));
+    will-change: transform;
+    animation: letterFloat 3.6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.3s);
+  }
+  .title .clef {
+    font-family: 'Noto Music', 'Segoe UI Symbol', serif; font-weight: 400;
+    font-size: 1.12em; line-height: 0;
+    margin: 0 -0.01em 0 0.03em;
+    position: relative; top: -0.17em;
+    /* Its box has no height (line-height 0), so a clipped gradient would
+       have nothing to paint - plain white instead. */
+    background: none; color: #f7f3ff;
+    filter: drop-shadow(0 3px 0 rgba(20, 0, 45, 0.4)) drop-shadow(0 0 16px rgba(255, 255, 255, 0.85));
+  }
+  /* A slow, smooth wave: every letter floats up and down the whole time,
+     each a little behind the one before it. */
+  @keyframes letterFloat {
+    0%, 100% { transform: translateY(0.035em); }
+    50%      { transform: translateY(-0.035em); }
+  }
+  /* Neon play triangle in place of the old arrow. */
+  .arrow {
+    margin-top: 70px;
+    width: 130px; height: 130px; border: none; background: none; padding: 0;
+    cursor: pointer; color: #fff;
+    animation: pulse 2.2s ease-in-out infinite;
+    transition: transform 0.15s;
+  }
+  .arrow:hover { transform: scale(1.08); }
+  .arrow svg { width: 100%; height: 100%; overflow: visible; }
+  @keyframes pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(155,107,255,0.9)) drop-shadow(0 0 20px rgba(120,80,255,0.5)); }
+    50%      { filter: drop-shadow(0 0 14px rgba(185,140,255,1)) drop-shadow(0 0 40px rgba(140,90,255,0.8)); }
+  }
+
+  /* --- Shared choice buttons (levels, languages, roles) --- */
+  .heading { font-size: clamp(26px, 4vw, 40px); font-weight: 800; margin-bottom: 26px; color: #ffd65c; }
+  .choices { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 460px; }
+  .choices.row { flex-direction: row; flex-wrap: wrap; justify-content: center; max-width: 620px; }
+  .choices.row .choice { flex: 1 1 200px; }
+  .choice {
+    border: 4px solid rgba(255,255,255,0.35); border-radius: 22px; cursor: pointer;
+    background: rgba(255,255,255,0.1); color: #fff;
+    font-family: inherit; font-size: clamp(22px, 3vw, 30px); font-weight: 800; letter-spacing: 1px;
+    padding: 16px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+    transition: transform 0.12s, background 0.12s, border-color 0.12s, box-shadow 0.12s;
+  }
+  .choice:hover { transform: translateY(-3px); background: rgba(255,255,255,0.2); border-color: #ffd65c; }
+  .choice:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+  .choice.sel { border-color: #ffd65c; background: rgba(255, 214, 92, 0.22); }
+  .choice .ico { font-size: 52px; line-height: 1; }
+
+  .back {
+    margin-top: 28px;
+    border: none; background: none; cursor: pointer;
+    color: rgba(255,255,255,0.75); font-family: inherit; font-size: 18px; font-weight: 700;
+  }
+  .back:hover { color: #fff; text-decoration: underline; }
+  .crumb { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 10px; letter-spacing: 1px; }
+
+  /* --- Step 4: login form --- */
+  .form { margin-top: 24px; width: 100%; max-width: 460px; text-align: left; }
+  .form[hidden] { display: none; }
+  .form h2 { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 12px; }
+  .form label { display: block; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 12px; }
+  .form input {
+    display: block; width: 100%; margin-top: 4px;
+    border: 3px solid rgba(255,255,255,0.35); border-radius: 14px; padding: 10px 14px;
+    font-family: inherit; font-size: 18px; font-weight: 600; color: #1e0a3a; background: #fff;
+    outline: none; transition: border-color 0.12s;
+  }
+  .form input:focus { border-color: #ffd65c; }
+  .error { color: #ff9b9b; font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 10px; }
+  .error[hidden] { display: none; }
+  .submit {
+    display: block; width: 100%; margin-top: 4px;
+    border: none; border-radius: 999px; padding: 12px 20px; cursor: pointer;
+    background: linear-gradient(180deg, #ffe48a, #ffc53d); color: #3a1a00;
+    font-family: inherit; font-size: 22px; font-weight: 800;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.3), 0 10px 18px rgba(0,0,0,0.25);
+    transition: transform 0.15s;
+  }
+  .submit:hover { transform: translateY(-2px); }
+  .submit:active { transform: translateY(2px); }
+
+</style>
 </head>
 <body>
-  <p>Nukreipiama į <a href="klausa.html">MUSICATION</a>…</p>
+
+  <div class="bg" aria-hidden="true">
+    <div class="aurora a1"></div>
+    <div class="aurora a2"></div>
+    <div class="aurora a3"></div>
+    <div class="aurora a4"></div>
+    <svg class="staves" id="staves" viewBox="0 0 2400 1200" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="noteGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="5" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+    </svg>
+  </div>
+  <div class="snow" id="snow" aria-hidden="true"></div>
+
+  <!-- 1. Big title + arrow -->
+  <section class="step" id="stepIntro">
+    <h1 class="title" aria-label="MUSICATION"><span style="--i:0;--c1:#52c3ff;--c2:#1f6fe8;--glow:rgba(60,150,255,0.45)">M</span><span style="--i:1;--c1:#5ef0ea;--c2:#10a7b7;--glow:rgba(40,210,220,0.4)">U</span><span style="--i:2;--c1:#b8ec4a;--c2:#4fae1f;--glow:rgba(140,220,60,0.4)">S</span><span style="--i:3;--c1:#ffe46a;--c2:#f5a512;--glow:rgba(255,200,40,0.4)">I</span><span style="--i:4;--c1:#ffbe55;--c2:#ff6a1a;--glow:rgba(255,130,40,0.4)">C</span><span style="--i:5;--c1:#ff6d95;--c2:#e9145a;--glow:rgba(255,60,120,0.45)">A</span><span style="--i:6;--c1:#ea8cff;--c2:#9d3bf0;--glow:rgba(200,90,255,0.45)">T</span><span style="--i:7;--c1:#7cf5e4;--c2:#14b9a8;--glow:rgba(40,210,190,0.4)">I</span><span class="clef" style="--i:8;--c1:#ffffff;--c2:#ddd2ff;--glow:rgba(255,255,255,0.6)">𝄞</span><span style="--i:9;--c1:#5cb8ff;--c2:#2667f0;--glow:rgba(60,140,255,0.45)">N</span></h1>
+    <button type="button" class="arrow" id="introArrow" aria-label="Pradėti">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <linearGradient id="playGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8f7bff"/><stop offset="1" stop-color="#d07cff"/>
+          </linearGradient>
+        </defs>
+        <path d="M30 18 Q24 14 24 22 V78 Q24 86 31 82 L80 54 Q87 50 80 46 Z" fill="rgba(40,12,90,0.65)" stroke="url(#playGrad)" stroke-width="6" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </section>
+
+  <!-- 2. MUSICATION I / II / III -->
+  <section class="step" id="stepLevel" hidden>
+    <div class="choices">
+      <button type="button" class="choice" data-level="I">MUSICATION I</button>
+      <button type="button" class="choice" data-level="II">MUSICATION II</button>
+      <button type="button" class="choice" data-level="III">MUSICATION III</button>
+    </div>
+    <button type="button" class="back" data-back="stepIntro">← Atgal / Back</button>
+  </section>
+
+  <!-- 3. Language -->
+  <section class="step" id="stepLang" hidden>
+    <p class="crumb" id="langCrumb"></p>
+    <div class="choices row">
+      <button type="button" class="choice" data-lang="lt">LIETUVIŲ</button>
+      <button type="button" class="choice" data-lang="en">ENGLISH</button>
+    </div>
+    <button type="button" class="back" data-back="stepLevel">← Atgal / Back</button>
+  </section>
+
+  <!-- 4. Teacher / student + login -->
+  <section class="step" id="stepLogin" hidden>
+    <p class="crumb" id="loginCrumb"></p>
+    <div class="choices row">
+      <button type="button" class="choice role" data-role="teacher" aria-pressed="false">
+        <span class="ico">👩‍🏫</span>
+        <span data-t="teacher"></span>
+      </button>
+      <button type="button" class="choice role" data-role="student" aria-pressed="false">
+        <span class="ico">🧒</span>
+        <span data-t="student"></span>
+      </button>
+    </div>
+
+    <form class="form" id="loginForm" hidden autocomplete="off">
+      <h2 id="formTitle"></h2>
+      <label><span data-t="user"></span>
+        <input type="text" id="loginUser" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+      </label>
+      <label><span data-t="pass"></span>
+        <input type="password" id="loginPass" autocomplete="current-password" required />
+      </label>
+      <p class="error" id="loginError" role="alert" hidden></p>
+      <button type="submit" class="submit" data-t="submit"></button>
+    </form>
+    <button type="button" class="back" data-back="stepLang" data-t="back"></button>
+  </section>
+
+<script>
+(function () {
+  'use strict';
+
+  var TEXT = {
+    lt: {
+      teacher: 'Mokytojas', student: 'Mokinys',
+      teacherForm: '👩‍🏫 Mokytojo prisijungimas', studentForm: '🧒 Mokinio prisijungimas',
+      user: 'Vartotojo vardas', pass: 'Slaptažodis', submit: 'Prisijungti',
+      error: 'Neteisingas vartotojo vardas arba slaptažodis.', back: '← Atgal'
+    },
+    en: {
+      teacher: 'Teacher', student: 'Student',
+      teacherForm: '👩‍🏫 Teacher login', studentForm: '🧒 Student login',
+      user: 'Username', pass: 'Password', submit: 'Log in',
+      error: 'Wrong username or password.', back: '← Back'
+    }
+  };
+
+  // Wavy staves drifting sideways. Each staff is drawn twice as wide as the
+  // 2400-unit view and slides left by exactly 2400, so the loop is seamless
+  // (every wavelength divides 2400).
+  (function makeStaves() {
+    var NS = 'http://www.w3.org/2000/svg';
+    var svg = document.getElementById('staves');
+    // Notes on the staves: glowing white or dark ink, like the falling ones.
+    var LOGO = ['#ffffff', '#120428', '#f1e6ff', '#120428', '#ffffff'];
+
+    function el(tag, attrs, parent) {
+      var n = document.createElementNS(NS, tag);
+      for (var k in attrs) { n.setAttribute(k, attrs[k]); }
+      parent.appendChild(n);
+      return n;
+    }
+
+    function staff(o) {
+      var g = el('g', { 'class': 'drift' }, svg);
+      g.style.animationDuration = o.speed + 's';
+      function y(x, offset) { return o.y + offset + o.amp * Math.sin(2 * Math.PI * x / o.len + o.phase); }
+
+      for (var line = 0; line < 5; line++) {
+        var d = '';
+        for (var x = 0; x <= 4800; x += 12) {
+          d += (x ? ' L' : 'M') + x + ' ' + y(x, line * o.gap).toFixed(1);
+        }
+        el('path', { d: d, opacity: o.opacity }, g);
+      }
+
+      // pos: 0 = top line, 8 = bottom line, odd numbers are spaces.
+      (o.notes || []).forEach(function (n, i) {
+        for (var rep = 0; rep < 2; rep++) {
+          var nx = n.x + rep * 2400;
+          var ny = y(nx, n.pos * o.gap / 2);
+          var color = LOGO[(i + o.colorShift) % LOGO.length];
+          var rx = o.gap * 0.68, ry = o.gap * 0.48;
+          var ng = el('g', color === '#120428' ? { opacity: 0.85 } : { filter: 'url(#noteGlow)', opacity: 0.9 }, g);
+          el('ellipse', {
+            cx: nx, cy: ny, rx: rx, ry: ry,
+            transform: 'rotate(-22 ' + nx + ' ' + ny + ')',
+            fill: n.hollow ? 'none' : color, stroke: color, 'stroke-width': n.hollow ? 4 : 0
+          }, ng);
+          var up = n.pos >= 4;
+          var sx = up ? nx + rx * 0.9 : nx - rx * 0.9;
+          el('line', {
+            x1: sx, y1: ny, x2: sx, y2: ny + (up ? -1 : 1) * o.gap * 3.4,
+            stroke: color, 'stroke-width': 3.5, 'stroke-linecap': 'round'
+          }, ng);
+        }
+      });
+    }
+
+    // Faint, wide staves far behind the title.
+    staff({ y: 520, gap: 16, amp: 130, len: 2400, phase: 1.2, speed: 110, opacity: 0.12 });
+    staff({ y: 330, gap: 12, amp: 90, len: 1200, phase: 3.0, speed: 95, opacity: 0.1 });
+    staff({ y: 1060, gap: 14, amp: 60, len: 1200, phase: 0.6, speed: 80, opacity: 0.14 });
+    // Upper staff.
+    staff({
+      y: 180, gap: 20, amp: 55, len: 1200, phase: 0, speed: 70, opacity: 0.32, colorShift: 0,
+      notes: [{ x: 220, pos: 5 }, { x: 560, pos: 2, hollow: true }, { x: 900, pos: 7 }, { x: 1300, pos: 4 },
+              { x: 1650, pos: 1 }, { x: 1980, pos: 6, hollow: true }, { x: 2250, pos: 3 }]
+    });
+    // Lower staff.
+    staff({
+      y: 900, gap: 22, amp: 75, len: 2400, phase: 2.4, speed: 55, opacity: 0.34, colorShift: 3,
+      notes: [{ x: 120, pos: 3 }, { x: 480, pos: 6 }, { x: 820, pos: 1, hollow: true }, { x: 1150, pos: 5 },
+              { x: 1500, pos: 8 }, { x: 1820, pos: 2 }, { x: 2150, pos: 4, hollow: true }]
+    });
+  })();
+
+  // Music symbols "snowing" down the screen.
+  (function makeSnow() {
+    var SYMBOLS = ['♪', '♫', '♬', '♩', '𝄞', '𝄞', '𝄢', '𝄢', '♯', '♭', '♮', '𝄐', '𝅗𝅥', '𝅝'];
+    var box = document.getElementById('snow');
+    var count = window.innerWidth < 600 ? 26 : 56;
+    for (var i = 0; i < count; i++) {
+      var f = document.createElement('span');
+      f.className = 'flake' + (Math.random() < 0.38 ? ' dark' : '');
+      f.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+      var duration = 9 + Math.random() * 12;
+      f.style.left = (Math.random() * 100) + 'vw';
+      f.style.fontSize = (20 + Math.random() * 44) + 'px';
+      f.style.opacity = (0.45 + Math.random() * 0.55).toFixed(2);
+      f.style.animationDuration = duration + 's';
+      // Negative delay so the screen is already full of symbols on load.
+      f.style.animationDelay = (-Math.random() * duration) + 's';
+      f.style.setProperty('--sway', (20 + Math.random() * 50) * (Math.random() < 0.5 ? -1 : 1) + 'px');
+      f.style.setProperty('--spin', (Math.random() * 120 - 60) + 'deg');
+      box.appendChild(f);
+    }
+  })();
+
+  var steps = document.querySelectorAll('.step');
+  var roleButtons = document.querySelectorAll('.role');
+  var form = document.getElementById('loginForm');
+  var formTitle = document.getElementById('formTitle');
+  var userInput = document.getElementById('loginUser');
+  var passInput = document.getElementById('loginPass');
+  var errorEl = document.getElementById('loginError');
+
+  var level = null;
+  var lang = 'lt';
+  var selectedRole = null;
+
+  function show(id) {
+    steps.forEach(function (s) { s.hidden = s.id !== id; });
+  }
+
+  function t(key) { return TEXT[lang][key]; }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('#stepLogin [data-t]').forEach(function (el) {
+      el.textContent = t(el.dataset.t);
+    });
+    document.getElementById('loginCrumb').textContent =
+      'MUSICATION ' + level + ' · ' + (lang === 'en' ? 'ENGLISH' : 'LIETUVIŲ');
+  }
+
+  // 1 → 2
+  document.getElementById('introArrow').addEventListener('click', function () { show('stepLevel'); });
+
+  // 2 → 3
+  document.querySelectorAll('[data-level]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      level = btn.dataset.level;
+      document.getElementById('langCrumb').textContent = 'MUSICATION ' + level;
+      show('stepLang');
+    });
+  });
+
+  // 3 → 4
+  document.querySelectorAll('[data-lang]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      lang = btn.dataset.lang;
+      selectedRole = null;
+      roleButtons.forEach(function (b) { b.classList.remove('sel'); b.setAttribute('aria-pressed', 'false'); });
+      form.hidden = true;
+      applyLang();
+      show('stepLogin');
+    });
+  });
+
+  document.querySelectorAll('[data-back]').forEach(function (btn) {
+    btn.addEventListener('click', function () { show(btn.dataset.back); });
+  });
+
+  // 4: teacher / student, then the login form
+  function selectRole(role) {
+    selectedRole = role;
+    roleButtons.forEach(function (btn) {
+      var on = btn.dataset.role === role;
+      btn.classList.toggle('sel', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    formTitle.textContent = t(role + 'Form');
+    errorEl.hidden = true;
+    form.reset();
+    form.hidden = false;
+    userInput.focus();
+  }
+  roleButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () { selectRole(btn.dataset.role); });
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!selectedRole) { return; }
+    var session = MusicationAuth.login(selectedRole, userInput.value, passInput.value, { level: level, lang: lang });
+    if (session) {
+      location.replace(MusicationAuth.HOME_PAGE);
+      return;
+    }
+    errorEl.textContent = t('error');
+    errorEl.hidden = false;
+    passInput.value = '';
+    passInput.focus();
+  });
+})();
+</script>
 </body>
 </html>

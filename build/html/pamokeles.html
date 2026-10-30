@@ -1,209 +1,431 @@
 <!DOCTYPE html>
 <html lang="lt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MUSICATION — Pamokėlės</title>
-  <link rel="stylesheet" href="../styles/kids.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MUSICATION — Pamokėlės</title>
+<script src="auth.js"></script>
+<script>var SESSION = MusicationAuth.requireLogin();</script>
+<link rel="stylesheet" href="../styles/pages.css">
+<style>
+  .screen[hidden] { display: none; }
+  .tile .edit {
+    position: absolute; top: 10px; right: 10px;
+    border: none; background: #fff; border-radius: 50%; width: 38px; height: 38px; font-size: 17px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; opacity: 0; transition: opacity 0.15s;
+  }
+  .tile:hover .edit, .tile .edit:focus { opacity: 1; }
+
+  /* ── One lesson ── */
+  .lesson-head {
+    display: flex; gap: 26px; align-items: center; flex-wrap: wrap;
+    background: color-mix(in srgb, var(--c) 14%, #fff);
+    border-radius: 30px; padding: 22px 26px; margin-bottom: 22px;
+    border-bottom: 8px solid var(--c);
+  }
+  .big-pic {
+    width: 200px; height: 200px; border-radius: 34px; flex: none; cursor: pointer;
+    background: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 130px; line-height: 1; overflow: hidden;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.08);
+    transition: transform 0.15s;
+  }
+  .big-pic:hover { transform: scale(1.04) rotate(-2deg); }
+  .big-pic img { width: 100%; height: 100%; object-fit: cover; }
+  .lesson-head h2 { font-size: 40px; font-weight: 800; line-height: 1.05; }
+  .lesson-text { font-size: 20px; font-weight: 600; line-height: 1.45; margin-top: 8px; white-space: pre-line; max-width: 760px; }
+  .lesson-head .info { flex: 1; min-width: 260px; }
+
+  .sec { margin-bottom: 22px; }
+  .sec h3 { font-size: 24px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+  .act { aspect-ratio: 1.15; }
+  .act .tile-pic { width: 52%; font-size: 52px; }
+  .ex-row { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 18px; padding: 10px 14px; box-shadow: 0 4px 0 rgba(0,0,0,0.06); margin-bottom: 10px; max-width: 640px; }
+  .ex-row .ex-ico { font-size: 30px; }
+  .ex-row .ex-title { flex: 1; font-weight: 800; font-size: 18px; }
+  .ex-row .meter { font-weight: 800; color: var(--ink-soft); }
+
+  /* ── Editor ── */
+  .editor .modal { max-width: 760px; }
+  .pic-preview { width: 92px; height: 92px; border-radius: 22px; background: #f3f1fb; display: flex; align-items: center; justify-content: center; font-size: 60px; overflow: hidden; flex: none; }
+  .pic-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .pic-line { display: flex; gap: 14px; align-items: flex-start; }
+  .group-title { font-weight: 800; font-size: 14px; color: var(--ink-soft); margin: 6px 0 2px; }
+</style>
 </head>
 <body>
-  <div class="topbar">
-    <a class="back" href="zaidimai.html">← Atgal</a>
-    <div class="spacer"></div>
-    <div class="stars-box">⭐ <b id="starCount">0</b></div>
+<div class="wrap">
+  <div class="top">
+    <button class="btn" id="backBtn">← Atgal</button>
+    <h1><span class="h-ico">📚</span> Pamokėlės</h1>
+    <div class="grow"></div>
+    <a class="btn btn-yellow" href="testai.html">📝 Užduotys</a>
+    <a class="btn btn-violet" href="istraukos.html">🎼 Muzikinės ištraukos</a>
+    <a class="btn btn-teal" href="mano-pamokos.html" id="myLessonsBtn" hidden>🎒 Mano pamokos</a>
   </div>
 
-  <!-- ===== Menu ===== -->
-  <section class="screen" id="menu">
-    <h1>📚 Pamokėlės
-      <small>Trumpos pamokėlės su garsais ir paveiksliukais</small>
-    </h1>
-    <div class="menu-grid" id="lessonMenu"></div>
+  <!-- All lessons as square tiles -->
+  <section class="screen" id="gridScreen">
+    <div class="tiles" id="tiles"></div>
   </section>
 
-  <!-- ===== Lesson 1: high/low ===== -->
-  <section class="screen" id="aukstizemi">
-    <h2>🐦 Aukšti ir žemi garsai</h2>
-    <div class="card">
-      <div class="illus">🐦 ⬆️</div>
-      <p class="lead">Paukštelis čiulba <b>aukštai</b> — garsas plonas ir aukštas.</p>
-      <button class="btn btn-primary" data-note="C6">🔊 Aukštas garsas</button>
-      <div class="illus">🐻 ⬇️</div>
-      <p class="lead">Meška urzgia <b>žemai</b> — garsas storas ir žemas.</p>
-      <button class="btn btn-primary" data-note="C3">🔊 Žemas garsas</button>
-    </div>
-    <button class="btn btn-amber done-btn" data-lesson="aukstizemi">✓ Supratau (gauk ⭐)</button>
-    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
-  </section>
+  <!-- One lesson -->
+  <section class="screen" id="viewScreen" hidden></section>
+</div>
 
-  <!-- ===== Lesson 2: dynamics ===== -->
-  <section class="screen" id="dinamika">
-    <h2>🔊 Garsiai ir tyliai</h2>
-    <div class="card">
-      <p class="lead">Muzika gali skambėti <b>garsiai</b> (ženklas <b>f</b> — forte) arba <b>tyliai</b> (ženklas <b>p</b> — piano).</p>
-      <div class="controls">
-        <button class="btn btn-primary" data-note="G4" data-gain="0.6">🔊 Garsiai (f)</button>
-        <button class="btn btn-primary" data-note="G4" data-gain="0.07">🤫 Tyliai (p)</button>
+<!-- Lesson editor (teacher) -->
+<div class="overlay editor" id="editor" hidden>
+  <div class="modal" style="--mc: var(--pink);">
+    <div class="modal-head"><h2 id="edTitle">Nauja pamokėlė</h2><button class="x" data-close>&times;</button></div>
+    <div class="modal-body">
+      <label class="field"><span>Pavadinimas</span><input class="input" id="edName" type="text" placeholder="pvz. Aukšti ir žemi garsai"></label>
+
+      <div class="field"><span>Paveikslėlis</span>
+        <div class="pic-line">
+          <div class="pic-preview" id="edPicPreview"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+            <div class="pick-row" id="edEmojis"></div>
+            <div><label class="btn btn-small">📷 Įkelti savo paveikslėlį<input type="file" id="edPicFile" accept="image/*" hidden></label></div>
+          </div>
+        </div>
       </div>
-      <p class="lead">Ta pati nata — tik vienas garsas stiprus, kitas švelnus.</p>
+
+      <div class="field"><span>Spalva</span><div class="pick-row" id="edColors"></div></div>
+      <label class="field"><span>Ką vaikai sužinos (tekstas pamokėlėje)</span><textarea class="textarea" id="edText" placeholder="Trumpas paaiškinimas vaikams…"></textarea></label>
+      <label class="field"><span>Aplankas</span><select class="select" id="edFolder"></select></label>
+
+      <div class="field"><span>📝 Užduotys</span><div class="checks" id="edTasks"></div></div>
+      <div class="field"><span>🎮 Solfedžio žaidimai</span><div class="checks" id="edGames"></div></div>
+      <div class="field"><span>🎼 Natų lapai (iš „Mano pamokos“)</span><div class="checks" id="edSheets"></div></div>
+      <div class="field"><span>🎵 Muzikinės ištraukos</span><div id="edExcerpts"></div></div>
+      <p class="muted" id="edError" hidden></p>
     </div>
-    <button class="btn btn-amber done-btn" data-lesson="dinamika">✓ Supratau (gauk ⭐)</button>
-    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
-  </section>
-
-  <!-- ===== Lesson 3: ta / ti-ti ===== -->
-  <section class="screen" id="ritmas">
-    <h2>👏 Ritmas: ta ir ti-ti</h2>
-    <div class="card">
-      <div class="rhythm-row">
-        <div class="beat"><div class="glyph">♩</div><div class="syl">ta</div></div>
-      </div>
-      <p class="lead"><b>ta</b> — vienas ilgas plojimas (ketvirtinė nata).</p>
-      <button class="btn btn-primary" id="playTa">👏 Plok „ta"</button>
-      <div class="rhythm-row">
-        <div class="beat"><div class="glyph">♫</div><div class="syl">ti-ti</div></div>
-      </div>
-      <p class="lead"><b>ti-ti</b> — du greiti plojimai (dvi aštuntinės).</p>
-      <button class="btn btn-primary" id="playTiti">👏 Plok „ti-ti"</button>
+    <div class="modal-foot">
+      <button class="btn btn-orange" id="edArchive" hidden>📚 Į biblioteką</button>
+      <div style="flex:1"></div>
+      <button class="btn" data-close>Atšaukti</button>
+      <button class="btn btn-pink" id="edSave">💾 Išsaugoti</button>
     </div>
-    <button class="btn btn-amber done-btn" data-lesson="ritmas">✓ Supratau (gauk ⭐)</button>
-    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
-  </section>
+  </div>
+</div>
 
-  <!-- ===== Lesson 4: coloured notes ===== -->
-  <section class="screen" id="spalvotos">
-    <h2>🌈 Spalvotos natos</h2>
-    <div class="card">
-      <p class="lead">Kiekviena nata turi savo spalvą. Paspausk ir išgirsk Do–Re–Mi–Fa–Sol–La–Si!</p>
-      <div class="piano" id="colorPiano"></div>
-    </div>
-    <button class="btn btn-amber done-btn" data-lesson="spalvotos">✓ Supratau (gauk ⭐)</button>
-    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
-  </section>
+<script src="lessonLibrary.js"></script>
+<script src="excerpts.js"></script>
+<script>
+(function () {
+  'use strict';
+  var L = window.LessonLibrary, CAT = window.MusicationCatalog, EX = window.MusicationExcerpts;
+  var TEACHER = SESSION && SESSION.role === 'teacher';
+  var COLORS = ['#009D9D', '#A6B908', '#FBAD04', '#EA5223', '#D11264', '#56317D', '#012A5F', '#1e88e5'];
+  var EMOJIS = ['🐦','🐻','🐸','🐱','🐶','🐰','🦊','🐝','🦋','🐞','🐢','🐘','🦁','🐮','🦉','🐔',
+                '🎵','🎶','🎹','🥁','🎻','🪈','🔔','👏','🌈','☀️','🌧️','⭐','🎈','🌸','🍎','🚂'];
 
-  <!-- ===== Lesson 5: staff ===== -->
-  <section class="screen" id="penkline">
-    <h2>🎼 Natos ant penklinės</h2>
-    <div class="card">
-      <p class="lead">Natos gyvena ant <b>penkių linijų</b>. Kuo aukščiau nata — tuo aukštesnis garsas. Paspausk natą!</p>
-      <div id="staff"></div>
-    </div>
-    <button class="btn btn-amber done-btn" data-lesson="penkline">✓ Supratau (gauk ⭐)</button>
-    <button class="btn btn-ghost back-lesson">← Pamokėlės</button>
-  </section>
+  if (TEACHER) { document.getElementById('myLessonsBtn').hidden = false; }
 
-  <script src="kids.js"></script>
-  <script src="seasonBg.js"></script>
-  <script>
-    (function () {
-      var K = window.Kids;
-      var SOLF = K.SOLFEGE;
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+  function picHtml(p) { return p && p.indexOf('data:') === 0 ? '<img alt="" src="' + p + '">' : esc(p || '🎵'); }
 
-      var LESSONS = [
-        { id: 'aukstizemi', ico: '🐦', name: 'Aukšti ir žemi garsai' },
-        { id: 'dinamika',   ico: '🔊', name: 'Garsiai ir tyliai' },
-        { id: 'ritmas',     ico: '👏', name: 'Ritmas: ta ir ti-ti' },
-        { id: 'spalvotos',  ico: '🌈', name: 'Spalvotos natos' },
-        { id: 'penkline',   ico: '🎼', name: 'Natos ant penklinės' }
-      ];
+  // A short, happy arpeggio when a picture is tapped - the "interactive" part.
+  var actx = null;
+  function chime(color) {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state !== 'running') { actx.resume(); }
+      var base = 523.25 * Math.pow(2, (COLORS.indexOf(color) % 5) / 12);
+      [1, 1.26, 1.5, 2].forEach(function (m, i) {
+        var t = actx.currentTime + i * 0.09;
+        var o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'triangle'; o.frequency.value = base * m;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.55);
+      });
+    } catch (e) {}
+  }
+  function wiggle(el) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); }
 
-      // ---- Menu ----
-      var menu = document.getElementById('lessonMenu');
-      function renderMenu() {
-        menu.innerHTML = '';
-        LESSONS.forEach(function (l) {
-          var done = K.progress.isDone('lesson.' + l.id);
-          var card = document.createElement('button');
-          card.className = 'menu-card';
-          card.innerHTML = '<span class="ico">' + l.ico + '</span><span class="name">' + l.name +
-            '</span><span class="sub">' + (done ? '✅ išmokta' : 'paspausk ir mokykis') + '</span>';
-          card.addEventListener('click', function () { K.showScreen(l.id); });
-          menu.appendChild(card);
+  function lessons() { return L.list({ kind: 'pamokele', archived: false }).slice().sort(function (a, b) { return a.createdAt - b.createdAt; }); }
+
+  document.getElementById('backBtn').addEventListener('click', function () {
+    if (location.hash.indexOf('#view=') === 0) { location.hash = ''; }
+    else { location.href = 'rasymas.html'; }
+  });
+
+  // ── Grid ──
+  function renderGrid() {
+    var box = document.getElementById('tiles');
+    box.innerHTML = '';
+    var list = lessons();
+    list.forEach(function (r) {
+      var s = L.load(r.id) || {};
+      var counts = [];
+      if ((s.tasks || []).length) { counts.push('📝 ' + s.tasks.length); }
+      if ((s.games || []).length) { counts.push('🎮 ' + s.games.length); }
+      if ((s.sheets || []).length) { counts.push('🎼 ' + s.sheets.length); }
+      if ((s.excerpts || []).length) { counts.push('🎵 ' + s.excerpts.length); }
+      var t = document.createElement('div');
+      t.className = 'tile';
+      t.setAttribute('role', 'button'); t.tabIndex = 0;
+      t.style.setProperty('--c', s.color || COLORS[0]);
+      t.innerHTML = '<div class="tile-pic">' + picHtml(s.picture) + '</div>' +
+        '<div class="tile-name">' + esc(r.title) + '</div>' +
+        '<div class="tile-sub">' + (counts.join(' · ') || '&nbsp;') + '</div>' +
+        (TEACHER ? '<button class="edit" title="Keisti">✏️</button>' : '');
+      t.addEventListener('click', function (e) {
+        if (e.target.classList.contains('edit')) { location.hash = 'edit=' + r.id; return; }
+        location.hash = 'view=' + r.id;
+      });
+      t.addEventListener('keydown', function (e) { if (e.key === 'Enter') { location.hash = 'view=' + r.id; } });
+      box.appendChild(t);
+    });
+    if (TEACHER) {
+      var n = document.createElement('button');
+      n.className = 'tile tile-new';
+      n.innerHTML = '<div class="tile-pic">➕</div><div class="tile-name">Nauja pamokėlė</div><div class="tile-sub">sukurk savo temą</div>';
+      n.addEventListener('click', function () { location.hash = 'new'; });
+      box.appendChild(n);
+    } else if (!list.length) {
+      box.innerHTML = '<div class="panel empty" style="grid-column:1/-1"><span class="big">🦉</span>Pamokėlių dar nėra – jas sukurs mokytojas.</div>';
+    }
+  }
+
+  // ── One lesson ──
+  function actTile(ico, name, color, href) {
+    return '<a class="tile act" style="--c:' + color + ';text-decoration:none;color:inherit" href="' + href + '">' +
+      '<div class="tile-pic">' + ico + '</div><div class="tile-name">' + esc(name) + '</div></a>';
+  }
+
+  function renderView(id) {
+    var r = L.get(id);
+    var box = document.getElementById('viewScreen');
+    if (!r) { location.hash = ''; return; }
+    var s = L.load(id) || {};
+    var c = s.color || COLORS[0];
+    var html = '<div class="lesson-head" style="--c:' + c + '">' +
+      '<div class="big-pic" id="bigPic" title="Paspausk!">' + picHtml(s.picture) + '</div>' +
+      '<div class="info"><h2>' + esc(r.title) + '</h2>' +
+      (s.text ? '<div class="lesson-text">' + esc(s.text) + '</div>' : '') + '</div>' +
+      (TEACHER ? '<button class="btn" id="editThis">✏️ Keisti</button>' : '') + '</div>';
+
+    var tasks = (s.tasks || []).map(function (tid) { return CAT.find(CAT.TASKS, tid); }).filter(Boolean);
+    if (tasks.length) {
+      html += '<div class="sec"><h3>📝 Užduotys</h3><div class="acts">' +
+        tasks.map(function (t, i) { return actTile(t.ico, t.name, COLORS[(i + 2) % COLORS.length], t.href); }).join('') + '</div></div>';
+    }
+    var games = (s.games || []).map(function (gid) { return CAT.find(CAT.GAMES, gid); }).filter(Boolean);
+    if (games.length) {
+      html += '<div class="sec"><h3>🎮 Žaidimai</h3><div class="acts">' +
+        games.map(function (g, i) { return actTile(g.ico, g.name, COLORS[(i + 4) % COLORS.length], g.href); }).join('') + '</div></div>';
+    }
+    var sheets = (s.sheets || []).map(function (sid) { return L.get(sid); }).filter(Boolean);
+    if (sheets.length) {
+      html += '<div class="sec"><h3>🎼 Natos</h3><div class="acts">' +
+        sheets.map(function (sh, i) { return actTile('🎼', sh.title, COLORS[(i + 1) % COLORS.length], 'rasymas.html?lesson=' + encodeURIComponent(sh.id)); }).join('') + '</div></div>';
+    }
+    html += '<div class="sec" id="exSec" hidden><h3>🎵 Muzikinės ištraukos</h3><div id="exList"></div></div>';
+    box.innerHTML = html;
+
+    var pic = document.getElementById('bigPic');
+    pic.addEventListener('click', function () { wiggle(pic); chime(c); });
+    var editBtn = document.getElementById('editThis');
+    if (editBtn) { editBtn.addEventListener('click', function () { location.hash = 'edit=' + id; }); }
+
+    if ((s.excerpts || []).length) {
+      EX.all().then(function (all) {
+        var items = s.excerpts.map(function (eid) { return all.filter(function (x) { return x.id === eid; })[0]; }).filter(Boolean);
+        if (!items.length) { return; }
+        var list = document.getElementById('exList');
+        items.forEach(function (it) {
+          var row = document.createElement('div');
+          row.className = 'ex-row';
+          row.innerHTML = '<span class="ex-ico">' + EX.KIND_ICON[it.kind] + '</span><span class="ex-title">' + esc(it.title) +
+            '</span><span class="meter">' + it.meter + '</span><button class="btn btn-icon">▶️</button>';
+          var b = row.querySelector('button');
+          b.dataset.ex = it.id;
+          b.addEventListener('click', function () {
+            if (EX.playingId() === it.id) { EX.stop(); } else { EX.play(it, { loop: it.kind === 'ritmas' }); }
+          });
+          list.appendChild(row);
         });
-      }
-      renderMenu();
-
-      // ---- Generic "play a note" buttons (data-note / data-gain) ----
-      document.querySelectorAll('button[data-note]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          K.audio.resume();
-          K.audio.tone(b.dataset.note, { dur: 1.0, gain: b.dataset.gain ? parseFloat(b.dataset.gain) : 0.35 });
-        });
+        document.getElementById('exSec').hidden = false;
       });
+    }
+  }
+  EX.onChange(function (id) {
+    document.querySelectorAll('[data-ex]').forEach(function (b) { b.textContent = b.dataset.ex === id ? '⏹️' : '▶️'; });
+  });
 
-      // ---- Lesson 3: clap demos ----
-      document.getElementById('playTa').addEventListener('click', function () { K.audio.resume(); K.audio.clap(); });
-      document.getElementById('playTiti').addEventListener('click', function () {
-        K.audio.resume(); K.audio.clap(); setTimeout(function () { K.audio.clap(); }, 240);
+  // ── Editor ──
+  var editor = document.getElementById('editor');
+  var edId = null, edPic = '🎵', edColor = COLORS[0];
+
+  function setPic(p) {
+    edPic = p;
+    document.getElementById('edPicPreview').innerHTML = picHtml(p);
+    document.querySelectorAll('#edEmojis .pick').forEach(function (b) { b.classList.toggle('sel', b.textContent === p); });
+  }
+  EMOJIS.forEach(function (em) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick'; b.textContent = em;
+    b.addEventListener('click', function () { setPic(em); });
+    document.getElementById('edEmojis').appendChild(b);
+  });
+  COLORS.forEach(function (c) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'pick swatch'; b.style.background = c; b.dataset.c = c;
+    b.addEventListener('click', function () { setColor(c); });
+    document.getElementById('edColors').appendChild(b);
+  });
+  function setColor(c) {
+    edColor = c;
+    document.querySelectorAll('#edColors .swatch').forEach(function (b) { b.classList.toggle('sel', b.dataset.c === c); });
+    document.getElementById('edPicPreview').style.background = 'color-mix(in srgb, ' + c + ' 18%, #fff)';
+  }
+
+  // Own picture: shrunk to at most 320px so it fits in the browser's storage.
+  document.getElementById('edPicFile').addEventListener('change', function (e) {
+    var f = e.target.files[0];
+    if (!f) { return; }
+    var img = new Image();
+    img.onload = function () {
+      var k = Math.min(1, 320 / Math.max(img.width, img.height));
+      var cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      var g = cv.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+      g.drawImage(img, 0, 0, cv.width, cv.height);
+      setPic(cv.toDataURL('image/jpeg', 0.85));
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(f);
+    e.target.value = '';
+  });
+
+  function checks(boxId, items, selected) {
+    var box = document.getElementById(boxId);
+    box.innerHTML = '';
+    if (!items.length) { box.innerHTML = '<span class="muted">Kol kas nėra.</span>'; return; }
+    items.forEach(function (it) {
+      var l = document.createElement('label');
+      l.className = 'check';
+      l.innerHTML = '<input type="checkbox" value="' + esc(it.id) + '"' + (selected.indexOf(it.id) >= 0 ? ' checked' : '') + '> ' +
+        '<span>' + it.label + '</span>';
+      box.appendChild(l);
+    });
+  }
+  function checked(boxId) {
+    return Array.prototype.map.call(document.querySelectorAll('#' + boxId + ' input:checked'), function (i) { return i.value; });
+  }
+
+  function openEditor(id, folderId) {
+    if (!TEACHER) { location.hash = ''; return; }
+    edId = id || null;
+    var r = id ? L.get(id) : null;
+    if (id && !r) { location.hash = ''; return; }
+    var s = r ? (L.load(id) || {}) : {};
+    document.getElementById('edTitle').textContent = r ? '✏️ ' + r.title : '➕ Nauja pamokėlė';
+    document.getElementById('edName').value = r ? r.title : '';
+    document.getElementById('edText').value = s.text || '';
+    document.getElementById('edError').hidden = true;
+    document.getElementById('edArchive').hidden = !r;
+    setPic(s.picture || EMOJIS[lessons().length % EMOJIS.length]);
+    setColor(s.color || COLORS[lessons().length % COLORS.length]);
+
+    var fsel = document.getElementById('edFolder');
+    fsel.innerHTML = '<option value="">— be aplanko —</option>' + L.folders().map(function (f) {
+      return '<option value="' + esc(f.id) + '">📁 ' + esc(f.name) + '</option>';
+    }).join('');
+    fsel.value = (r ? r.folderId : folderId) || '';
+
+    checks('edTasks', CAT.TASKS.map(function (t) { return { id: t.id, label: t.ico + ' ' + esc(t.name) }; }), s.tasks || []);
+    checks('edGames', CAT.GAMES.map(function (g) { return { id: g.id, label: g.ico + ' ' + esc(g.name) }; }), s.games || []);
+    checks('edSheets', L.list({ kind: 'natos', archived: false }).map(function (n) { return { id: n.id, label: '🎼 ' + esc(n.title) }; }), s.sheets || []);
+
+    var exBox = document.getElementById('edExcerpts');
+    exBox.innerHTML = '';
+    EX.all().then(function (all) {
+      EX.METERS.forEach(function (m) {
+        var title = document.createElement('div');
+        title.className = 'group-title'; title.textContent = m;
+        var grid = document.createElement('div');
+        grid.className = 'checks'; grid.id = 'edEx' + m.charAt(0);
+        exBox.appendChild(title); exBox.appendChild(grid);
+        checks(grid.id, all.filter(function (x) { return x.meter === m; }).map(function (x) {
+          return { id: x.id, label: EX.KIND_ICON[x.kind] + ' ' + esc(x.title) };
+        }), s.excerpts || []);
       });
+    });
 
-      // ---- Lesson 4: coloured piano ----
-      var cp = document.getElementById('colorPiano');
-      SOLF.forEach(function (s) {
-        var b = document.createElement('button');
-        b.className = 'pkey'; b.style.background = s.color;
-        b.innerHTML = s.solf + '<small>' + s.note.charAt(0) + '</small>';
-        b.addEventListener('click', function () { K.audio.resume(); K.audio.tone(s.note, { dur: 0.8 }); K.say(s.solf); });
-        cp.appendChild(b);
-      });
+    editor.hidden = false;
+    setTimeout(function () { document.getElementById('edName').focus(); }, 50);
+  }
 
-      // ---- Lesson 5: simple staff (SVG) ----
-      (function buildStaff() {
-        var svgNS = 'http://www.w3.org/2000/svg';
-        var W = 460, H = 200, x0 = 70, top = 50, gap = 18; // line gap
-        var svg = document.createElementNS(svgNS, 'svg');
-        svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', '100%');
-        // 5 staff lines
-        for (var i = 0; i < 5; i++) {
-          var ln = document.createElementNS(svgNS, 'line');
-          var y = top + i * gap;
-          ln.setAttribute('x1', 20); ln.setAttribute('x2', W - 20);
-          ln.setAttribute('y1', y); ln.setAttribute('y2', y);
-          ln.setAttribute('stroke', '#b9b9d6'); ln.setAttribute('stroke-width', '2');
-          svg.appendChild(ln);
-        }
-        // Notes C4..G4 climbing. Vertical step = gap/2 per scale step; C4 sits below the staff.
-        var bottomY = top + 4 * gap; // bottom line
-        var notes = SOLF.slice(0, 5); // Do..Sol
-        notes.forEach(function (s, idx) {
-          var cx = x0 + idx * 75;
-          var cy = bottomY + gap / 2 - idx * (gap / 2); // each step up by half a line gap
-          var c = document.createElementNS(svgNS, 'circle');
-          c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 12);
-          c.setAttribute('fill', s.color); c.setAttribute('stroke', '#1a1a2e'); c.setAttribute('stroke-width', '2');
-          c.style.cursor = 'pointer';
-          c.addEventListener('click', function () { K.audio.resume(); K.audio.tone(s.note, { dur: 0.8 }); K.say(s.solf); });
-          svg.appendChild(c);
-          var tx = document.createElementNS(svgNS, 'text');
-          tx.setAttribute('x', cx); tx.setAttribute('y', H - 14); tx.setAttribute('text-anchor', 'middle');
-          tx.setAttribute('fill', '#f3f3fb'); tx.setAttribute('font-size', '16'); tx.setAttribute('font-family', 'Chewy, cursive');
-          tx.textContent = s.solf;
-          svg.appendChild(tx);
-        });
-        document.getElementById('staff').appendChild(svg);
-      })();
+  function closeEditor() {
+    editor.hidden = true;
+    // Back to wherever the editor was opened over.
+    if (/^#(edit|new)/.test(location.hash)) {
+      location.hash = edId ? 'view=' + edId : '';
+    }
+  }
+  editor.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', closeEditor); });
 
-      // ---- "Supratau" -> star (once per lesson) ----
-      document.querySelectorAll('.done-btn').forEach(function (b) {
-        b.addEventListener('click', function () {
-          var id = 'lesson.' + b.dataset.lesson;
-          if (!K.progress.isDone(id)) {
-            K.progress.markDone(id); K.stars.add(1);
-            K.confetti(); K.mascot('cheer', 'Gavai ⭐!');
-          } else {
-            K.mascot('happy', 'Jau išmokta!');
-          }
-          renderMenu();
-          setTimeout(function () { K.showScreen('menu'); }, 900);
-        });
-      });
+  document.getElementById('edSave').addEventListener('click', function () {
+    var name = document.getElementById('edName').value.trim();
+    if (!name) {
+      var err = document.getElementById('edError');
+      err.textContent = '⚠️ Įrašyk pamokėlės pavadinimą.'; err.hidden = false;
+      document.getElementById('edName').focus();
+      return;
+    }
+    var state = {
+      picture: edPic, color: edColor,
+      text: document.getElementById('edText').value.trim(),
+      tasks: checked('edTasks'), games: checked('edGames'), sheets: checked('edSheets'),
+      excerpts: checked('edEx2').concat(checked('edEx3'), checked('edEx4'))
+    };
+    var folderId = document.getElementById('edFolder').value || null;
+    try {
+      if (edId) { L.update(edId, { title: name, state: state, folderId: folderId }); }
+      else { edId = L.save(name, state, { kind: 'pamokele', folderId: folderId }); }
+    } catch (e) {
+      var er = document.getElementById('edError');
+      er.textContent = '⚠️ Nepavyko išsaugoti – gal per didelis paveikslėlis?'; er.hidden = false;
+      return;
+    }
+    editor.hidden = true;
+    location.hash = 'view=' + edId;
+  });
 
-      document.querySelectorAll('.back-lesson').forEach(function (b) {
-        b.addEventListener('click', function () { K.showScreen('menu'); });
-      });
+  document.getElementById('edArchive').addEventListener('click', function () {
+    if (!edId) { return; }
+    var r = L.get(edId);
+    if (confirm('Perkelti „' + r.title + '“ į biblioteką? Ją galėsi grąžinti iš „Mano pamokos“.')) {
+      L.update(edId, { archived: true });
+      editor.hidden = true; edId = null;
+      location.hash = '';
+    }
+  });
 
-      K.initScreens('menu');
-    })();
-  </script>
+  // ── Routing: #view=ID, #edit=ID, #new, #new=FOLDER ──
+  function route() {
+    var h = location.hash.slice(1);
+    var m = /^(view|edit|new)(?:=(.*))?$/.exec(h);
+    EX.stop();
+    var viewing = m && (m[1] === 'view' || m[1] === 'edit');
+    document.getElementById('gridScreen').hidden = !!(m && m[1] === 'view');
+    document.getElementById('viewScreen').hidden = !(m && m[1] === 'view');
+    if (m && m[1] === 'view') { editor.hidden = true; renderView(decodeURIComponent(m[2] || '')); }
+    else { renderGrid(); }
+    if (m && m[1] === 'edit') { openEditor(decodeURIComponent(m[2] || '')); }
+    else if (m && m[1] === 'new') { openEditor(null, m[2] ? decodeURIComponent(m[2]) : null); }
+    else { editor.hidden = true; }
+    window.scrollTo(0, 0);
+    return viewing;
+  }
+  window.addEventListener('hashchange', route);
+  route();
+})();
+</script>
 </body>
 </html>

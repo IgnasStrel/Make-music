@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>MUSICATION — Gyvūnų orkestras 🎼</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lt-font.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+    position: relative;
+    background: linear-gradient(180deg, var(--sky-a, #8fd3ff) 0%, var(--sky-b, #bfe8ff) 45%, var(--sky-c, #d9f4c8) 72%, var(--sky-d, #b6e28a) 100%);
+    transition: background 0.6s ease;
+  }
+
+  .topbar { position: relative; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+  .game-title { font-size: 19px; font-weight: 800; color: #1e3a1e; text-shadow: 0 1px 0 rgba(255,255,255,0.5); flex: 1; }
+  .tb-btn {
+    border: none; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,0.88); box-shadow: 0 3px 0 rgba(0,0,0,0.12);
+    font-size: 20px; width: 42px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .tb-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(0,0,0,0.14); }
+  .tb-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+
+  .stage { position: relative; z-index: 5; height: calc(100vh - 64px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 6px 12px; }
+
+  /* ── Orchestra scene: 5 animals, priority #1 per spec section 18 ── */
+  .scene { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; max-width: 720px; }
+  .animal {
+    width: 92px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .animal-circle {
+    width: 84px; height: 84px; border-radius: 50%;
+    border: 5px solid var(--a-color, #fff);
+    background: radial-gradient(circle at 35% 30%, #ffffff, #f3f8ee 70%);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 8px 14px rgba(0,0,0,0.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; position: relative;
+    animation: idleBreathe 3s ease-in-out infinite;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  @keyframes idleBreathe { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.035) rotate(-1.5deg); } }
+  .animal-circle .inst-badge {
+    position: absolute; bottom: -6px; right: -6px; font-size: 22px;
+    background: #fff; border-radius: 50%; width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .animal-name { font-size: 13px; font-weight: 700; color: #1e3a1e; text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
+  .animal.playing .animal-circle {
+    animation: playPulse 0.32s ease-in-out;
+    box-shadow: 0 0 0 6px rgba(255,193,7,0.55), 0 8px 14px rgba(0,0,0,0.18);
+  }
+  @keyframes playPulse { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1.08); } }
+
+  /* ── 8-bar timeline grid, priority #3 ── */
+  .grid-wrap { background: rgba(255,255,255,0.55); border-radius: 20px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+  .grid-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  .row-label { width: 34px; font-size: 24px; text-align: center; flex: none; }
+  .bar-cell {
+    width: 34px; height: 34px; border-radius: 50%; flex: none;
+    border: none; cursor: pointer; background: rgba(255,255,255,0.85);
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.12);
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .bar-cell:hover { transform: scale(1.1); }
+  .bar-cell.on {
+    background: radial-gradient(circle at 35% 30%, #fff6c8, #ffcd3c 70%);
+    box-shadow: inset 0 0 0 2px #ffb300, 0 0 8px rgba(255,193,7,0.6);
+  }
+  .bar-cell.current { box-shadow: inset 0 0 0 3px #2f80ed, 0 0 0 4px rgba(47,128,237,0.25); }
+  .bar-cell.on.current { box-shadow: inset 0 0 0 3px #2f80ed, 0 0 10px rgba(255,193,7,0.7); }
+  .bar-cell.bump { animation: cellBump 0.3s ease; }
+  @keyframes cellBump { 0% { transform: scale(1); } 45% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+  /* ── Transport controls, priority #4 ── */
+  .transport { display: flex; align-items: center; gap: 14px; }
+  .tr-btn {
+    border: none; border-radius: 999px; cursor: pointer;
+    background: linear-gradient(180deg, #8ee38a, #5cc85a); color: #16401a;
+    font-family: inherit; font-size: 26px; width: 62px; height: 62px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.16), 0 10px 18px rgba(0,0,0,0.14);
+    transition: transform 0.15s;
+  }
+  .tr-btn.stop { background: linear-gradient(180deg, #ff9e9e, #ef6a6a); color: #4a1414; }
+  .tr-btn.small { width: 50px; height: 50px; font-size: 21px; background: rgba(255,255,255,0.88); color: #234; box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
+  .tr-btn:hover { transform: translateY(-2px); }
+  .tr-btn:active { transform: translateY(2px); }
+
+  /* ── Modals (music-world picker, animal legend) ── */
+  .modal-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay[hidden] { display: none; }
+  .modal { background: #fff; border-radius: 20px; padding: 22px 26px; width: 100%; max-width: 440px; max-height: 84vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .modal-head h3 { font-size: 19px; }
+  .modal-close { border: none; background: transparent; font-size: 24px; cursor: pointer; color: #667; }
+  .world-row { display: flex; flex-direction: column; gap: 10px; }
+  .world-btn {
+    display: flex; align-items: center; gap: 12px; border: 2px solid #eee; border-radius: 14px;
+    padding: 10px 14px; background: #fff; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700; color: #234;
+  }
+  .world-btn.on { border-color: #ffb300; background: #fff8e2; }
+  .world-ico { font-size: 26px; }
+  .legend-row { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eee; padding: 10px 0; }
+  .legend-row:last-child { border-bottom: none; }
+  .legend-ico { font-size: 34px; flex: none; }
+  .legend-text { flex: 1; }
+  .legend-text b { font-size: 15px; }
+  .legend-text span { display: block; font-size: 13px; color: #666; }
+  .legend-play { border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 17px; background: #eef; cursor: pointer; flex: none; }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <span class="game-title">🎼 Gyvūnų orkestras</span>
+    <button class="tb-btn" id="btnHome" title="Į pirmąjį puslapį">🏠</button>
+    <button class="tb-btn" id="btnGames" title="Žaidimų pasirinkimas">🎮</button>
+    <button class="tb-btn" id="btnInfo" title="Žaidimo aprašymas">ℹ️</button>
+  </div>
+
+  <div class="stage">
+    <div class="scene" id="scene"></div>
+    <div class="grid-wrap" id="gridWrap"></div>
+    <div class="transport">
+      <button class="tr-btn small" id="btnMusic" title="Muzikinis pasaulis">🎵</button>
+      <button class="tr-btn stop" id="btnStop" title="Stop">⏹️</button>
+      <button class="tr-btn" id="btnPlay" title="Groti / Pauzė">▶️</button>
+      <button class="tr-btn small" id="btnAnimals" title="Apie gyvūnus">🐾</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="musicOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head"><h3>🎵 Muzikinis pasaulis</h3><button class="modal-close" id="musicClose">&times;</button></div>
+      <div class="world-row" id="worldRow"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="animalsOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head"><h3>🐾 Gyvūnai ir instrumentai</h3><button class="modal-close" id="animalsClose">&times;</button></div>
+      <div id="legendBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="infoOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head"><h3>ℹ️ Apie žaidimą</h3><button class="modal-close" id="infoClose">&times;</button></div>
+      <div style="font-size:14.5px;line-height:1.6;color:#333">
+        <p style="margin-bottom:10px"><b>Vaikas nekuria ritmo — vaikas kuria orkestrą.</b> Paspausk gyvūną, kad jį išgirstum. Paspausk taškelį ties taktu, kuriame nori, kad gyvūnas įsijungtų — kelis, vieną ar visus penkis.</p>
+        <p style="margin-bottom:10px">Paspaudus ▶️, kūrinys groja 8 taktų ratu ir kartojasi be pertraukos — vaikas gali bet kada keisti savo pasirinkimus.</p>
+        <p>Nėra teisingo ar neteisingo derinio — kiekviena kompozicija tinka.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ══════════════════════════════════════════════════════════════════════
+  // V1 spec: 5 fixed animal/instrument/rhythm units — the child never edits
+  // an animal's own rhythm, only WHEN (which of the 8 bars) it plays.
+  // ══════════════════════════════════════════════════════════════════════
+  var ANIMALS = [
+    { id: 'elephant', icon: '🐘', name: 'Dramblys',    inst: '🥁', instName: 'Būgnas',      color: '#c9a67a', sound: 'drum',       hits: [0, 0.34, 0.68] },
+    { id: 'monkey',   icon: '🐒', name: 'Beždžionėlė', inst: '🪇', instName: 'Barškutis',   color: '#b98a5e', sound: 'shaker',     hits: [0, 0.16, 0.42, 0.58] },
+    { id: 'bird',     icon: '🐦', name: 'Paukštelis',  inst: '🔔', instName: 'Varpelis',    color: '#7ec8e3', sound: 'bell',       hits: [0, 0.5] },
+    { id: 'octopus',  icon: '🐙', name: 'Aštuonkojis', inst: '🪘', instName: 'Tambūrinas',  color: '#e8b4d8', sound: 'tambourine', hits: [0, 0.34, 0.68] },
+    { id: 'crab',     icon: '🦀', name: 'Krabas',      inst: '🪵', instName: 'Lazdelės',    color: '#f2a6c5', sound: 'sticks',     hits: [0, 0.25, 0.5, 0.75] }
+  ];
+  var TOTAL_BARS = 8;
+
+  var WORLDS = [
+    { id: 'forest', icon: '🌳', name: 'Miškas',    bpm: 92,  chord: [130.8, 164.8, 196.0], sky: ['#8fd3ff', '#bfe8ff', '#d9f4c8', '#b6e28a'] },
+    { id: 'sea',     icon: '🌊', name: 'Jūra',      bpm: 86,  chord: [146.8, 174.6, 220.0], sky: ['#6fc3ff', '#a9e3ff', '#bdeeff', '#8fd0e8'] },
+    { id: 'circus',  icon: '🎪', name: 'Cirkas',    bpm: 108, chord: [196.0, 246.9, 293.7], sky: ['#ffd6e8', '#ffe8c2', '#fff3d0', '#ffc7a3'] },
+    { id: 'space',   icon: '🚀', name: 'Kosmosas',  bpm: 100, chord: [110.0, 138.6, 164.8], sky: ['#2b2350', '#4a3a7a', '#6a4f9a', '#8a6fc0'] }
+  ];
+  var worldIndex = 0;
+
+  // ── Web Audio: tiny synth per instrument + a soft ambient pad ───────────
+  var ACTX = null;
+  function ctx() { if (!ACTX) { ACTX = new (window.AudioContext || window.webkitAudioContext)(); } return ACTX; }
+
+  function hit(sound, t, gainOut) {
+    var c = ctx();
+    if (sound === 'drum') {
+      var osc = c.createOscillator(), g = c.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(120, t); osc.frequency.exponentialRampToValueAtTime(48, t + 0.18);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      osc.connect(g); g.connect(gainOut); osc.start(t); osc.stop(t + 0.24);
+    } else if (sound === 'sticks') {
+      var buf = noiseBuffer(0.05); var src = c.createBufferSource(); src.buffer = buf;
+      var hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2800;
+      var g2 = c.createGain(); g2.gain.setValueAtTime(0.7, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+      src.connect(hp); hp.connect(g2); g2.connect(gainOut); src.start(t); src.stop(t + 0.07);
+    } else if (sound === 'shaker') {
+      var buf2 = noiseBuffer(0.09); var src2 = c.createBufferSource(); src2.buffer = buf2;
+      var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 6500; bp.Q.value = 0.7;
+      var g3 = c.createGain(); g3.gain.setValueAtTime(0.5, t); g3.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      src2.connect(bp); bp.connect(g3); g3.connect(gainOut); src2.start(t); src2.stop(t + 0.1);
+    } else if (sound === 'bell') {
+      [1568, 2349].forEach(function (freq, i) {
+        var osc2 = c.createOscillator(), g4 = c.createGain();
+        osc2.type = 'sine'; osc2.frequency.value = freq;
+        g4.gain.setValueAtTime(0.0001, t); g4.gain.exponentialRampToValueAtTime(i === 0 ? 0.5 : 0.25, t + 0.01);
+        g4.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        osc2.connect(g4); g4.connect(gainOut); osc2.start(t); osc2.stop(t + 0.52);
+      });
+    } else if (sound === 'tambourine') {
+      var buf3 = noiseBuffer(0.12); var src3 = c.createBufferSource(); src3.buffer = buf3;
+      var hp2 = c.createBiquadFilter(); hp2.type = 'highpass'; hp2.frequency.value = 4500;
+      var g5 = c.createGain(); g5.gain.setValueAtTime(0.55, t); g5.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      src3.connect(hp2); hp2.connect(g5); g5.connect(gainOut); src3.start(t); src3.stop(t + 0.15);
+      var osc3 = c.createOscillator(), g6 = c.createGain();
+      osc3.type = 'sine'; osc3.frequency.setValueAtTime(180, t); osc3.frequency.exponentialRampToValueAtTime(90, t + 0.12);
+      g6.gain.setValueAtTime(0.0001, t); g6.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g6.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      osc3.connect(g6); g6.connect(gainOut); osc3.start(t); osc3.stop(t + 0.16);
+    }
+  }
+  var noiseBufCache = {};
+  function noiseBuffer(dur) {
+    var key = dur.toFixed(3);
+    if (noiseBufCache[key]) { return noiseBufCache[key]; }
+    var c = ctx();
+    var buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) { d[i] = (Math.random() * 2 - 1) * (1 - i / d.length); }
+    noiseBufCache[key] = buf;
+    return buf;
+  }
+  function playAnimalPattern(animal, atTime, gainOut) {
+    animal.hits.forEach(function (offset) { hit(animal.sound, atTime + offset * barSeconds(), gainOut); });
+  }
+  function previewAnimal(animal) {
+    var c = ctx();
+    var master = c.createGain(); master.gain.value = 0.6; master.connect(c.destination);
+    playAnimalPattern(animal, c.currentTime + 0.02, master);
+    pulseAnimal(animal.id);
+  }
+
+  // ── Soft ambient pad, one per world, only while PLAYING ─────────────────
+  var padNodes = null;
+  function startPad(world) {
+    stopPad();
+    var c = ctx();
+    var master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
+    master.gain.linearRampToValueAtTime(0.06, c.currentTime + 1.2);
+    var oscs = world.chord.map(function (freq) {
+      var o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
+      var g = c.createGain(); g.gain.value = 1 / world.chord.length;
+      o.connect(g); g.connect(master); o.start();
+      return o;
+    });
+    padNodes = { master: master, oscs: oscs };
+  }
+  function stopPad() {
+    if (!padNodes) { return; }
+    var c = ctx();
+    var m = padNodes.master, oscs = padNodes.oscs;
+    m.gain.cancelScheduledValues(c.currentTime);
+    m.gain.setValueAtTime(m.gain.value, c.currentTime);
+    m.gain.linearRampToValueAtTime(0.0001, c.currentTime + 0.4);
+    setTimeout(function () { oscs.forEach(function (o) { try { o.stop(); } catch (e) {} }); }, 500);
+    padNodes = null;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Scene + grid DOM
+  // ══════════════════════════════════════════════════════════════════════
+  var scene = document.getElementById('scene');
+  var animalEls = {};
+  ANIMALS.forEach(function (a) {
+    var wrap = document.createElement('div');
+    wrap.className = 'animal'; wrap.id = 'animal-' + a.id;
+    wrap.innerHTML =
+      '<div class="animal-circle" style="--a-color:' + a.color + '">' + a.icon + '<span class="inst-badge">' + a.inst + '</span></div>' +
+      '<span class="animal-name">' + a.name + '</span>';
+    wrap.addEventListener('click', function () { previewAnimal(a); });
+    scene.appendChild(wrap);
+    animalEls[a.id] = wrap;
+  });
+  function pulseAnimal(id) {
+    var el = animalEls[id];
+    el.classList.remove('playing'); void el.offsetWidth; el.classList.add('playing');
+    setTimeout(function () { el.classList.remove('playing'); }, 500);
+  }
+
+  var gridWrap = document.getElementById('gridWrap');
+  var activeBars = {}; // animal.id -> Set-like object {1:true, 5:true, ...}
+  var cellEls = {}; // animal.id -> [cell1..cell8]
+  ANIMALS.forEach(function (a) {
+    activeBars[a.id] = {};
+    var row = document.createElement('div');
+    row.className = 'grid-row';
+    var label = document.createElement('div');
+    label.className = 'row-label'; label.textContent = a.icon;
+    row.appendChild(label);
+    cellEls[a.id] = [];
+    for (var bar = 1; bar <= TOTAL_BARS; bar++) {
+      (function (bar) {
+        var cell = document.createElement('button');
+        cell.className = 'bar-cell'; cell.type = 'button';
+        cell.addEventListener('click', function () {
+          if (activeBars[a.id][bar]) { delete activeBars[a.id][bar]; cell.classList.remove('on'); }
+          else { activeBars[a.id][bar] = true; cell.classList.add('on'); }
+          cell.classList.remove('bump'); void cell.offsetWidth; cell.classList.add('bump');
+        });
+        row.appendChild(cell);
+        cellEls[a.id].push(cell);
+      })(bar);
+    }
+    gridWrap.appendChild(row);
+  });
+  function updateCurrentColumn(bar) {
+    ANIMALS.forEach(function (a) {
+      cellEls[a.id].forEach(function (cell, i) { cell.classList.toggle('current', i === (bar - 1)); });
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Master clock — single lookahead scheduler drives music + visuals for
+  // every animal at once (spec section 32: one master clock, never separate
+  // per-animal timers).
+  // ══════════════════════════════════════════════════════════════════════
+  var isPlaying = false;
+  var currentBar = 1;
+  var nextBarTime = 0;
+  var schedulerTimer = null;
+  var LOOKAHEAD_MS = 25;
+  var SCHEDULE_AHEAD = 0.12;
+  var masterGain = null;
+
+  function barSeconds() { return (60 / WORLDS[worldIndex].bpm) * 2; }
+
+  function scheduleBar(bar, time) {
+    var delayMs = Math.max(0, (time - ctx().currentTime) * 1000);
+    setTimeout(function () { if (isPlaying) { updateCurrentColumn(bar); } }, delayMs);
+    ANIMALS.forEach(function (a) {
+      if (activeBars[a.id][bar]) {
+        playAnimalPattern(a, time, masterGain);
+        setTimeout(function () { if (isPlaying) { pulseAnimal(a.id); } }, delayMs);
+      }
+    });
+  }
+  function advance() { nextBarTime += barSeconds(); currentBar = (currentBar % TOTAL_BARS) + 1; }
+  function scheduler() {
+    while (nextBarTime < ctx().currentTime + SCHEDULE_AHEAD) {
+      scheduleBar(currentBar, nextBarTime);
+      advance();
+    }
+    schedulerTimer = setTimeout(scheduler, LOOKAHEAD_MS);
+  }
+
+  function play() {
+    if (isPlaying) { return; }
+    isPlaying = true;
+    var c = ctx();
+    if (c.state !== 'running') { c.resume(); }
+    if (!masterGain) { masterGain = c.createGain(); masterGain.gain.value = 0.7; masterGain.connect(c.destination); }
+    startPad(WORLDS[worldIndex]);
+    nextBarTime = c.currentTime + 0.06;
+    scheduler();
+    document.getElementById('btnPlay').textContent = '⏸️';
+  }
+  function pause() {
+    if (!isPlaying) { return; }
+    isPlaying = false;
+    clearTimeout(schedulerTimer);
+    stopPad();
+    document.getElementById('btnPlay').textContent = '▶️';
+  }
+  function stop() {
+    pause();
+    currentBar = 1;
+    updateCurrentColumn(0);
+    ANIMALS.forEach(function (a) { animalEls[a.id].classList.remove('playing'); });
+  }
+
+  document.getElementById('btnPlay').addEventListener('click', function () { isPlaying ? pause() : play(); });
+  document.getElementById('btnStop').addEventListener('click', stop);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 🎵 Music-world picker
+  // ══════════════════════════════════════════════════════════════════════
+  function applyWorldColors() {
+    var w = WORLDS[worldIndex];
+    document.documentElement.style.setProperty('--sky-a', w.sky[0]);
+    document.documentElement.style.setProperty('--sky-b', w.sky[1]);
+    document.documentElement.style.setProperty('--sky-c', w.sky[2]);
+    document.documentElement.style.setProperty('--sky-d', w.sky[3]);
+  }
+  applyWorldColors();
+
+  var musicOverlay = document.getElementById('musicOverlay');
+  var worldRow = document.getElementById('worldRow');
+  function renderWorlds() {
+    worldRow.innerHTML = WORLDS.map(function (w, i) {
+      return '<button class="world-btn' + (i === worldIndex ? ' on' : '') + '" data-i="' + i + '"><span class="world-ico">' + w.icon + '</span>' + w.name + '</button>';
+    }).join('');
+    worldRow.querySelectorAll('.world-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var wasPlaying = isPlaying;
+        if (wasPlaying) { stop(); }
+        worldIndex = +b.dataset.i;
+        applyWorldColors();
+        renderWorlds();
+        musicOverlay.hidden = true;
+        if (wasPlaying) { play(); }
+      });
+    });
+  }
+  document.getElementById('btnMusic').addEventListener('click', function () { renderWorlds(); musicOverlay.hidden = false; });
+  document.getElementById('musicClose').addEventListener('click', function () { musicOverlay.hidden = true; });
+  musicOverlay.addEventListener('click', function (e) { if (e.target === musicOverlay) { musicOverlay.hidden = true; } });
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 🐾 Animal legend (icon, instrument, character, one-tap preview)
+  // ══════════════════════════════════════════════════════════════════════
+  var CHARACTER = { elephant: 'stiprus, žemas', monkey: 'linksmas, judrus', bird: 'lengvas, skambus', octopus: 'ritmiškas', crab: 'trumpas, aiškus' };
+  var animalsOverlay = document.getElementById('animalsOverlay');
+  var legendBody = document.getElementById('legendBody');
+  legendBody.innerHTML = ANIMALS.map(function (a) {
+    return '<div class="legend-row"><span class="legend-ico">' + a.icon + '</span>' +
+      '<div class="legend-text"><b>' + a.name + ' ' + a.inst + ' ' + a.instName + '</b><span>' + CHARACTER[a.id] + '</span></div>' +
+      '<button class="legend-play" data-id="' + a.id + '">▶</button></div>';
+  }).join('');
+  legendBody.querySelectorAll('.legend-play').forEach(function (b) {
+    b.addEventListener('click', function () { previewAnimal(ANIMALS.filter(function (a) { return a.id === b.dataset.id; })[0]); });
+  });
+  document.getElementById('btnAnimals').addEventListener('click', function () { animalsOverlay.hidden = false; });
+  document.getElementById('animalsClose').addEventListener('click', function () { animalsOverlay.hidden = true; });
+  animalsOverlay.addEventListener('click', function (e) { if (e.target === animalsOverlay) { animalsOverlay.hidden = true; } });
+
+  var infoOverlay = document.getElementById('infoOverlay');
+  document.getElementById('btnInfo').addEventListener('click', function () { infoOverlay.hidden = false; });
+  document.getElementById('infoClose').addEventListener('click', function () { infoOverlay.hidden = true; });
+  infoOverlay.addEventListener('click', function (e) { if (e.target === infoOverlay) { infoOverlay.hidden = true; } });
+
+  // ── Top-level navigation ─────────────────────────────────────────────────
+  document.getElementById('btnHome').addEventListener('click', function () { location.href = 'rasymas.html'; });
+  document.getElementById('btnGames').addEventListener('click', function () { location.href = 'zaidimai.html'; });
+
+})();
+</script>
+</body>
+</html>

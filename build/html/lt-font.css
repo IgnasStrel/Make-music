@@ -1,0 +1,15 @@
+/* The 'Baloo 2' web font has no ready-made "ū" / "Ū" (U+016B / U+016A),
+   so the browser builds them from "u" plus a loose macron, and the macron
+   lands on the next letter ("gyvuñas"). Only for these two characters the
+   family falls back to a system font that has them whole. One face per
+   weight the pages load (same descriptors as Google's faces, so they join
+   the same group), and loaded after the Google Fonts stylesheet: within a
+   group the later @font-face wins. */
+@font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 500; unicode-range: U+016A-016B;
+  src: local('Segoe UI Semibold'), local('SegoeUI-Semibold'), local('Arial Bold'), local('Arial-BoldMT'); }
+@font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 600; unicode-range: U+016A-016B;
+  src: local('Segoe UI Semibold'), local('SegoeUI-Semibold'), local('Arial Bold'), local('Arial-BoldMT'); }
+@font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 700; unicode-range: U+016A-016B;
+  src: local('Segoe UI Bold'), local('SegoeUI-Bold'), local('Arial Bold'), local('Arial-BoldMT'); }
+@font-face { font-family: 'Baloo 2'; font-style: normal; font-weight: 800; unicode-range: U+016A-016B;
+  src: local('Segoe UI Black'), local('SegoeUI-Black'), local('Segoe UI Bold'), local('SegoeUI-Bold'), local('Arial Bold'), local('Arial-BoldMT'); }

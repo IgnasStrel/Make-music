@@ -3,17 +3,17 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
 function getIndexPath() {
-  // Opens straight into rasymas.html - the simple kids' note-writing screen,
-  // which already has its own right-hand sidebar with Žaidimai (games),
-  // Mano pamokos (saved lessons) and Išsaugoti (save). Games open in the
-  // same window via plain links there; setWindowOpenHandler below still
-  // covers the separate zaidimai.html pop-out used from smoosic.html
-  // (the full notation editor), which stays reachable but isn't the home
-  // screen anymore.
+  // Opens on index.html - the login screen where a teacher or a student
+  // signs in. After logging in it goes to rasymas.html, the main
+  // note-writing screen, whose sidebar "Žaidimai" button opens the games
+  // list (zaidimai.html). That list currently offers one game, "Judėk
+  // kartu"; the older games are still in build/html but are not listed.
+  // setWindowOpenHandler below still covers the zaidimai.html pop-out used
+  // from smoosic.html (the full notation editor).
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'build', 'html', 'rasymas.html');
+    return path.join(process.resourcesPath, 'build', 'html', 'index.html');
   }
-  return path.join(__dirname, '..', 'build', 'html', 'rasymas.html');
+  return path.join(__dirname, '..', 'build', 'html', 'index.html');
 }
 
 function createWindow() {

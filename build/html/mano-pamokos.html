@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MUSICATION — Mano pamokos</title>
+<script src="auth.js"></script>
+<script>var SESSION = MusicationAuth.requireLogin();</script>
+<link rel="stylesheet" href="../styles/pages.css">
+<style>
+  .layout { display: grid; grid-template-columns: 270px 1fr; gap: 22px; align-items: start; }
+
+  /* ── Folder column ── */
+  .side { display: flex; flex-direction: column; gap: 10px; position: sticky; top: 14px; }
+  .side h3 { font-size: 15px; color: var(--ink-soft); font-weight: 800; margin: 6px 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .fold {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    border: 3px solid transparent; cursor: pointer; text-align: left;
+    background: #fff; border-radius: 18px; padding: 10px 12px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.07);
+    border-left: 10px solid var(--c, #c7c3dd);
+    font-size: 17px; font-weight: 800;
+    transition: transform 0.12s, background 0.12s;
+  }
+  .fold:hover { transform: translateX(3px); }
+  .fold.sel { background: color-mix(in srgb, var(--c, #c7c3dd) 18%, #fff); }
+  .fold.drop { border-color: var(--c, var(--teal)); transform: scale(1.03); }
+  .fold .f-ico { font-size: 22px; }
+  .fold .f-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fold .f-count { font-size: 14px; color: var(--ink-soft); background: rgba(35,38,74,0.07); border-radius: 999px; padding: 0 9px; }
+  .fold .f-edit { border: none; background: transparent; cursor: pointer; font-size: 16px; opacity: 0.55; padding: 0 2px; }
+  .fold .f-edit:hover { opacity: 1; }
+
+  /* ── File area ── */
+  .bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .bar .input { flex: 1; min-width: 200px; }
+  .where { font-size: 26px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .where .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--c, #c7c3dd); }
+
+  .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+  .file {
+    background: #fff; border-radius: 22px; overflow: hidden;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.07), 0 10px 22px rgba(35,38,74,0.08);
+    display: flex; flex-direction: column;
+    animation: tileIn 0.35s cubic-bezier(.34,1.56,.64,1) both;
+    cursor: grab;
+  }
+  .file.dragging { opacity: 0.45; }
+  .file-top {
+    height: 92px; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--c) 22%, #fff); font-size: 52px; position: relative;
+  }
+  .file-top img { width: 72px; height: 72px; object-fit: cover; border-radius: 16px; }
+  .file-kind { position: absolute; top: 8px; left: 10px; font-size: 12px; font-weight: 800; background: #fff; border-radius: 999px; padding: 1px 9px; color: var(--ink-soft); }
+  .file-body { padding: 10px 14px 4px; flex: 1; }
+  .file-title { font-weight: 800; font-size: 18px; line-height: 1.15; word-break: break-word; }
+  .file-date { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+  .file-acts { display: flex; gap: 6px; padding: 8px 10px 12px; flex-wrap: wrap; }
+  .file-acts .btn { box-shadow: 0 2px 0 rgba(0,0,0,0.1); }
+  .file-acts .btn-icon { width: 34px; height: 34px; font-size: 16px; }
+  .file-acts { gap: 5px; }
+
+  .teacher-only { max-width: 520px; margin: 60px auto; text-align: center; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { position: static; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="top">
+    <button class="btn" id="backBtn">← Atgal</button>
+    <h1><span class="h-ico">🎒</span> Mano pamokos</h1>
+    <div class="grow"></div>
+    <button class="btn btn-pink" id="newLesson">➕ Nauja pamokėlė</button>
+    <button class="btn btn-teal" id="newSheet">🎼 Naujas natų lapas</button>
+    <button class="btn btn-yellow" id="newFolder">📁 Naujas aplankas</button>
+  </div>
+
+  <div class="layout">
+    <aside class="side" id="side"></aside>
+    <main>
+      <div class="where" id="where"></div>
+      <div class="bar">
+        <input class="input" id="search" type="search" placeholder="🔍 Ieškoti pagal pavadinimą…">
+        <button class="chip sel" data-kind="">Visi</button>
+        <button class="chip" data-kind="pamokele">📚 Pamokėlės</button>
+        <button class="chip" data-kind="natos">🎼 Natų lapai</button>
+      </div>
+      <div class="files" id="files"></div>
+    </main>
+  </div>
+</div>
+
+<!-- Text / folder dialog -->
+<div class="overlay" id="dlg" hidden>
+  <div class="modal" style="max-width: 460px;">
+    <div class="modal-head"><h2 id="dlgTitle"></h2><button class="x" data-close>&times;</button></div>
+    <div class="modal-body">
+      <label class="field"><span id="dlgLabel">Pavadinimas</span><input class="input" id="dlgInput" type="text"></label>
+      <div class="field" id="dlgColorField"><span>Spalva</span><div class="pick-row" id="dlgColors"></div></div>
+      <div class="field" id="dlgFoldersField"><span>Kur perkelti?</span><div class="pick-row" id="dlgFolders" style="flex-direction:column;align-items:stretch"></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-orange" id="dlgDelete" hidden>🗑️ Ištrinti aplanką</button>
+      <div class="grow" style="flex:1"></div>
+      <button class="btn" data-close>Atšaukti</button>
+      <button class="btn btn-teal" id="dlgOk">✓ Gerai</button>
+    </div>
+  </div>
+</div>
+
+<script src="lessonLibrary.js"></script>
+<script>
+(function () {
+  'use strict';
+  var L = window.LessonLibrary;
+  var COLORS = ['#009D9D', '#A6B908', '#FBAD04', '#EA5223', '#D11264', '#56317D', '#012A5F', '#1e88e5'];
+  var KIND = {
+    pamokele: { ico: '📚', name: 'Pamokėlė', color: '#D11264' },
+    natos:    { ico: '🎼', name: 'Natų lapas', color: '#009D9D' }
+  };
+  // view: 'all' | 'lib' (biblioteka) | 'none' (not in a folder) | <folder id>
+  var view = 'all', kindFilter = '', query = '';
+
+  document.getElementById('backBtn').addEventListener('click', function () { location.href = 'rasymas.html'; });
+
+  if (!SESSION || SESSION.role !== 'teacher') {
+    document.getElementById('app').innerHTML =
+      '<div class="panel teacher-only"><div class="empty"><span class="big">👩‍🏫</span>' +
+      'Šis puslapis skirtas mokytojui.</div><a class="btn btn-teal" href="rasymas.html">← Grįžti</a></div>';
+    return;
+  }
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function fmt(ts) { return new Date(ts).toLocaleDateString('lt-LT') + ' ' + new Date(ts).toLocaleTimeString('lt-LT', { hour: '2-digit', minute: '2-digit' }); }
+  function folderById(id) { return L.folders().filter(function (f) { return f.id === id; })[0] || null; }
+  function folderParam() { return (view !== 'all' && view !== 'lib' && view !== 'none') ? view : ''; }
+
+  // ── Folder column ──
+  function renderSide() {
+    var side = document.getElementById('side');
+    var all = L.list();
+    var active = all.filter(function (r) { return !r.archived; });
+    side.innerHTML = '';
+    function add(id, ico, name, color, count, editable) {
+      var b = document.createElement('div');
+      b.className = 'fold' + (view === id ? ' sel' : '');
+      b.setAttribute('role', 'button'); b.tabIndex = 0;
+      if (color) { b.style.setProperty('--c', color); }
+      b.innerHTML = '<span class="f-ico">' + ico + '</span><span class="f-name">' + esc(name) + '</span>' +
+        '<span class="f-count">' + count + '</span>' +
+        (editable ? '<button class="f-edit" title="Pervadinti / spalva">✏️</button>' : '');
+      b.addEventListener('click', function (e) {
+        if (e.target.classList.contains('f-edit')) { folderDialog(folderById(id)); return; }
+        view = id; render();
+      });
+      // Drop a file card here to move it into this folder (or the library).
+      b.addEventListener('dragover', function (e) { if (id !== 'all') { e.preventDefault(); b.classList.add('drop'); } });
+      b.addEventListener('dragleave', function () { b.classList.remove('drop'); });
+      b.addEventListener('drop', function (e) {
+        e.preventDefault(); b.classList.remove('drop');
+        var fid = e.dataTransfer.getData('text/plain');
+        if (!fid) { return; }
+        if (id === 'lib') { L.update(fid, { archived: true }); }
+        else { L.update(fid, { folderId: id === 'none' ? null : id, archived: false }); }
+        render();
+      });
+      side.appendChild(b);
+    }
+    add('all', '🗂️', 'Visos pamokos', '#23264a', active.length);
+    add('none', '📄', 'Be aplanko', '#c7c3dd', active.filter(function (r) { return !r.folderId; }).length);
+    var h = document.createElement('h3'); h.textContent = 'Aplankai'; side.appendChild(h);
+    var folders = L.folders();
+    folders.forEach(function (f) {
+      add(f.id, '📁', f.name, f.color, active.filter(function (r) { return r.folderId === f.id; }).length, true);
+    });
+    if (!folders.length) {
+      var p = document.createElement('p'); p.className = 'muted'; p.style.margin = '0 6px';
+      p.textContent = 'Dar nėra aplankų. Spausk „📁 Naujas aplankas“.';
+      side.appendChild(p);
+    }
+    var h2 = document.createElement('h3'); h2.textContent = 'Nereikalingos'; side.appendChild(h2);
+    add('lib', '📚', 'Biblioteka', '#6a6f8f', all.filter(function (r) { return r.archived; }).length);
+  }
+
+  // ── Files ──
+  function visibleFiles() {
+    var filter = { archived: view === 'lib' };
+    if (kindFilter) { filter.kind = kindFilter; }
+    return L.search(query, filter).filter(function (r) {
+      if (view === 'all' || view === 'lib') { return true; }
+      if (view === 'none') { return !r.folderId; }
+      return r.folderId === view;
+    });
+  }
+
+  function renderWhere() {
+    var el = document.getElementById('where');
+    var f = folderById(view);
+    var name = view === 'all' ? 'Visos pamokos' : view === 'lib' ? '📚 Biblioteka' : view === 'none' ? 'Be aplanko' : (f ? f.name : '');
+    el.innerHTML = '<span class="dot"></span>' + esc(name);
+    el.style.setProperty('--c', f ? f.color : view === 'lib' ? '#6a6f8f' : '#23264a');
+  }
+
+  function openFile(r) {
+    if (r.kind === 'pamokele') { location.href = 'pamokeles.html#view=' + r.id; }
+    else { location.href = 'rasymas.html?lesson=' + encodeURIComponent(r.id); }
+  }
+
+  function renderFiles() {
+    var box = document.getElementById('files');
+    var files = visibleFiles();
+    box.innerHTML = '';
+    if (!files.length) {
+      box.innerHTML = '<div class="panel empty" style="grid-column:1/-1"><span class="big">' + (view === 'lib' ? '📚' : '🌱') + '</span>' +
+        (query ? 'Nieko nerasta.' : view === 'lib' ? 'Biblioteka tuščia. Čia atsidurs pamokos, kurių nebereikia.' : 'Čia dar nieko nėra. Sukurk pamokėlę arba natų lapą!') + '</div>';
+      return;
+    }
+    files.forEach(function (r) {
+      var k = KIND[r.kind] || KIND.natos;
+      var f = folderById(r.folderId);
+      var state = r.kind === 'pamokele' ? (L.load(r.id) || {}) : null;
+      var pic = state && state.picture
+        ? (state.picture.indexOf('data:') === 0 ? '<img alt="" src="' + state.picture + '">' : esc(state.picture))
+        : k.ico;
+      var card = document.createElement('div');
+      card.className = 'file';
+      card.draggable = true;
+      card.style.setProperty('--c', (state && state.color) || (f ? f.color : k.color));
+      card.innerHTML =
+        '<div class="file-top"><span class="file-kind">' + k.ico + ' ' + k.name + '</span>' + pic + '</div>' +
+        '<div class="file-body"><div class="file-title">' + esc(r.title) + '</div>' +
+        '<div class="file-date">' + (f && view === 'all' ? '📁 ' + esc(f.name) + ' · ' : '') + fmt(r.updatedAt) + '</div></div>' +
+        '<div class="file-acts">' +
+          '<button class="btn btn-small btn-teal" data-a="open">Atidaryti</button>' +
+          (r.kind === 'pamokele' && !r.archived ? '<button class="btn btn-small btn-icon" data-a="edit" title="Keisti pamokėlę">✏️</button>' : '') +
+          '<button class="btn btn-small btn-icon" data-a="rename" title="Pervadinti">🏷️</button>' +
+          (!r.archived ? '<button class="btn btn-small btn-icon" data-a="move" title="Perkelti į aplanką">📁</button>' : '') +
+          '<button class="btn btn-small btn-icon" data-a="copy" title="Padaryti kopiją">📋</button>' +
+          (r.archived
+            ? '<button class="btn btn-small btn-icon" data-a="restore" title="Grąžinti iš bibliotekos">↩️</button>' +
+              '<button class="btn btn-small btn-icon" data-a="delete" title="Ištrinti visam laikui">🗑️</button>'
+            : '<button class="btn btn-small btn-icon" data-a="archive" title="Perkelti į biblioteką">📚</button>') +
+        '</div>';
+      card.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/plain', r.id); card.classList.add('dragging'); });
+      card.addEventListener('dragend', function () { card.classList.remove('dragging'); });
+      card.querySelector('.file-top').addEventListener('dblclick', function () { openFile(r); });
+      card.querySelectorAll('[data-a]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var a = b.dataset.a;
+          if (a === 'open') { openFile(r); }
+          else if (a === 'edit') { location.href = 'pamokeles.html#edit=' + r.id; }
+          else if (a === 'rename') {
+            textDialog('🏷️ Pervadinti', r.title, function (t) { L.update(r.id, { title: t }); render(); });
+          }
+          else if (a === 'move') { moveDialog(r); }
+          else if (a === 'copy') { L.duplicate(r.id, r.title + ' (kopija)'); render(); }
+          else if (a === 'archive') { L.update(r.id, { archived: true }); render(); }
+          else if (a === 'restore') { L.update(r.id, { archived: false }); render(); }
+          else if (a === 'delete') {
+            if (confirm('Ištrinti „' + r.title + '“ visam laikui?')) { L.remove(r.id); render(); }
+          }
+        });
+      });
+      box.appendChild(card);
+    });
+  }
+
+  function render() { renderSide(); renderWhere(); renderFiles(); }
+
+  // ── Dialog (text input / folder / move) ──
+  var dlg = document.getElementById('dlg');
+  var dlgInput = document.getElementById('dlgInput');
+  var dlgOk = null, dlgColor = COLORS[0];
+  function openDlg(opts) {
+    document.getElementById('dlgTitle').textContent = opts.title;
+    dlg.querySelector('.modal').style.setProperty('--mc', opts.color || 'var(--teal)');
+    dlgInput.parentElement.hidden = !opts.text;
+    dlgInput.value = opts.value || '';
+    document.getElementById('dlgColorField').hidden = !opts.colors;
+    document.getElementById('dlgFoldersField').hidden = !opts.folders;
+    document.getElementById('dlgDelete').hidden = !opts.onDelete;
+    document.getElementById('dlgDelete').onclick = opts.onDelete || null;
+    document.getElementById('dlgOk').hidden = !opts.onOk;
+    dlgOk = opts.onOk || null;
+    dlg.hidden = false;
+    if (opts.text) { setTimeout(function () { dlgInput.focus(); dlgInput.select(); }, 30); }
+  }
+  function closeDlg() { dlg.hidden = true; }
+  dlg.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', closeDlg); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) { closeDlg(); } });
+  function ok() {
+    if (!dlgOk) { return; }
+    var v = dlgInput.value.trim();
+    if (!dlgInput.parentElement.hidden && !v) { dlgInput.focus(); return; }
+    var fn = dlgOk; closeDlg(); fn(v);
+  }
+  document.getElementById('dlgOk').addEventListener('click', ok);
+  dlgInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { ok(); } });
+
+  function textDialog(title, value, onOk) {
+    openDlg({ title: title, text: true, value: value, onOk: onOk });
+  }
+
+  function folderDialog(folder) {
+    dlgColor = folder ? folder.color : COLORS[L.folders().length % COLORS.length];
+    var row = document.getElementById('dlgColors');
+    row.innerHTML = '';
+    COLORS.forEach(function (c) {
+      var s = document.createElement('button');
+      s.type = 'button'; s.className = 'pick swatch' + (c === dlgColor ? ' sel' : '');
+      s.style.background = c;
+      s.addEventListener('click', function () {
+        dlgColor = c;
+        row.querySelectorAll('.swatch').forEach(function (x) { x.classList.toggle('sel', x === s); });
+      });
+      row.appendChild(s);
+    });
+    openDlg({
+      title: folder ? '📁 Aplankas' : '📁 Naujas aplankas', color: 'var(--yellow)',
+      text: true, value: folder ? folder.name : '', colors: true,
+      onOk: function (name) {
+        if (folder) { L.updateFolder(folder.id, { name: name, color: dlgColor }); }
+        else { view = L.addFolder(name, dlgColor).id; }
+        render();
+      },
+      onDelete: folder ? function () {
+        if (confirm('Ištrinti aplanką „' + folder.name + '“? Pamokos jame liks, tik be aplanko.')) {
+          L.removeFolder(folder.id); closeDlg(); if (view === folder.id) { view = 'all'; } render();
+        }
+      } : null
+    });
+  }
+
+  function moveDialog(r) {
+    var box = document.getElementById('dlgFolders');
+    box.innerHTML = '';
+    [{ id: null, name: 'Be aplanko', color: '#c7c3dd' }].concat(L.folders()).forEach(function (f) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'fold' + (r.folderId === f.id ? ' sel' : '');
+      b.style.setProperty('--c', f.color);
+      b.innerHTML = '<span class="f-ico">' + (f.id ? '📁' : '📄') + '</span><span class="f-name">' + esc(f.name) + '</span>';
+      b.addEventListener('click', function () { L.update(r.id, { folderId: f.id }); closeDlg(); render(); });
+      box.appendChild(b);
+    });
+    openDlg({ title: '📁 Perkelti „' + r.title + '“', folders: true, color: 'var(--violet)' });
+  }
+
+  // ── Toolbar ──
+  document.getElementById('newFolder').addEventListener('click', function () { folderDialog(null); });
+  document.getElementById('newLesson').addEventListener('click', function () {
+    location.href = 'pamokeles.html#new' + (folderParam() ? '=' + folderParam() : '');
+  });
+  document.getElementById('newSheet').addEventListener('click', function () {
+    location.href = 'rasymas.html?new=1' + (folderParam() ? '&folder=' + encodeURIComponent(folderParam()) : '');
+  });
+  document.getElementById('search').addEventListener('input', function (e) { query = e.target.value; renderFiles(); });
+  document.querySelectorAll('.chip[data-kind]').forEach(function (c) {
+    c.addEventListener('click', function () {
+      kindFilter = c.dataset.kind;
+      document.querySelectorAll('.chip[data-kind]').forEach(function (x) { x.classList.toggle('sel', x === c); });
+      renderFiles();
+    });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

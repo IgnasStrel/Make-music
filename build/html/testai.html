@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MUSICATION — Testai</title>
+  <title>MUSICATION — Užduotys</title>
   <link rel="stylesheet" href="../styles/kids.css" />
   <style>
     .opt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; width: 100%; }
@@ -12,14 +12,14 @@
 </head>
 <body>
   <div class="topbar">
-    <a class="back" href="zaidimai.html">← Atgal</a>
+    <a class="back" href="rasymas.html">← Atgal</a>
     <div class="spacer"></div>
     <div class="stars-box">⭐ <b id="starCount">0</b></div>
   </div>
 
   <!-- ===== Menu ===== -->
   <section class="screen" id="menu">
-    <h1>📝 Testai
+    <h1>📝 Užduotys
       <small>Atsakyk į 5 klausimus ir surink žvaigždutes</small>
     </h1>
     <div class="menu-grid">
@@ -40,7 +40,7 @@
     <div class="hint" id="qtext">—</div>
     <div class="opt-grid" id="options"></div>
     <div class="scoreboard"><div>Taškai: <b id="score">0</b></div></div>
-    <button class="btn btn-ghost" id="quitBtn">← Testai</button>
+    <button class="btn btn-ghost" id="quitBtn">← Užduotys</button>
   </section>
 
   <!-- ===== Result ===== -->
@@ -52,7 +52,7 @@
     </div>
     <div class="controls">
       <button class="btn btn-primary" id="retryBtn">🔁 Bandyti dar</button>
-      <button class="btn btn-ghost" id="resMenu">← Kiti testai</button>
+      <button class="btn btn-ghost" id="resMenu">← Kitos užduotys</button>
     </div>
   </section>
 
@@ -202,7 +202,17 @@
       document.getElementById('resMenu').addEventListener('click', function () { K.showScreen('menu'); });
       document.getElementById('retryBtn').addEventListener('click', function () { if (test) { var id = Object.keys(TESTS).find(function (k) { return TESTS[k] === test; }); start(id); } });
 
+      // Opened from a lesson (pamokėlė) as testai.html#natos: start that task
+      // right away. Read before initScreens(), which rewrites the hash.
+      var wanted = location.hash.slice(1);
       K.initScreens('menu');
+      if (TESTS[wanted]) { start(wanted); }
+
+      // "← Atgal" goes back to wherever the page was opened from (a lesson,
+      // the main screen, ...).
+      document.querySelector('.topbar .back').addEventListener('click', function (e) {
+        if (document.referrer && document.referrer.indexOf(location.origin) === 0) { e.preventDefault(); history.back(); }
+      });
     })();
   </script>
 </body>

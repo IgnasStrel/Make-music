@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>MUSICATION — Judėk kartu 💃</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lt-font.css">
+<script src="auth.js"></script>
+<script>
+  // The game only opens after logging in on index.html (teacher or student).
+  // It is reached from the main screen: rasymas.html → Žaidimai.
+  var SESSION = MusicationAuth.requireLogin();
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+    position: relative;
+    background: #bfe8ff;
+    color: #1e3a1e;
+  }
+  /* The real illustrated pond/meadow scene from the asset folder — same art
+     style as the animal pictures. Blurred and oversized on its own layer
+     (not directly on body) so the blur's soft edges never show. */
+  body::before {
+    content: ''; position: fixed; inset: -20px; z-index: -1;
+    background: url('media/judek/img/background.png') center center / cover no-repeat;
+    filter: blur(6px);
+  }
+  [hidden] { display: none !important; }
+
+  .topbar { position: relative; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
+  .game-title { font-size: 24px; font-weight: 800; color: #1e3a1e; text-shadow: 0 1px 0 rgba(255,255,255,0.6); flex: 1; }
+  .tb-btn {
+    border: none; border-radius: 999px; cursor: pointer;
+    background: rgba(255,255,255,0.92); box-shadow: 0 3px 0 rgba(0,0,0,0.12);
+    font-family: inherit; font-size: 20px; min-width: 44px; height: 44px; padding: 0 12px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; color: #234;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .tb-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(0,0,0,0.14); }
+  .tb-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+  .tb-btn.wide { font-size: 17px; padding: 0 18px; }
+
+  /* ── Variants: one square tile per animal pair ── */
+  .variants { max-width: 1180px; margin: 0 auto; padding: 4px 18px 40px; }
+  .page-h { text-align: center; font-size: clamp(34px, 5vw, 56px); font-weight: 800; color: #fff; line-height: 1.05;
+    text-shadow: 0 3px 0 rgba(0,0,0,0.15), 0 6px 18px rgba(0,0,0,0.25); }
+  .page-sub { text-align: center; font-size: 20px; font-weight: 700; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.35); margin: 2px 0 22px; }
+  .v-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 22px; }
+  .v-tile {
+    border: none; cursor: pointer; text-align: center; font-family: inherit; color: #1e3a1e;
+    background: #fff; border-radius: 28px; padding: 12px 12px 14px;
+    border-bottom: 8px solid var(--c);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.1), 0 14px 28px rgba(0,0,0,0.15);
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    animation: tileIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+    animation-delay: calc(var(--i) * 0.05s);
+  }
+  .v-tile:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 12px 0 rgba(0,0,0,0.1), 0 20px 34px rgba(0,0,0,0.2); }
+  .v-pic { border-radius: 20px; overflow: hidden; aspect-ratio: 620 / 438; background: #eaf3e2; }
+  .v-pic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s; }
+  .v-tile:hover .v-pic img { transform: scale(1.08); }
+  .v-name { font-size: 23px; font-weight: 800; line-height: 1.1; }
+  .v-icons { font-size: 26px; line-height: 1; }
+  .v-tile:hover .v-icons { animation: wiggle 0.6s ease; }
+  @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg) scale(1.15); } 60% { transform: rotate(8deg) scale(1.1); } }
+  @keyframes tileIn { from { opacity: 0; transform: translateY(18px) scale(0.94); } to { opacity: 1; transform: none; } }
+
+  /* ── One variant: the scene on the left, the four choices on the right ── */
+  .stage { position: relative; z-index: 5; padding: 0 18px 24px; }
+  .v-layout {
+    max-width: 1320px; margin: 0 auto;
+    display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 26px; align-items: center;
+    min-height: calc(100vh - 92px);
+  }
+  .scene-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .scene-hint { font-weight: 800; color: #fff; font-size: 17px; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+
+  /* The real illustrated artwork/video IS the scene. Tapping either half of
+     the picture opens that animal's own video; a caption shows who sounds. */
+  .scene-card {
+    position: relative; width: min(100%, calc((100vh - 150px) * 620 / 438)); aspect-ratio: 620 / 438;
+    border-radius: 26px; overflow: hidden; background: #eaf3e2;
+    box-shadow: 0 14px 0 rgba(0,0,0,0.12), 0 20px 34px rgba(0,0,0,0.2);
+  }
+  .scene-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scene-media.zooming { animation: gentleZoom 7s ease-in-out infinite; }
+  @keyframes gentleZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+  .tap-zone { position: absolute; top: 0; bottom: 0; width: 50%; cursor: pointer; }
+  .tap-zone.left { left: 0; }
+  .tap-zone.right { right: 0; }
+  .scene-caption {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(6px);
+    background: rgba(255,255,255,0.94); padding: 7px 20px; border-radius: 999px;
+    font-weight: 800; font-size: 16px; color: #234; box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease; pointer-events: none; white-space: nowrap;
+  }
+  .scene-caption.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .opts { display: flex; flex-direction: column; gap: 14px; }
+  .opt {
+    background: rgba(255,255,255,0.95); border-radius: 24px; padding: 14px 16px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.1), 0 12px 24px rgba(0,0,0,0.12);
+    border-left: 10px solid var(--c);
+    animation: tileIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .opt-head { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; margin-bottom: 10px; }
+  .opt-head .opt-ico { font-size: 30px; }
+  .opt-head small { display: block; font-size: 14px; font-weight: 700; color: #678; }
+  button.opt { border-top: none; border-right: none; border-bottom: none; cursor: pointer; font-family: inherit; color: inherit; text-align: left; display: flex; align-items: center; gap: 12px; transition: transform 0.12s; }
+  button.opt:hover { transform: translateY(-3px); }
+  button.opt .opt-head { margin: 0; }
+  .opt-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .a-btn {
+    flex: 1; min-width: 130px;
+    border: 3px solid transparent; border-radius: 18px; cursor: pointer;
+    background: color-mix(in srgb, var(--c) 14%, #fff); padding: 10px 12px;
+    font-family: inherit; font-size: 19px; font-weight: 800; color: #234;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.12s, border-color 0.12s;
+  }
+  .a-btn:hover { transform: translateY(-2px); }
+  .a-btn .a-ico { font-size: 28px; }
+  .a-btn small { font-size: 12px; color: #678; font-weight: 700; }
+  .a-btn.on { border-color: var(--c); background: #fff; }
+  .a-btn.on .a-ico { animation: wiggle 0.9s ease infinite; }
+
+  /* Music-only player under the animal buttons. */
+  .mini-player { display: flex; align-items: center; gap: 8px; margin-top: 10px; background: #f3f7f2; border-radius: 16px; padding: 8px 10px; }
+  .mini-player .tb-btn { box-shadow: 0 2px 0 rgba(0,0,0,0.12); min-width: 40px; height: 40px; font-size: 17px; }
+  .mini-player input { flex: 1; accent-color: var(--c); }
+  .mini-player .mp-time { font-size: 13px; font-weight: 800; color: #567; min-width: 74px; text-align: right; }
+
+  .opt-game { --c: #3d9a3b; justify-content: center; background: linear-gradient(180deg, #8ee38a, #5cc85a) !important; color: #16401a !important; }
+  .opt-game .opt-head { font-size: 30px; }
+  .opt-game .opt-head small { color: #1f5a1f; }
+
+  /* ── "▶ Žaidimas": the scene grows to nearly the whole screen over a dark
+     backdrop, everything else steps aside, and the controls sit below. ── */
+  .game-backdrop, .game-controls { display: none; }
+  body.game-on .stage { z-index: 50; }
+  body.game-on .topbar, body.game-on .opts, body.game-on .scene-hint { visibility: hidden; }
+  body.game-on .game-backdrop { display: block; position: fixed; inset: 0; z-index: 0; background: rgba(0,0,0,0.9); }
+  body.game-on .scene-card {
+    /* centred in the space above the ~104px control bar, 12px from the top */
+    position: fixed; z-index: 1; left: 50%; top: calc(12px + (100vh - 116px) / 2);
+    width: min(96vw, calc((100vh - 136px) * 620 / 438));
+    transform: translate(-50%, -50%);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    animation: gamePopIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes gamePopIn { from { transform: translate(-50%, -50%) scale(0.6); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+  body.game-on .tap-zone { pointer-events: none; }
+  body.game-on .scene-caption { font-size: clamp(18px, 3.4vh, 30px); padding: 10px 28px; bottom: 22px; }
+  body.game-paused .scene-media.zooming { animation-play-state: paused; }
+  body.game-on .game-controls {
+    display: flex; position: fixed; z-index: 2; left: 0; right: 0; bottom: 0;
+    justify-content: center; gap: 14px; flex-wrap: wrap; padding: 16px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  .fs-btn {
+    border: none; border-radius: 999px; padding: 13px 26px; cursor: pointer;
+    font-family: inherit; font-size: 17px; font-weight: 800;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.28); transition: transform 0.15s;
+  }
+  .fs-btn:active { transform: translateY(2px); }
+  .fs-btn.stop { background: linear-gradient(180deg, #ffb199, #ff7a59); color: #4a1408; }
+  .fs-btn.restart { background: linear-gradient(180deg, #8ee3ff, #4fb8e0); color: #06303f; }
+  .fs-btn.play { background: linear-gradient(180deg, #8ee38a, #5cc85a); color: #16401a; }
+  .fs-btn.next { background: linear-gradient(180deg, #ffe58a, #ffc83d); color: #4a3200; }
+  .fs-btn.exit { background: linear-gradient(180deg, #ffffff, #dfe4ea); color: #233; }
+  .game-controls .fs-btn { font-size: 20px; padding: 14px 30px; }
+
+  /* Full-screen solo player for one animal's own video + song. */
+  .fs-player { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.94); display: flex; flex-direction: column; }
+  .fs-topbar { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+  .fs-name { color: #fff; font-size: 24px; font-weight: 800; }
+  .fs-video-wrap {
+    flex: 1; position: relative; overflow: hidden;
+    margin: 4px 14px 14px; border-radius: 26px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    animation: fsPopIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes fsPopIn { from { transform: scale(0.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .fs-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .fs-controls { position: relative; z-index: 2; display: flex; justify-content: center; gap: 14px; padding: 16px 14px calc(16px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Game card picture, opened over the whole screen. */
+  .card-viewer {
+    position: fixed; inset: 0; z-index: 95; background: rgba(0,0,0,0.92);
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+    animation: cardIn 0.25s ease-out;
+  }
+  .card-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .card-viewer-close { position: absolute; top: 14px; right: 14px; width: 52px; height: 52px; font-size: 24px; }
+  @keyframes cardIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+
+  .modal-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: #fff; border-radius: 20px; padding: 22px 26px; width: 100%; max-width: 480px; max-height: 84vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .modal-head h3 { font-size: 19px; }
+  .modal-close { border: none; background: transparent; font-size: 24px; cursor: pointer; color: #667; }
+  .card-sec { margin-bottom: 14px; }
+  .card-sec h4 { font-size: 14px; color: #567; margin-bottom: 4px; }
+  .card-sec p, .card-sec li { font-size: 14.5px; color: #333; line-height: 1.5; }
+  .rhythm-line { font-family: monospace; font-size: 16px; font-weight: 700; background: #f2f2f8; padding: 5px 10px; border-radius: 8px; display: inline-block; }
+  .animal-card { border: 2px solid #eee; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
+  .animal-card h3 { font-size: 17px; margin-bottom: 8px; }
+
+  @media (max-width: 900px) {
+    .v-layout { grid-template-columns: 1fr; min-height: 0; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <button class="tb-btn wide" id="btnBack">← <span id="backLabel">Žaidimai</span></button>
+    <span class="game-title" id="gameTitle">💃 Judėk kartu</span>
+    <button class="tb-btn" id="btnHome" title="Į pagrindinį ekraną">🏠</button>
+    <button class="tb-btn" id="btnInfo" title="Žaidimo aprašymas">ℹ️</button>
+  </div>
+
+  <!-- All variants (animal pairs) of this game -->
+  <section class="variants" id="variantsView" hidden>
+    <h1 class="page-h">💃 Judėk kartu</h1>
+    <p class="page-sub">Pasirink gyvūnėlių porą</p>
+    <div class="v-grid" id="vGrid"></div>
+  </section>
+
+  <!-- One variant: card / animal videos / music only / the whole game -->
+  <div class="stage" id="variantView" hidden>
+    <div class="v-layout">
+      <div class="scene-col">
+        <div class="scene-card" id="sceneCard">
+          <video class="scene-media" id="sceneVideo" muted loop playsinline hidden></video>
+          <img class="scene-media" id="sceneImg" alt="" hidden />
+          <div class="tap-zone left" id="zoneA"></div>
+          <div class="tap-zone right" id="zoneB"></div>
+          <div class="scene-caption" id="sceneCaption"></div>
+        </div>
+        <p class="scene-hint">👆 Paspausk ant gyvūnėlio – pamatysi jo video</p>
+      </div>
+
+      <div class="opts">
+        <button class="opt" id="optCard" style="--c:#FBAD04">
+          <div class="opt-head"><span class="opt-ico">🃏</span><span>Žaidimo kortelė<small>kaip žaisti, judesiai, ritmas</small></span></div>
+        </button>
+        <div class="opt" style="--c:#D11264">
+          <div class="opt-head"><span class="opt-ico">🎬</span><span>Gyvūnėlių video<small>kiekvienas gyvūnėlis atskirai</small></span></div>
+          <div class="opt-btns" id="videoBtns"></div>
+        </div>
+        <div class="opt" style="--c:#009D9D">
+          <div class="opt-head"><span class="opt-ico">🎵</span><span>Tik muzika<small>klausyk be video</small></span></div>
+          <div class="opt-btns" id="musicBtns"></div>
+          <div class="mini-player" id="miniPlayer" hidden>
+            <button class="tb-btn" id="mpToggle" title="Sustabdyti / groti">⏸</button>
+            <button class="tb-btn" id="mpRestart" title="Iš pradžių">🔁</button>
+            <input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Kur groja">
+            <span class="mp-time" id="mpTime">0:00</span>
+          </div>
+        </div>
+        <button class="opt opt-game" id="playBtn">
+          <div class="opt-head"><span class="opt-ico">▶</span><span>Žaidimas<small>nuo pradžios iki galo</small></span></div>
+        </button>
+      </div>
+    </div>
+    <div class="game-backdrop"></div>
+    <div class="game-controls">
+      <button class="fs-btn stop" id="gamePauseBtn">⏸ Sustabdyti</button>
+      <button class="fs-btn restart" id="gameRestartBtn">🔁 Iš pradžių</button>
+      <button class="fs-btn next" id="gameNextBtn">🔄 Kitas gyvūnas</button>
+      <button class="fs-btn exit" id="gameExitBtn">✕ Išjungti</button>
+    </div>
+  </div>
+
+  <audio id="motifAudio" preload="none"></audio>
+  <audio id="musicOnly" preload="none"></audio>
+
+  <div class="fs-player" id="fsPlayer" hidden>
+    <div class="fs-topbar"><span class="fs-name" id="fsName"></span><button class="tb-btn" id="fsCloseBtn" title="Išjungti">✕</button></div>
+    <div class="fs-video-wrap"><video class="fs-video" id="fsVideo" muted loop playsinline></video></div>
+    <div class="fs-controls">
+      <button class="fs-btn stop" id="fsStopBtn">⏸ Sustabdyti</button>
+      <button class="fs-btn restart" id="fsRestartBtn">🔁 Iš naujo</button>
+    </div>
+  </div>
+  <audio id="fsAudio" preload="none"></audio>
+
+  <div class="card-viewer" id="cardViewer" hidden>
+    <img id="cardViewerImg" alt="Žaidimo kortelė" />
+    <button class="tb-btn card-viewer-close" id="cardViewerClose" title="Uždaryti">✕</button>
+  </div>
+
+  <div class="modal-overlay" id="teacherOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head"><h3>🃏 Žaidimo kortelė</h3><button class="modal-close" id="teacherClose">&times;</button></div>
+      <div id="teacherBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="infoOverlay" hidden>
+    <div class="modal">
+      <div class="modal-head"><h3>ℹ️ Apie žaidimą</h3><button class="modal-close" id="infoClose">&times;</button></div>
+      <div class="card-sec">
+        <h4>TIKSLAS</h4>
+        <p>Skatinti mažus vaikus klausytis klasikinės muzikos ir judėti kartu su gyvūnais, mėgdžiojant jų judesius.</p>
+      </div>
+      <div class="card-sec">
+        <h4>REKOMENDUOJAMAS AMŽIUS</h4>
+        <p>1–3 metai.</p>
+      </div>
+      <div class="card-sec">
+        <h4>KAIP ŽAISTI</h4>
+        <p>Pasirink gyvūnėlių porą. Pažiūrėkite kiekvieno gyvūnėlio video, paklausykite jo muzikos, o kai būsite pasiruošę, paspauskite „▶ Žaidimas" ir visi kartu judėkite pagal gyvūnų muziką.</p>
+      </div>
+      <div class="card-sec">
+        <h4>ŽAIDIMO FORMULĖ</h4>
+        <p>🐾 PAMATYK → 👂 IŠGIRSK → 🙆 PAMĖGDŽIOK → 💃 JUDĖK KARTU</p>
+      </div>
+      <div class="card-sec">
+        <h4>SVARBU</h4>
+        <p>Kuo mažiau mygtukų ir teksto — pagrindinė sąveika yra gyvūnas + muzika + judesys. Nėra teisingų ar neteisingų atsakymų.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ══════════════════════════════════════════════════════════════════════
+  // ANIMAL MODULE — every animal used by "Judėk kartu" (spec: piece info,
+  // how to move like it, a simple rhythm, a suggested instrument, and the
+  // educational goal for its teacher card).
+  // ══════════════════════════════════════════════════════════════════════
+  var ANIMALS = {
+    antis:     { icon: '🦆', name: 'Antis',     audio: 'media/judek/audio/antis.mp3',
+      move: 'Plaukioja ramiai vandenyje, švelniai sūpuodamasi į šonus.', rhythm: 'TA — TA —',
+      instrument: 'Vandens varpeliai arba ramus tamburinas', goal: 'Lavinti klausą lėtam, tolygiam ritmui.',
+      soloVideo: 'media/judek/video/antis-solo.mp4', soloAudio: 'media/judek/audio/antis-solo.mp3' },
+    varle:     { icon: '🐸', name: 'Varlė',     audio: 'media/judek/audio/varle.mp3',
+      move: 'Pašoka ant lapo, trumpam sustoja ir vėl pašoka.', rhythm: 'TA-ti  TA-ti',
+      instrument: 'Medinės kaladėlės', goal: 'Lavinti staigaus judesio ir sustojimo pojūtį.',
+      soloVideo: 'media/judek/video/varle-solo.mp4', soloAudio: 'media/judek/audio/varle-solo.mp3' },
+    bite:      { icon: '🐝', name: 'Bitė',      audio: 'media/judek/audio/bite.mp3',
+      move: 'Skraido nuo gėlės prie gėlės, greitai plasnodama sparneliais.', rhythm: 'ti-ti-ti-ti',
+      instrument: 'Maži metaliniai varpeliai arba trikampis', goal: 'Lavinti klausą greitam, lengvam ritmui.',
+      soloVideo: 'media/judek/video/bite-solo.mp4', soloAudio: 'media/judek/audio/bite-solo.mp3' },
+    sraige:    { icon: '🐌', name: 'Sraigė',    audio: 'media/judek/audio/sraige.mp3',
+      move: 'Labai labai lėtai šliaužia į priekį.', rhythm: 'TAAAAAA',
+      instrument: 'Tylus, lėtas būgnelis', goal: 'Lavinti kantrybę ir labai lėto tempo pojūtį.',
+      soloVideo: 'media/judek/video/sraige-solo.mp4', soloAudio: 'media/judek/audio/sraige-solo.mp3' },
+    dramblys:  { icon: '🐘', name: 'Dramblys',  audio: 'media/judek/audio/dramblys.mp3',
+      move: 'Vaikšto lėtai ir sunkiai, aukštai keldamas kojas.', rhythm: 'TA — TA — TA — TA',
+      instrument: 'Didelis, žemo garso būgnas', goal: 'Lavinti klausą žemam, sunkiam žingsniui.',
+      refPiece: 'Camille Saint-Saëns — „Dramblys" (idėja iš „Gyvūnų karnavalo")',
+      soloVideo: 'media/judek/video/dramblys-solo.mp4', soloAudio: 'media/judek/audio/dramblys-solo.mp3' },
+    drugelis:  { icon: '🦋', name: 'Drugelis',  audio: 'media/judek/audio/drugelis.mp3',
+      move: 'Švelniai plazda sparneliais ore, tarsi skrisdamas.', rhythm: 'ti-ti-ti-ti-ti-ti TA',
+      instrument: 'Skambaliukai arba trikampis', goal: 'Lavinti lengvo, švelnaus judesio pojūtį.',
+      soloVideo: 'media/judek/video/drugelis-solo.mp4', soloAudio: 'media/judek/audio/drugelis-solo.mp3' },
+    karve:     { icon: '🐄', name: 'Karvė',     audio: 'media/judek/audio/karve.mp3',
+      move: 'Ėda žolę, juda lėtai.', rhythm: 'TA — TA —',
+      instrument: 'Varpelis (kaip karvutės ant kaklo) arba būgnelis', goal: 'Lavinti klausą lėtam, ramiam žingsniui.',
+      soloVideo: 'media/judek/video/karve-solo.mp4', soloAudio: 'media/judek/audio/karve-solo.mp3' },
+    zyle:      { icon: '🐦', name: 'Zylė',      audio: 'media/judek/audio/zyle.mp3',
+      move: 'Šokinėja ant šakelės, plasnoja sparneliais.', rhythm: 'ti-ti-ti-ti TA',
+      instrument: 'Aukšto tono varpeliai arba ksilofonas', goal: 'Lavinti klausą greitam, trumpam judesiui.',
+      refPiece: 'Camille Saint-Saëns — „Paukštinykas (Voljeras)" (idėja iš „Gyvūnų karnavalo")',
+      soloVideo: 'media/judek/video/zyle-solo.mp4', soloAudio: 'media/judek/audio/zyle-solo.mp3' },
+    meskiukas: { icon: '🐻', name: 'Meškiukas', audio: 'media/judek/audio/meskiukas.mp3',
+      move: 'Sūpuojasi iš šono į šoną, lėtai vaikšto.', rhythm: 'TA-a TA-a ti-ti TA',
+      instrument: 'Žemo garso būgnas', goal: 'Lavinti klausą sunkiam, sūpuojančiam judesiui.',
+      soloVideo: 'media/judek/video/meskiukas-solo.mp4', videoHasMusic: true },
+    vovere:    { icon: '🐿️', name: 'Voverė',   audio: 'media/judek/audio/vovere.mp3',
+      move: 'Greitai šokinėja tarp šakų.', rhythm: 'ti-ti ti-ti ti-ti',
+      instrument: 'Medinės kastanjetės', goal: 'Lavinti klausą greitiems, trumpiems šuoliukams.',
+      soloVideo: 'media/judek/video/vovere-solo.mp4', videoHasMusic: true },
+    vezlys:    { icon: '🐢', name: 'Vėžlys',    audio: 'media/judek/audio/vezlys.mp3',
+      move: 'Juda labai labai lėtai, tarsi laikas būtų sustojęs.', rhythm: 'TAAAA — — — TA',
+      instrument: 'Labai lėtas, tylus būgnelis', goal: 'Lavinti kantrybę ir labai lėto tempo pojūtį.',
+      refPiece: 'Camille Saint-Saëns — „Vėžliai" (idėja iš „Gyvūnų karnavalo")',
+      soloVideo: 'media/judek/video/vezlys-solo.mp4', videoHasMusic: true },
+    kiskis:    { icon: '🐇', name: 'Kiškis',    audio: 'media/judek/audio/kiskis.mp3',
+      move: 'Pašokinėja lengvai vietoje.', rhythm: 'ti-ti TA ti-ti TA',
+      instrument: 'Tamburinas (lengvi pliaukštelėjimai)', goal: 'Lavinti klausą lengvam, greitam šuoliukui.',
+      soloVideo: 'media/judek/video/kiskis-solo.mp4', videoHasMusic: true }
+  };
+
+  // An animal's own video: either a silent looping picture with its song in
+  // soloAudio, or (videoHasMusic) a video that carries its own song.
+  function hasSolo(animal) { return !!(animal.soloVideo && (animal.soloAudio || animal.videoHasMusic)); }
+  // "Tik muzika": the animal's full song, or its short tune when the song
+  // only exists inside its video.
+  function musicOf(animal) { return animal.soloAudio || animal.audio; }
+
+  // The game's variants: one per animal pair. The real illustrated picture
+  // (or, where one exists, a real short video) shows both animals side by
+  // side; card is the pair's game card picture.
+  var PAIRS = [
+    { id: 'antis-varle',       name: 'Antytė – varlytė',    a: 'antis',     b: 'varle',    scene: 'media/judek/img/antis-varle.png',       video: 'media/judek/video/antis-varle.mp4',       card: 'media/judek/cards/antis-varle.png' },
+    { id: 'bite-sraige',       name: 'Bitė – sraigė',       a: 'bite',      b: 'sraige',   scene: 'media/judek/img/bite-sraige.png',       video: 'media/judek/video/bite-sraige.mp4',       card: 'media/judek/cards/bite-sraige.png' },
+    { id: 'dramblys-drugelis', name: 'Dramblys – drugelis', a: 'dramblys',  b: 'drugelis', scene: 'media/judek/img/dramblys-drugelis.png', video: 'media/judek/video/dramblys-drugelis.mp4', card: 'media/judek/cards/dramblys-drugelis.png' },
+    { id: 'karve-zyle',        name: 'Karvė – zylė',        a: 'karve',     b: 'zyle',     scene: 'media/judek/img/karve-zyle.png',        video: 'media/judek/video/karve-zyle.mp4',        card: 'media/judek/cards/karve-zyle.png' },
+    { id: 'meskiukas-vovere',  name: 'Meška – voverė',      a: 'meskiukas', b: 'vovere',   scene: 'media/judek/img/meskiukas-vovere.png',  video: null,                                      card: 'media/judek/cards/meskiukas-vovere.png' },
+    { id: 'vezlys-kiskis',     name: 'Vėžlys – kiškis',     a: 'vezlys',    b: 'kiskis',   scene: 'media/judek/img/vezlys-kiskis.png',     video: null,                                      card: 'media/judek/cards/vezlys-kiskis.png' }
+  ];
+  var ACCENTS = ['#009D9D', '#D11264', '#FBAD04', '#56317D', '#EA5223', '#A6B908'];
+
+  // judek.html            → all variants as tiles
+  // judek.html?pora=<id>  → that variant's page
+  // With only one variant there is nothing to choose: it opens straight away.
+  var wanted = new URLSearchParams(location.search).get('pora');
+  var pairIndex = -1;
+  PAIRS.forEach(function (p, i) { if (p.id === wanted) { pairIndex = i; } });
+  if (pairIndex < 0 && PAIRS.length === 1) { pairIndex = 0; }
+
+  var backToVariants = pairIndex >= 0 && PAIRS.length > 1;
+  document.getElementById('backLabel').textContent = backToVariants ? 'Visos poros' : 'Žaidimai';
+  document.getElementById('btnBack').addEventListener('click', function () {
+    location.href = backToVariants ? 'judek.html' : 'zaidimai.html';
+  });
+  document.getElementById('btnHome').addEventListener('click', function () { location.href = 'rasymas.html'; });
+
+  var infoOverlay = document.getElementById('infoOverlay');
+  document.getElementById('btnInfo').addEventListener('click', function () {
+    if (window.stopEverything) { window.stopEverything(); }
+    infoOverlay.hidden = false;
+  });
+  document.getElementById('infoClose').addEventListener('click', function () { infoOverlay.hidden = true; });
+  infoOverlay.addEventListener('click', function (e) { if (e.target === infoOverlay) { infoOverlay.hidden = true; } });
+
+  if (pairIndex < 0) { showVariants(); } else { showVariant(); }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // All variants: interactive square tiles.
+  // ══════════════════════════════════════════════════════════════════════
+  function showVariants() {
+    document.getElementById('variantsView').hidden = false;
+    document.getElementById('gameTitle').textContent = '';
+    var grid = document.getElementById('vGrid');
+    PAIRS.forEach(function (p, i) {
+      var a = ANIMALS[p.a], b = ANIMALS[p.b];
+      var t = document.createElement('button');
+      t.className = 'v-tile';
+      t.style.setProperty('--c', ACCENTS[i % ACCENTS.length]);
+      t.style.setProperty('--i', i);
+      t.innerHTML = '<div class="v-pic"><img alt="" src="' + p.scene + '"></div>' +
+        '<div class="v-icons">' + a.icon + ' ' + b.icon + '</div>' +
+        '<div class="v-name">' + p.name + '</div>';
+      t.addEventListener('click', function () { location.href = 'judek.html?pora=' + p.id; });
+      grid.appendChild(t);
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // One variant: a) game card, b) each animal's video, c) music only,
+  // d) the whole game from start to end.
+  // ══════════════════════════════════════════════════════════════════════
+  function showVariant() {
+    var pair = PAIRS[pairIndex];
+    var A = ANIMALS[pair.a], B = ANIMALS[pair.b];
+    document.getElementById('variantView').hidden = false;
+    document.getElementById('gameTitle').textContent = '💃 Judėk kartu · ' + pair.name;
+    document.title = 'MUSICATION — ' + pair.name;
+
+    var sceneVideo = document.getElementById('sceneVideo');
+    var sceneImg = document.getElementById('sceneImg');
+    var sceneCaption = document.getElementById('sceneCaption');
+    var motifAudioEl = document.getElementById('motifAudio');
+
+    function safePlay(v) { var p = v.play(); if (p && p.catch) { p.catch(function () {}); } }
+    function showCaption(text) { sceneCaption.textContent = text; sceneCaption.classList.add('show'); }
+    function hideCaption() { sceneCaption.classList.remove('show'); }
+
+    // The pair's own video (silent, looping) - sceneVideo is kept for the
+    // animals' solo videos during the game.
+    var pairVideo = null;
+    if (pair.video) {
+      pairVideo = document.createElement('video');
+      pairVideo.className = 'scene-media';
+      pairVideo.muted = true; pairVideo.loop = true; pairVideo.preload = 'auto'; pairVideo.hidden = true;
+      pairVideo.setAttribute('muted', ''); pairVideo.setAttribute('playsinline', '');
+      pairVideo.src = pair.video;
+      document.getElementById('sceneCard').insertBefore(pairVideo, sceneImg);
+    }
+
+    function hideAllMedia() {
+      if (pairVideo) { pairVideo.pause(); pairVideo.hidden = true; }
+      sceneVideo.pause(); sceneVideo.hidden = true;
+      sceneImg.hidden = true; sceneImg.classList.remove('zooming');
+    }
+    function activeVideo() {
+      if (pairVideo && !pairVideo.hidden) { return pairVideo; }
+      return sceneVideo.hidden ? null : sceneVideo;
+    }
+    function showPairMedia() {
+      hideAllMedia();
+      if (pairVideo && !pairVideo.error) {
+        pairVideo.hidden = false;
+        pairVideo.currentTime = 0;
+        safePlay(pairVideo);
+      } else {
+        // No video for this pair (or it failed to load): the still picture.
+        sceneImg.hidden = false;
+        sceneImg.src = pair.scene;
+        sceneImg.classList.add('zooming');
+      }
+    }
+
+    // ── Shared music for the game ──
+    function stopAllMusic() {
+      motifAudioEl.onended = null; motifAudioEl.pause();
+      // A video playing its own song goes back to being a silent picture.
+      sceneVideo.onended = null; sceneVideo.muted = true; sceneVideo.loop = true;
+      stopMusicOnly();
+    }
+    function playAudioFile(src, onDone) {
+      stopAllMusic();
+      motifAudioEl.src = src;
+      motifAudioEl.currentTime = 0;
+      motifAudioEl.onended = onDone || null;
+      motifAudioEl.play();
+    }
+
+    // ── b) Each animal's own video, full screen ──────────────────────────
+    // Its video loops silently while a separate audio track carries the
+    // song (or the video plays with its own song). Stop toggles pause /
+    // resume; Restart jumps back to the start; ✕ closes it.
+    var fsPlayer = document.getElementById('fsPlayer');
+    var fsVideo = document.getElementById('fsVideo');
+    var fsAudio = document.getElementById('fsAudio');
+    var fsStopBtn = document.getElementById('fsStopBtn');
+    var fsMusic = fsAudio;
+
+    function openSoloPlayer(animal) {
+      if (sequenceRunning) { cancelSequence(); exitGameMode(); }
+      stopAllMusic();
+      var own = !!animal.videoHasMusic;
+      document.getElementById('fsName').textContent = animal.icon + ' ' + animal.name;
+      fsVideo.src = animal.soloVideo;
+      fsVideo.muted = !own; fsVideo.loop = !own;
+      if (own) {
+        fsAudio.pause(); fsAudio.removeAttribute('src');
+        fsMusic = fsVideo;
+      } else {
+        fsAudio.src = animal.soloAudio;
+        fsAudio.currentTime = 0;
+        fsMusic = fsAudio;
+      }
+      fsStopBtn.textContent = '⏸ Sustabdyti';
+      fsPlayer.hidden = false;
+      fsVideo.currentTime = 0;
+      safePlay(fsVideo);
+      if (!own) { safePlay(fsAudio); }
+    }
+    function closeSoloPlayer() {
+      fsAudio.pause();
+      fsVideo.pause();
+      fsPlayer.hidden = true;
+    }
+    function playFs() {
+      safePlay(fsVideo);
+      if (fsMusic !== fsVideo) { safePlay(fsAudio); }
+    }
+    fsStopBtn.addEventListener('click', function () {
+      if (fsMusic.paused) { playFs(); fsStopBtn.textContent = '⏸ Sustabdyti'; }
+      else { fsAudio.pause(); fsVideo.pause(); fsStopBtn.textContent = '▶ Tęsti'; }
+    });
+    document.getElementById('fsRestartBtn').addEventListener('click', function () {
+      fsVideo.currentTime = 0;
+      if (fsMusic !== fsVideo) { fsAudio.currentTime = 0; }
+      fsStopBtn.textContent = '⏸ Sustabdyti';
+      playFs();
+    });
+    document.getElementById('fsCloseBtn').addEventListener('click', closeSoloPlayer);
+    // A silent video loops on its own (it's usually shorter than the song);
+    // once the song ends, freeze on that frame instead of looping on.
+    fsAudio.addEventListener('ended', function () { fsVideo.pause(); fsStopBtn.textContent = '▶ Tęsti'; });
+    fsVideo.addEventListener('ended', function () { fsStopBtn.textContent = '▶ Tęsti'; });
+
+    // Tapping either half of the scene opens that animal's video too.
+    function onZoneTap(which) {
+      if (sequenceRunning) { return; }
+      var animal = ANIMALS[pair[which]];
+      if (hasSolo(animal)) { openSoloPlayer(animal); return; }
+      showCaption('🎵 ' + animal.icon + ' ' + animal.name);
+      playAudioFile(animal.audio, hideCaption);
+    }
+    document.getElementById('zoneA').addEventListener('click', function () { onZoneTap('a'); });
+    document.getElementById('zoneB').addEventListener('click', function () { onZoneTap('b'); });
+
+    // ── c) Music only ─────────────────────────────────────────────────────
+    var musicEl = document.getElementById('musicOnly');
+    var miniPlayer = document.getElementById('miniPlayer');
+    var mpToggle = document.getElementById('mpToggle');
+    var mpSeek = document.getElementById('mpSeek');
+    var mpTime = document.getElementById('mpTime');
+    var musicAnimal = null;
+
+    function fmt(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+    function markMusicButtons() {
+      document.querySelectorAll('#musicBtns .a-btn').forEach(function (b) {
+        b.classList.toggle('on', !!musicAnimal && b.dataset.animal === musicAnimal && !musicEl.paused);
+      });
+    }
+    function stopMusicOnly() {
+      musicEl.pause();
+      mpToggle.textContent = '▶';
+      markMusicButtons();
+    }
+    function playMusicOnly(key) {
+      if (sequenceRunning) { cancelSequence(); exitGameMode(); showPairMedia(); }
+      motifAudioEl.pause();
+      if (musicAnimal !== key) {
+        musicAnimal = key;
+        musicEl.src = musicOf(ANIMALS[key]);
+      }
+      musicEl.currentTime = 0;
+      safePlay(musicEl);
+      miniPlayer.hidden = false;
+    }
+    musicEl.addEventListener('play', function () { mpToggle.textContent = '⏸'; markMusicButtons(); });
+    musicEl.addEventListener('pause', function () { mpToggle.textContent = '▶'; markMusicButtons(); });
+    musicEl.addEventListener('timeupdate', function () {
+      if (musicEl.duration) { mpSeek.value = Math.round(musicEl.currentTime / musicEl.duration * 1000); }
+      mpTime.textContent = fmt(musicEl.currentTime) + ' / ' + fmt(musicEl.duration);
+    });
+    mpToggle.addEventListener('click', function () { if (musicEl.paused) { safePlay(musicEl); } else { musicEl.pause(); } });
+    document.getElementById('mpRestart').addEventListener('click', function () { musicEl.currentTime = 0; safePlay(musicEl); });
+    mpSeek.addEventListener('input', function () {
+      if (musicEl.duration) { musicEl.currentTime = mpSeek.value / 1000 * musicEl.duration; }
+    });
+
+    // Animal buttons for b) and c).
+    [['a', A], ['b', B]].forEach(function (x, i) {
+      var key = pair[x[0]], animal = x[1];
+      var vb = document.createElement('button');
+      vb.className = 'a-btn'; vb.style.setProperty('--c', '#D11264');
+      vb.innerHTML = '<span class="a-ico">' + animal.icon + '</span> ' + animal.name + ' <small>video</small>';
+      vb.addEventListener('click', function () { openSoloPlayer(animal); });
+      document.getElementById('videoBtns').appendChild(vb);
+
+      var mb = document.createElement('button');
+      mb.className = 'a-btn'; mb.style.setProperty('--c', '#009D9D'); mb.dataset.animal = key;
+      mb.innerHTML = '<span class="a-ico">' + animal.icon + '</span> ' + animal.name + ' <small>mp3</small>';
+      mb.addEventListener('click', function () {
+        if (musicAnimal === key && !musicEl.paused) { musicEl.pause(); } else { playMusicOnly(key); }
+      });
+      document.getElementById('musicBtns').appendChild(mb);
+    });
+
+    // ── a) Game card ──────────────────────────────────────────────────────
+    function animalCardHtml(animal) {
+      return '<div class="animal-card">' +
+        '<h3>' + animal.icon + ' ' + animal.name + '</h3>' +
+        '<div class="card-sec"><h4>🎵 KŪRINYS</h4><p>' + (animal.refPiece || 'Trumpa muzikinė ištrauka, pritaikyta ' + animal.name.toLowerCase() + 's judesiui.') + '</p></div>' +
+        '<div class="card-sec"><h4>🐾 KAIP JUDĖTI</h4><p>' + animal.move + '</p></div>' +
+        '<div class="card-sec"><h4>👏 RITMO PRATIMAS</h4><p class="rhythm-line">' + animal.rhythm + '</p></div>' +
+        '<div class="card-sec"><h4>🥁 SIŪLOMI INSTRUMENTAI</h4><p>' + animal.instrument + '</p></div>' +
+        '<div class="card-sec"><h4>🎯 UGDYMO TIKSLAS</h4><p>' + animal.goal + '</p></div>' +
+        '</div>';
+    }
+    var teacherOverlay = document.getElementById('teacherOverlay');
+    var cardViewer = document.getElementById('cardViewer');
+    // The pair's own card picture full screen; without one, the written
+    // card built from the animal data.
+    document.getElementById('optCard').addEventListener('click', function () {
+      stopEverything();
+      if (pair.card) {
+        document.getElementById('cardViewerImg').src = pair.card;
+        cardViewer.hidden = false;
+        return;
+      }
+      document.getElementById('teacherBody').innerHTML = animalCardHtml(A) + animalCardHtml(B);
+      teacherOverlay.hidden = false;
+    });
+    function closeCardViewer() { cardViewer.hidden = true; }
+    document.getElementById('cardViewerClose').addEventListener('click', closeCardViewer);
+    cardViewer.addEventListener('click', function (e) { if (e.target === cardViewer) { closeCardViewer(); } });
+    document.getElementById('teacherClose').addEventListener('click', function () { teacherOverlay.hidden = true; });
+    teacherOverlay.addEventListener('click', function (e) { if (e.target === teacherOverlay) { teacherOverlay.hidden = true; } });
+
+    // ── d) The whole game: greet → animal A → animal B → goodbye, on the
+    // nearly full-screen scene with ⏸/▶, 🔁 from the start, 🔄 and ✕. ──
+    var sequenceRunning = false;
+    var sequenceToken = 0;
+    var gamePaused = false;
+    var resumeAudio = false;
+    var gameStage = null;   // 'greet' | 'a' | 'b' | 'bye'
+    var gamePauseBtn = document.getElementById('gamePauseBtn');
+    var gameNextBtn = document.getElementById('gameNextBtn');
+
+    // The greeting / goodbye pauses are timers, so they must be able to
+    // pause too: seqTimer remembers how much of its wait is left.
+    var seqTimer = null;
+    function startSeqTimer() {
+      seqTimer.startedAt = Date.now();
+      seqTimer.id = setTimeout(function () { var cb = seqTimer.cb; seqTimer = null; cb(); }, seqTimer.remaining);
+    }
+    function seqDelay(ms, cb) { seqTimer = { cb: cb, remaining: ms }; if (!gamePaused) { startSeqTimer(); } }
+
+    function cancelSequence() {
+      sequenceRunning = false; sequenceToken++; gameStage = null;
+      if (seqTimer) { clearTimeout(seqTimer.id); seqTimer = null; }
+      hideCaption();
+    }
+    function setPauseButton() {
+      gamePauseBtn.textContent = gamePaused ? '▶ Paleisti' : '⏸ Sustabdyti';
+      gamePauseBtn.className = 'fs-btn ' + (gamePaused ? 'play' : 'stop');
+      document.body.classList.toggle('game-paused', gamePaused);
+    }
+    function setGamePaused(paused) {
+      if (!sequenceRunning || paused === gamePaused) { return; }
+      gamePaused = paused;
+      setPauseButton();
+      if (paused) {
+        resumeAudio = !motifAudioEl.paused;
+        motifAudioEl.pause();
+        if (activeVideo()) { activeVideo().pause(); }
+        if (seqTimer) { clearTimeout(seqTimer.id); seqTimer.remaining -= Date.now() - seqTimer.startedAt; }
+      } else {
+        if (resumeAudio) { motifAudioEl.play(); }
+        if (activeVideo()) { safePlay(activeVideo()); }
+        if (seqTimer) { startSeqTimer(); }
+      }
+    }
+    function enterGameMode() {
+      gamePaused = false;
+      setPauseButton();
+      document.body.classList.add('game-on');
+    }
+    function exitGameMode() {
+      document.body.classList.remove('game-on', 'game-paused');
+      gamePaused = false;
+    }
+    function quitGame() {
+      if (!document.body.classList.contains('game-on')) { return; }
+      cancelSequence();
+      stopAllMusic();
+      exitGameMode();
+      showPairMedia();
+    }
+    function restartGame() {
+      cancelSequence();
+      stopAllMusic();
+      showPairMedia();
+      runSequence();
+    }
+
+    // An animal with its own video shows that video while its song plays;
+    // the others keep the pair's picture/video running underneath.
+    function playAnimalPart(animal, onDone) {
+      if (hasSolo(animal)) {
+        hideAllMedia();
+        sceneVideo.hidden = false;
+        if (sceneVideo.getAttribute('src') !== animal.soloVideo) { sceneVideo.src = animal.soloVideo; }
+        sceneVideo.currentTime = 0;
+        if (animal.videoHasMusic) {
+          stopAllMusic();
+          sceneVideo.muted = false; sceneVideo.loop = false;
+          sceneVideo.onended = function () {
+            sceneVideo.onended = null; sceneVideo.muted = true; sceneVideo.loop = true;
+            if (onDone) { onDone(); }
+          };
+          safePlay(sceneVideo);
+        } else {
+          safePlay(sceneVideo);
+          playAudioFile(animal.soloAudio, onDone);
+        }
+      } else {
+        showPairMedia();
+        playAudioFile(animal.audio, onDone);
+      }
+    }
+
+    function runSequence() {
+      if (sequenceRunning) { return; }
+      stopMusicOnly();
+      sequenceRunning = true;
+      var myToken = ++sequenceToken;
+      enterGameMode();
+      gameStage = 'greet';
+      updateNextAnimalBtn();
+      showCaption('👋 Labas! ' + A.icon + ' ' + B.icon);
+      seqDelay(1400, function () { playGameAnimal('a', myToken); });
+    }
+    function playGameAnimal(which, myToken) {
+      if (sequenceToken !== myToken) { return; }
+      gameStage = which;
+      updateNextAnimalBtn();
+      var animal = ANIMALS[pair[which]];
+      showCaption('🎵 ' + animal.icon + ' ' + animal.name);
+      playAnimalPart(animal, function () {
+        if (sequenceToken !== myToken) { return; }
+        if (which === 'a') { playGameAnimal('b', myToken); } else { sayGoodbye(myToken); }
+      });
+    }
+    function sayGoodbye(myToken) {
+      gameStage = 'bye';
+      updateNextAnimalBtn();
+      showCaption('👋 Iki! 🌙');
+      seqDelay(1600, function () {
+        if (sequenceToken !== myToken) { return; }
+        hideCaption();
+        exitGameMode();
+        showPairMedia();
+        sequenceRunning = false;
+        gameStage = null;
+      });
+    }
+
+    // 🔄 switches to the pair's other animal at once (also when paused).
+    function nextAnimal() { return (gameStage === 'greet' || gameStage === 'a') ? 'b' : 'a'; }
+    function updateNextAnimalBtn() { gameNextBtn.textContent = '🔄 Kitas gyvūnas ' + ANIMALS[pair[nextAnimal()]].icon; }
+    function changeAnimal() {
+      if (!sequenceRunning) { return; }
+      var which = nextAnimal();
+      var myToken = ++sequenceToken;
+      if (seqTimer) { clearTimeout(seqTimer.id); seqTimer = null; }
+      stopAllMusic();
+      gamePaused = false;
+      setPauseButton();
+      playGameAnimal(which, myToken);
+    }
+
+    document.getElementById('playBtn').addEventListener('click', function () { closeSoloPlayer(); runSequence(); });
+    gamePauseBtn.addEventListener('click', function () { setGamePaused(!gamePaused); });
+    document.getElementById('gameRestartBtn').addEventListener('click', restartGame);
+    document.getElementById('gameExitBtn').addEventListener('click', quitGame);
+    gameNextBtn.addEventListener('click', changeAnimal);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !cardViewer.hidden) { closeCardViewer(); return; }
+      if (!document.body.classList.contains('game-on')) { return; }
+      if (e.key === 'Escape') { quitGame(); }
+      if (e.key === 'ArrowRight') { changeAnimal(); }
+      if (e.key === ' ') { e.preventDefault(); setGamePaused(!gamePaused); }
+    });
+
+    function stopEverything() {
+      if (sequenceRunning) { cancelSequence(); exitGameMode(); showPairMedia(); }
+      stopAllMusic();
+      closeSoloPlayer();
+    }
+    window.stopEverything = stopEverything;
+
+    showPairMedia();
+  }
+})();
+</script>
+</body>
+</html>

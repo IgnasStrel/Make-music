@@ -4,7 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>MUSICATION — Rašyk natas 🎵</title>
+  <script src="auth.js"></script>
+  <script>
+    // The main screen only opens after logging in on index.html.
+    var SESSION = MusicationAuth.requireLogin();
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="lt-font.css">
   <!-- Shared kids engine (mascot, stars, audio helpers) - loaded before our
        own <style> below so any of its rules our markup happens to share a
        class name with (only .topbar) get cleanly overridden by us. -->
@@ -53,6 +59,14 @@
     }
 
     .topbar { display: flex; align-items: center; justify-content: space-between; }
+    .topbar-brand { display: flex; align-items: center; gap: 22px; }
+    .topbar-logo { display: block; height: 100px; width: auto; }
+    /* The level (I / II / III) chosen on the login screen, next to the logo. */
+    .topbar-level {
+      font-family: var(--heading-font); font-weight: 800; line-height: 1;
+      font-size: 84px; color: #012A5F; letter-spacing: 4px;
+      padding-top: 6px;
+    }
     .back-link {
       text-decoration: none; color: var(--ink);
       background: var(--glass);
@@ -67,74 +81,102 @@
     /* ── Main area: just the center content ── */
     .main-area {
       display: flex; gap: 12px; align-items: flex-start; flex: 1;
-      padding-left: 86px; /* leave room for fixed left circles */
+      /* 1840px is the layout on a full-HD (1920px) screen; max-width keeps
+         the right-hand buttons on screen when the window is narrower. */
+      width: 1840px; max-width: 100%;
+      padding-left: 200px; /* leave room for fixed left circles */
     }
 
     /* ── Left column: 4 settings circles — fixed to left edge of screen ── */
     .left-col {
       position: fixed;
-      left: 8px;
-      top: 50%;
+      left: 55px;
+      top: 40%;
       transform: translateY(-50%);
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex; flex-direction: column; gap: 16px;
       z-index: 200;
     }
 
     .circle-wrap { position: relative; }
 
+    /* Shared kid-button shape as .play-btn on judek.html: a white pill with a
+       3D bottom edge, lifting on hover and pressing down on click. */
+    .scircle, .nav-card-head, .nav-btn, .pop-btn {
+      border: none; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+      background: #fff; color: #16401a;
+      font-family: inherit; font-weight: 800;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.16), 0 10px 18px rgba(0,0,0,0.14);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .scircle:hover, .nav-card-head:hover, .nav-btn:hover, .pop-btn:hover { transform: translateY(-2px); }
+    .scircle:active, .nav-card-head:active, .nav-btn:active, .pop-btn:active {
+      transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.16);
+    }
+
+    /* Emoji only, no words (the name is still there as a tooltip and for
+       screen readers), so the circle can be a bit smaller than before and
+       all six fit on a small laptop screen without touching the top bar. */
     .scircle {
-      width: 62px; height: 62px; border-radius: 18px;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      cursor: pointer;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 2px;
-      box-shadow: 0 3px 10px rgba(15,23,42,0.12);
-      transition: box-shadow 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
-      user-select: none; -webkit-tap-highlight-color: transparent;
+      width: 88px; height: 88px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
     }
-    .scircle .ico { font-size: 22px; line-height: 1; }
-    .scircle .lbl { font-size: 10px; font-weight: 700; color: var(--ink-soft); font-family: var(--heading-font); }
-    .scircle:hover { box-shadow: 0 6px 18px rgba(15,23,42,0.18); border-color: rgba(255,255,255,0.8); transform: translateY(-2px) scale(1.04); }
+    .scircle .ico { font-size: 46px; line-height: 1; display: inline-block; }
+    /* Playful touch: the icon wiggles when the pointer is over its button. */
+    @keyframes iconWiggle {
+      0%, 100% { transform: rotate(0) scale(1); }
+      25% { transform: rotate(-14deg) scale(1.12); }
+      50% { transform: rotate(10deg) scale(1.12); }
+      75% { transform: rotate(-6deg) scale(1.06); }
+    }
+    .scircle:hover .ico, .nav-card-head:hover .nch-ico { animation: iconWiggle 0.6s ease-in-out; }
     .scircle.open {
-      border-color: var(--accent);
-      background: rgba(47,111,237,0.22);
-      box-shadow: 0 6px 20px rgba(47,111,237,0.35);
+      box-shadow: 0 0 0 4px #8ee38a, 0 6px 0 rgba(0,0,0,0.16), 0 10px 18px rgba(0,0,0,0.14);
     }
-    .scircle.open .lbl { color: var(--accent-dark); }
 
     /* Popup opens to the RIGHT of the circle */
     .popup {
       position: absolute;
       left: calc(100% + 10px);
       top: 50%; transform: translateY(-50%);
-      background: var(--glass-strong);
-      border: 1px solid var(--glass-border);
-      border-radius: 14px; padding: 8px;
+      background: #f6fdf3;
+      border-radius: 22px; padding: 12px;
       z-index: 300;
-      box-shadow: 0 10px 32px rgba(15,23,42,0.22);
-      display: none; flex-direction: column; gap: 3px;
-      min-width: 148px;
+      box-shadow: 0 0 0 6px rgba(142,227,138,0.3), 0 18px 40px rgba(15,23,42,0.22);
+      transform-origin: left center;
+      display: none; flex-direction: column; gap: 5px;
+      min-width: 190px;
       white-space: nowrap;
-      max-height: 80vh;
+      max-height: calc(100vh - 32px);
       overflow-y: auto;
     }
-    .popup.open { display: flex; }
+    @keyframes popIn {
+      from { opacity: 0; scale: 0.9; }
+      to   { opacity: 1; scale: 1; }
+    }
+    .popup.open { display: flex; animation: popIn 0.25s cubic-bezier(.34,1.56,.64,1) both; }
     .pop-title {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-      color: var(--ink-soft); text-align: center;
-      margin-bottom: 4px; font-family: var(--font);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 10px 16px; margin-bottom: 6px; border-radius: 14px;
+      background:
+        repeating-linear-gradient(to bottom, transparent 0 7px, rgba(255,255,255,0.22) 7px 8px),
+        linear-gradient(135deg, #5cc85a, #3fa83e);
+      color: #fff; text-shadow: 0 2px 0 rgba(22,64,26,0.25);
+      font-family: var(--heading-font); font-size: 22px; font-weight: 800;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.12);
     }
+    .pop-title::before, .pop-title::after { font-size: 26px; line-height: 1; }
+    .pop-title::before { content: '♪'; }
+    .pop-title::after { content: '♫'; }
     .pop-btn {
-      background: transparent;
-      border: 1px solid transparent; border-radius: 7px;
-      padding: 7px 10px;
-      font-family: var(--font); font-size: 13.5px; font-weight: 500; color: var(--ink);
-      cursor: pointer; text-align: left; transition: 0.12s;
-      white-space: nowrap;
+      border-radius: 999px; padding: 12px 22px;
+      font-family: var(--font); font-size: 18px; font-weight: 700;
+      text-align: left; white-space: nowrap;
     }
-    .pop-btn:hover { background: rgba(47,111,237,0.08); }
-    .pop-btn.sel { border-color: var(--accent); background: rgba(47,111,237,0.12); color: var(--accent-dark); font-weight: 600; }
+    .pop-btn.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #3fa83e, 0 6px 0 rgba(0,0,0,0.16); }
+    #pop-sound.open { display: grid; grid-template-columns: repeat(2, max-content); gap: 6px 14px; }
+    #pop-sound .pop-title { grid-column: 1 / -1; }
+    .snd-col { display: flex; flex-direction: column; gap: 8px; }
+    .snd-head { font-family: var(--heading-font); font-size: 17px; font-weight: 800; color: #4a6a4a; text-align: center; padding: 2px 0; }
 
     /* ── Lesson library modal ── */
     .lib-overlay {
@@ -145,7 +187,7 @@
     }
     .lib-overlay[hidden] { display: none; }
     .lib-modal {
-      background: #fff; border-radius: 16px; padding: 20px;
+      background: #f1fbef; border: 2px solid #8ee38a; border-radius: 18px; padding: 20px;
       width: 100%; max-width: 420px; max-height: 80vh;
       display: flex; flex-direction: column; gap: 12px;
       box-shadow: 0 20px 50px rgba(15,23,42,0.35);
@@ -166,6 +208,43 @@
     }
     .lib-search:focus { outline: none; border-color: var(--accent); }
     .lib-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Info popup (Nustatymai / Reikšmės / Kita) ── */
+    #infoOverlay .lib-modal { padding: 22px 24px 16px; gap: 14px; border-radius: 24px; }
+    #infoOverlay .lib-modal-head { font-family: var(--heading-font); font-size: 24px; font-weight: 800; color: #16401a; }
+    #infoOverlay .lib-close {
+      width: 40px; height: 40px; border-radius: 50%; flex: none;
+      background: #fff; color: #16401a; font-size: 26px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.14);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    #infoOverlay .lib-close:hover { transform: translateY(-2px); color: #16401a; }
+    #infoOverlay .lib-close:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.14); }
+    /* The body scrolls when it is long, and a scrolling box clips whatever
+       sticks out of it - the padding (cancelled by the negative side margin)
+       leaves room for the buttons' shadows and green "selected" ring. */
+    #infoBody {
+      font-family: var(--font); font-size: 14px; color: var(--ink);
+      display: flex; flex-direction: column; gap: 10px; overflow-y: auto;
+      padding: 6px 8px 14px; margin: 0 -8px;
+    }
+
+    /* Settings popup content */
+    .set-wrap { display: flex; flex-direction: column; gap: 18px; }
+    .set-section { display: flex; flex-direction: column; gap: 8px; }
+    .set-label { font-family: var(--heading-font); font-size: 16px; font-weight: 800; color: #4a6a4a; }
+    .set-card {
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; border-radius: 18px; padding: 12px 14px;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+    }
+    .set-avatar { font-size: 36px; line-height: 1; flex: none; }
+    .set-name { flex: 1; min-width: 0; font-family: var(--heading-font); font-size: 21px; font-weight: 800; color: #16401a; }
+    .set-logout.pop-btn { flex: none; font-size: 16px; padding: 10px 18px; background: #fff0eb; color: #b3361c; }
+    .set-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .set-choice .pop-btn { text-align: center; font-size: 17px; padding: 13px 10px; }
+    .set-choice .pop-btn.sel { background: #dff7dc; }
     .lib-empty { color: var(--ink-soft); font-size: 14px; text-align: center; padding: 16px 0; }
     .lib-row {
       display: flex; align-items: center; gap: 10px;
@@ -194,10 +273,39 @@
       border: 1px solid var(--glass-border);
       border-radius: 14px; padding: 6px 10px;
       display: flex; gap: 2px; align-items: center; justify-content: center;
-      box-shadow: 0 3px 14px rgba(15,23,42,0.10); flex-wrap: nowrap;
+      box-shadow: 0 3px 14px rgba(15,23,42,0.10); flex-wrap: wrap; row-gap: 2px;
+      /* Above the staff panels, so the Metras / Tonacija menus that drop
+         down from here are not hidden under the staff lines. */
+      position: relative; z-index: 20;
     }
+    /* Drop-down menus of the Metras / Tonacija buttons. */
+    .nbar-wrap { position: relative; display: flex; }
+    .nbar-menu {
+      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: #f6fdf3; border-radius: 18px; padding: 10px; z-index: 400;
+      box-shadow: 0 0 0 6px rgba(142,227,138,0.3), 0 18px 40px rgba(15,23,42,0.22);
+      display: none; flex-direction: column; gap: 6px; white-space: nowrap;
+    }
+    .nbar-menu.open { display: flex; animation: popIn 0.2s cubic-bezier(.34,1.56,.64,1) both; }
+    .nbar-menu .pop-btn { font-size: 16px; padding: 9px 16px; }
+    #meterMenu .pop-btn { text-align: center; }
+    #meterMenu .pop-btn[data-meter]:not([data-meter=""]) { font-size: 22px; font-weight: 800; }
+    /* "Groti kartu" (play along with a music excerpt): its list opens upwards. */
+    .along-wrap { position: relative; }
+    .sbtn-along { --sbtn-color: #29b6f6; --sbtn-shadow: #0288d1; --sbtn-fill: #e6f6ff; }
+    .sbtn-along.on { --sbtn-fill: #29b6f6; }
+    .along-menu {
+      position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+      background: #f6fdf3; border-radius: 18px; padding: 10px; z-index: 400;
+      box-shadow: 0 0 0 6px rgba(142,227,138,0.3), 0 18px 40px rgba(15,23,42,0.22);
+      display: none; flex-direction: column; gap: 5px; white-space: nowrap;
+      max-height: 60vh; overflow-y: auto; min-width: 250px;
+    }
+    .along-menu.open { display: flex; }
+    .along-menu .pop-btn { font-size: 16px; padding: 8px 14px; }
+    .along-menu .am-head { font-family: var(--heading-font); font-weight: 800; color: #4a6a4a; font-size: 15px; padding: 2px 6px; }
     .nbar-btn {
-      min-width: 42px; height: 54px;
+      min-width: 39px; height: 54px;
       border: 1px solid transparent; background: transparent;
       border-radius: 6px; cursor: pointer;
       display: flex; flex-direction: column;
@@ -211,12 +319,18 @@
     .nbar-btn .nl { font-size: 10px; font-weight: 600; color: var(--ink-soft); font-family: var(--font); }
     /* Icon-only note/rest/accidental glyphs (spec: "aiškios ikonos be žodžių") */
     .glyph-serif { font-family:serif; font-size:28px; line-height:1.1; display:block; }
+    /* Every note / rest / accidental icon is drawn in the same 40x48 box,
+       so they all come out the same size and line up. */
+    .nbar-ico { width: 32px; height: 38px; display: block; }
     /* Markings keep an icon + the music term (spec's explicit exception), so
        they need a bit more room than the icon-only buttons. */
-    .nbar-mark { min-width: 62px; }
+    .nbar-mark { min-width: 52px; }
+    /* MUSICATION I: double sharp / double flat are beyond kindergarten, and
+       leaving them out keeps the whole bar on one line. */
+    body.kids .nbar-btn[data-acc="doublesharp"], body.kids .nbar-btn[data-acc="doubleflat"] { display: none; }
     .nbar-mark .nl { font-size: 9.5px; }
     .nbar-btn.active .nl { color: var(--accent-dark); }
-    .nbar-sep { width: 1px; height: 36px; background: rgba(15,23,42,0.10); margin: 0 3px; flex-shrink: 0; }
+    .nbar-sep { width: 1px; height: 36px; background: rgba(15,23,42,0.10); margin: 0 2px; flex-shrink: 0; }
 
     /* Staff panel */
     .staff-panel {
@@ -231,39 +345,116 @@
     /* SVG is vector, so scaling it up to fill the wider page stays crisp (HD)
        instead of stretching a raster image - the viewBox keeps everything
        (staff, clef, notes) proportional at any size. */
+    /* aspect-ratio follows the viewBox width, which the script sets. */
     #staffSvg, #staffSvg2 { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 130; min-width: 900px; }
-    .staff-actions { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+    .staff-panel[hidden] { display: none; }
+    /* MUSICATION I draws the staff bigger. On shorter screens two of them
+       (plus the buttons under them) must still fit above the piano, so the
+       staff may get a little smaller there; it stays centred in its panel. */
+    body.kids #staffSvg, body.kids #staffSvg2 { max-height: max(110px, calc((100vh - 613px) / 2)); }
+    /* Staff actions: big, round, emoji-only buttons — no words, so children
+       who cannot read yet can use them. Each one has its own colour, set
+       through --sbtn-color (ring + fill tint) and --sbtn-shadow (the chunky
+       "3D" edge that squashes when the button is pressed). */
+    .staff-actions { display: flex; gap: 20px; justify-content: center; align-items: center; margin-top: 12px; padding-bottom: 8px; }
     .sbtn {
-      font-family: var(--font); font-size: 14px; font-weight: 600;
-      padding: 9px 20px; border: 1px solid transparent; border-radius: 8px;
-      cursor: pointer; transition: background 0.13s, border-color 0.13s, transform 0.08s;
-      display: inline-flex; align-items: center; gap: 6px;
+      width: 68px; height: 68px; padding: 0; flex: none;
+      border: 4px solid var(--sbtn-color); border-radius: 50%;
+      background: var(--sbtn-fill, #fff); cursor: pointer;
+      font-size: 34px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 0 var(--sbtn-shadow), 0 10px 16px rgba(0,0,0,0.16);
+      transition: transform 0.12s, box-shadow 0.12s;
+      user-select: none; -webkit-tap-highlight-color: transparent;
     }
-    .sbtn:hover { transform: translateY(-1px); }
-    .sbtn:active { transform: translateY(1px); }
-    .sbtn-play  { background: var(--accent); color: #fff; box-shadow: 0 1px 3px rgba(47,111,237,0.4); }
-    .sbtn-play:hover { background: var(--accent-dark); box-shadow: 0 3px 8px rgba(47,111,237,0.45); }
-    .sbtn-del   { background: #fff; color: var(--ink); border-color: var(--panel-border); }
-    .sbtn-del:hover { background: #f4f6f9; border-color: rgba(15,23,42,0.2); }
-    .sbtn-clear { background: #fff; color: #c0392b; border-color: rgba(192,57,43,0.3); }
-    .sbtn-clear:hover { background: rgba(192,57,43,0.06); }
-    .sbtn-stop  { background: #fff; color: #c0392b; border-color: rgba(192,57,43,0.3); }
-    .sbtn-stop:hover { background: rgba(192,57,43,0.06); }
-    .sbtn-zoom  { background: #fff; color: var(--ink); border-color: var(--panel-border); padding: 9px 14px; }
-    .sbtn-zoom:hover { background: #f4f6f9; }
+    .sbtn:hover { transform: translateY(-3px) scale(1.06); }
+    .sbtn:active { transform: translateY(4px) scale(0.97); box-shadow: 0 2px 0 var(--sbtn-shadow), 0 4px 8px rgba(0,0,0,0.16); }
+    .sbtn:focus-visible { outline: 4px solid rgba(47,111,237,0.55); outline-offset: 3px; }
+    /* Play is the main action, so it is the biggest. */
+    .sbtn-play  { --sbtn-color: #5cc85a; --sbtn-shadow: #3d9a3b; --sbtn-fill: #eaffe8; width: 84px; height: 84px; font-size: 42px; }
+    .sbtn-stop  { --sbtn-color: #ff7a59; --sbtn-shadow: #d4532f; --sbtn-fill: #fff0eb; }
+    .sbtn-del   { --sbtn-color: #ffb300; --sbtn-shadow: #d18f00; --sbtn-fill: #fff8e1; }
+    .sbtn-clear { --sbtn-color: #b388ff; --sbtn-shadow: #8457d6; --sbtn-fill: #f4eeff; }
+    /* Page (lapas) turning: sits at the right end of the action row so the
+       main buttons stay centred. ➡ pulses when the page is full. */
+    .staff-actions { position: relative; }
+    .page-nav { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 10px; }
+    .sbtn-page { --sbtn-color: #29b6f6; --sbtn-shadow: #0288d1; --sbtn-fill: #e6f6ff; width: 56px; height: 56px; font-size: 28px; }
+    .sbtn[hidden], .page-label[hidden] { display: none; }
+    .page-label { font-family: var(--font); font-weight: 700; font-size: 16px; color: var(--ink-soft); min-width: 44px; text-align: center; }
+    /* The play-head stick: drag it to another note to play from there. */
+    .play-head { cursor: grab; touch-action: none; }
+    /* While the music plays, the stick glows and pulses on every note, and
+       the little frog sitting in its middle hops onto each note. */
+    .play-head .ph-line { filter: drop-shadow(0 0 3px rgba(47,179,74,0.75)); }
+    .play-head .ph-frog { transform-box: fill-box; transform-origin: center bottom; }
+    .play-head.beat .ph-line { animation: phPulse 0.35s ease-out; }
+    .play-head.beat .ph-knob { animation: phKnob 0.35s ease-out; transform-box: fill-box; transform-origin: center; }
+    .play-head.hop .ph-frog { animation: frogHop 0.42s cubic-bezier(.3,.7,.4,1); }
+    @keyframes phPulse {
+      0%   { stroke-width: 9; filter: drop-shadow(0 0 10px rgba(47,179,74,1)); }
+      100% { stroke-width: 4; filter: drop-shadow(0 0 3px rgba(47,179,74,0.75)); }
+    }
+    @keyframes phKnob { 0% { transform: scale(1.6); } 100% { transform: scale(1); } }
+    @keyframes frogHop {
+      0%   { transform: translateY(0) scale(1.15, 0.85); }
+      35%  { transform: translateY(-22px) scale(0.92, 1.1) rotate(-8deg); }
+      70%  { transform: translateY(0) scale(1.12, 0.88); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+    body.dragging-stick, body.dragging-stick * { cursor: grabbing !important; user-select: none; }
+    .sbtn-page.pulse { animation: page-pulse 1.1s ease-in-out infinite; }
+    /* Page turn: "next" pivots on the left edge (like turning a book page
+       forward), "prev" on the right. 300ms out + 300ms in, see goToPage(). */
+    .staff-panel.flipping { overflow: hidden; }
+    .flip-out-next, .flip-in-next { transform-origin: left center; }
+    .flip-out-prev, .flip-in-prev { transform-origin: right center; }
+    .flip-out-next { animation: flip-out-next .3s ease-in forwards; }
+    .flip-in-next  { animation: flip-in-next  .3s ease-out forwards; }
+    .flip-out-prev { animation: flip-out-prev .3s ease-in forwards; }
+    .flip-in-prev  { animation: flip-in-prev  .3s ease-out forwards; }
+    @keyframes flip-out-next { from { transform: perspective(1600px) rotateY(0); opacity: 1; } to { transform: perspective(1600px) rotateY(-90deg); opacity: .35; } }
+    @keyframes flip-in-next  { from { transform: perspective(1600px) rotateY(90deg); opacity: .35; } to { transform: perspective(1600px) rotateY(0); opacity: 1; } }
+    @keyframes flip-out-prev { from { transform: perspective(1600px) rotateY(0); opacity: 1; } to { transform: perspective(1600px) rotateY(90deg); opacity: .35; } }
+    @keyframes flip-in-prev  { from { transform: perspective(1600px) rotateY(-90deg); opacity: .35; } to { transform: perspective(1600px) rotateY(0); opacity: 1; } }
+    @keyframes page-pulse {
+      0%, 100% { box-shadow: 0 6px 0 var(--sbtn-shadow), 0 0 0 0 rgba(41,182,246,0.55); }
+      50%      { box-shadow: 0 6px 0 var(--sbtn-shadow), 0 0 0 12px rgba(41,182,246,0); }
+    }
+    /* Short screens (small laptops): the tall piano leaves less room above
+       it, so the staff panels and the action buttons tighten up a little
+       to stay clear of the keys. */
+    @media (max-height: 820px) {
+      .page { gap: 6px; }
+      .staff-panel { padding: 8px 20px 6px; }
+      .staff-actions { gap: 16px; margin-top: 2px; padding-bottom: 6px; }
+      .sbtn { width: 56px; height: 56px; font-size: 28px; }
+      .sbtn-play { width: 68px; height: 68px; font-size: 34px; }
+      .left-col { top: 50%; }
+    }
+    /* Screens lower than full HD: the 100px logo would push the staff under
+       the piano and sit on top of the left-hand buttons, so it is smaller. */
+    @media (max-height: 880px) {
+      .topbar-logo { height: 56px; }
+      .topbar-level { font-size: 47px; padding-top: 3px; }
+      /* ...and the "Pamokos" popup has seven buttons: slimmer ones fit
+         without scrolling. */
+      .lib-modal.sub-modal { max-height: 94vh; }
+      .sub-modal .sub-group { gap: 10px; }
+      .sub-group .nav-btn { padding: 9px 22px; font-size: 18px; }
+    }
 
     /* ── Piano ── */
     .piano-wrap {
-      position: fixed; bottom: 0; left: 0; right: 0;
+      position: fixed; bottom: 0; left: 27px; right: 0;
       background: transparent; padding: 8px 0 4px;
       display: flex; justify-content: center;
       overflow-x: auto; z-index: 10;
-      box-shadow: 0 -5px 22px rgba(0,0,0,0.5);
     }
-    .piano-inner { position: relative; display: flex; flex-shrink: 0; height: 140px; }
+    .piano-inner { position: relative; display: flex; flex-shrink: 0; height: 225px; }
 
     .wk {
-      flex-shrink: 0; height: 140px;
+      flex-shrink: 0; height: 215px;
       background: linear-gradient(175deg, #f6f6f2 75%, #e0e0da 100%);
       border: 1px solid #bbb; border-radius: 0 0 8px 8px;
       cursor: pointer;
@@ -278,7 +469,7 @@
     .wk:active, .wk.lit { background: linear-gradient(175deg, #c8e4ff 75%, #a8c8ee 100%); transform: scaleY(0.97) translateY(2px); }
 
     .bk {
-      position: absolute; top: 0; height: 86px;
+      position: absolute; top: 0; height: 160px;
       background: linear-gradient(175deg, #3d3d3d 0%, #111 100%);
       border-radius: 0 0 5px 5px;
       cursor: pointer; z-index: 2;
@@ -290,74 +481,64 @@
     .bk:active, .bk.lit { background: linear-gradient(175deg, #6090cc 0%, #336 100%); transform: scaleY(0.97) translateY(2px); }
 
     .clef-hover-bg { transition: fill 0.15s; }
+    @font-face { font-family: 'Bravura'; src: url('../styles/fonts/Bravura_1.392.woff') format('woff'); font-display: block; }
+    .clef-glyph { font-family: 'Bravura'; }
     #clefGroupRow1:hover .clef-hover-bg,
     #clefGroupRow2:hover .clef-hover-bg { fill: rgba(70,142,224,0.15); }
 
     /* ── Right column: games & other activities ── */
     .right-col {
-      width: 320px; flex-shrink: 0;
-      display: flex; flex-direction: column; gap: 12px;
-      overflow-y: auto;
+      width: max-content; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 16px;
+      /* room for the buttons' hover lift and 3D shadow inside the scroll box */
+      overflow-y: auto; padding: 3px 5px 15px;
+      left: 22px; position: relative;
+    }
+    /* Narrower than full HD there is no spare room on the right, so the
+       22px nudge would push these buttons past the edge of the window. */
+    @media (max-width: 1880px) {
+      .right-col { left: 0; }
     }
 
     /* Each nav group (Žaidimai / Mokymasis / Pamokos) is its own plain white
        card with a clickable header that expands/collapses its body - a
        smooth, dependency-free "unfold" using the CSS grid-rows trick
        (0fr -> 1fr) instead of a JS height hack or an animation library. */
-    .nav-card {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 18px;
-      box-shadow: 0 6px 22px rgba(15,23,42,0.12);
-      overflow: hidden;
-    }
-    /* A weak colour hint per card so the sidebar isn't just flat white -
-       change these 3 lines any time to whatever tint you like. */
-    .right-col .nav-card:nth-of-type(1) { background: #fdf3f8; }
-    .right-col .nav-card:nth-of-type(2) { background: #fdfaf0; }
-    .right-col .nav-card:nth-of-type(3) { background: #f2fbf6; }
     .nav-card-head {
-      width: 100%; display: flex; align-items: center; gap: 10px;
-      background: transparent; border: none; cursor: pointer;
-      padding: 14px 16px;
-      font-family: var(--heading-font); font-weight: 700; font-size: 15.5px; color: var(--ink);
-      text-align: left; -webkit-tap-highlight-color: transparent;
-      transition: background 0.12s;
+      display: flex; align-items: center; justify-content: center;
+      width: 88px; height: 88px; padding: 0; border-radius: 50%;
+      text-decoration: none;
     }
-    .nav-card-head:hover { background: rgba(15,23,42,0.04); }
-    .nch-ico { font-size: 20px; line-height: 1; }
-    .nch-title { flex: 1; }
-    .nch-chev { font-size: 13px; color: var(--ink-soft); transition: transform 0.25s cubic-bezier(.16,1,.3,1); }
-    .nav-card.open .nch-chev { transform: rotate(180deg); }
-    .nav-card-body {
-      display: grid; grid-template-rows: 0fr;
-      transition: grid-template-rows 0.32s cubic-bezier(.16,1,.3,1);
+    .nch-ico { font-size: 46px; line-height: 1; display: inline-block; }
+    /* Emoji only: the name stays in the page (it is the tooltip, the
+       subcategory popup's heading and what a screen reader says) but is
+       not shown on the button. */
+    .nch-title {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
     }
-    .nav-card.open .nav-card-body { grid-template-rows: 1fr; }
-    .nav-card-inner {
-      min-height: 0; overflow: hidden;
-      display: flex; flex-direction: column; gap: 6px;
-      padding: 0 10px 10px;
+    .sub-modal { max-width: 480px; max-height: 92vh; }
+    .sub-modal .lib-modal-head { font-size: 24px; font-family: var(--heading-font); font-weight: 800; color: #16401a; }
+    /* Scrolls inside the popup if the buttons do not all fit; the padding
+       (cancelled by the negative side margin) keeps their shadows unclipped. */
+    .sub-group {
+      display: flex; flex-direction: column; gap: 12px;
+      overflow-y: auto; min-height: 0; padding: 4px 8px 14px; margin: 0 -8px;
     }
+    .sub-group[hidden] { display: none; }
 
     .nav-btn {
-      display: flex; align-items: center; gap: 12px;
-      width: 100%; background: rgba(255,255,255,0.7);
-      border: 1px solid transparent;
-      border-radius: 14px; padding: 10px 12px;
-      font-family: var(--font); font-size: 14.5px; font-weight: 600; color: var(--ink);
+      display: flex; align-items: center; gap: 16px;
+      width: 100%; border-radius: 999px; padding: 18px 26px;
+      font-family: var(--font); font-size: 21px; font-weight: 700;
       text-decoration: none;
-      cursor: pointer; transition: background 0.15s, transform 0.15s, box-shadow 0.15s; user-select: none;
-      -webkit-tap-highlight-color: transparent;
     }
     .nav-btn .nb-ico {
-      font-size: 19px; line-height: 1; flex-shrink: 0;
-      width: 34px; height: 34px; border-radius: 10px;
+      font-size: 30px; line-height: 1; flex-shrink: 0;
+      width: 56px; height: 56px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      background: var(--nav-accent, #2f6fed); background: color-mix(in srgb, var(--nav-accent, #2f6fed) 20%, white);
+      background: rgba(255,255,255,0.45);
     }
-    .nav-btn:hover { background: #ffffff; transform: translateX(3px) translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,0.12); }
-    .nav-btn:active { transform: scale(0.98); }
 
     /* ── Motion polish: notes pop in, panels + nav items unfold on load ── */
     @keyframes notePop {
@@ -375,23 +556,21 @@
       from { opacity: 0; transform: translateX(-10px) scale(0.96); }
       to   { opacity: 1; transform: translateX(0) scale(1); }
     }
-    .note-bar, .staff-panel, .right-col .nav-card {
+    .note-bar, .staff-panel, .right-col .nav-card-head {
       animation: panelIn 0.4s cubic-bezier(.16,1,.3,1) both;
     }
     .staff-panel:nth-of-type(2) { animation-delay: 0.06s; }
-    .right-col .nav-card:nth-child(1) { animation-delay: 0.08s; }
-    .right-col .nav-card:nth-child(2) { animation-delay: 0.14s; }
-    .right-col .nav-card:nth-child(3) { animation-delay: 0.2s; }
-    /* Buttons "unfold" into place just after their card lands. */
-    .nav-card-inner .nav-btn {
+    .right-col .nav-card-head:nth-child(1) { animation-delay: 0.08s; }
+    .right-col .nav-card-head:nth-child(2) { animation-delay: 0.14s; }
+    .right-col .nav-card-head:nth-child(3) { animation-delay: 0.2s; }
+    .sub-group .nav-btn {
       animation: navBtnIn 0.32s cubic-bezier(.16,1,.3,1) both;
     }
-    .nav-card-inner .nav-btn:nth-child(1) { animation-delay: 0.3s; }
-    .nav-card-inner .nav-btn:nth-child(2) { animation-delay: 0.35s; }
-    .nav-card-inner .nav-btn:nth-child(3) { animation-delay: 0.4s; }
-    .nav-card-inner .nav-btn:nth-child(4) { animation-delay: 0.45s; }
-    .nav-card-inner .nav-btn:nth-child(5) { animation-delay: 0.5s; }
-    .nav-card-inner .nav-btn:nth-child(6) { animation-delay: 0.55s; }
+
+    /* Bigger "Fonas" colour orbs inside the left-circle popup, to match the
+       enlarged sidebar buttons (scoped to this page only). */
+    #pop-bg .bg-orb-row { gap: 10px; }
+    #pop-bg .bg-orb { width: 54px; height: 54px; font-size: 24px; }
   </style>
 </head>
 <body>
@@ -401,9 +580,11 @@
 
 <div class="page">
   <div class="topbar">
-    <span class="back-link" style="cursor:default;">🎵 MUSICATION</span>
+    <div class="topbar-brand">
+      <img class="topbar-logo" src="../uploads/musication-logo.png" alt="MUSICATION">
+      <span class="topbar-level" id="topbarLevel">I</span>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button class="back-link" id="btnNew" style="border:none;background:none;cursor:pointer;">🆕 <span data-i18n="newLesson">Nauja</span></button>
       <button class="back-link" id="btnUser" title="Naudotojas">👤 <span id="userModeLabel">Mokytojas</span></button>
     </div>
   </div>
@@ -418,126 +599,96 @@
 
         <!-- Whole -->
         <button class="nbar-btn" data-type="whole" title="Visa nata">
-          <svg width="36" height="26" viewBox="0 0 36 26">
-            <ellipse cx="18" cy="17" rx="14" ry="8.5" fill="none" stroke="#333" stroke-width="3"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="20" cy="36" rx="10.5" ry="7" fill="none" stroke="#2b2f45" stroke-width="3.4"/><ellipse cx="20" cy="36" rx="4" ry="5.6" transform="rotate(-35 20 36)" fill="#2b2f45" opacity="0.15"/></svg>
         </button>
 
         <!-- Half -->
         <button class="nbar-btn" data-type="half" title="Pusinė nata">
-          <svg width="32" height="44" viewBox="0 0 32 44">
-            <ellipse cx="12" cy="34" rx="11" ry="7" fill="none" stroke="#333" stroke-width="3" transform="rotate(-12 12 34)"/>
-            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="none" stroke="#2b2f45" stroke-width="3"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <!-- Dotted half -->
         <button class="nbar-btn" data-type="half-dot" title="Pusinė nata su tašku">
-          <svg width="40" height="44" viewBox="0 0 40 44">
-            <ellipse cx="12" cy="34" rx="11" ry="7" fill="none" stroke="#333" stroke-width="3" transform="rotate(-12 12 34)"/>
-            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
-            <circle cx="31" cy="31" r="2.4" fill="#333"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="none" stroke="#2b2f45" stroke-width="3"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="33" cy="36" r="2.8" fill="#2b2f45"/></svg>
         </button>
 
         <!-- Quarter (default active) -->
         <button class="nbar-btn active" data-type="quarter" title="Ketvirtinė nata">
-          <svg width="32" height="44" viewBox="0 0 32 44">
-            <ellipse cx="12" cy="34" rx="11" ry="7" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 12 34)"/>
-            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="#2b2f45"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <!-- Dotted quarter -->
         <button class="nbar-btn" data-type="quarter-dot" title="Ketvirtinė nata su tašku">
-          <svg width="40" height="44" viewBox="0 0 40 44">
-            <ellipse cx="12" cy="34" rx="11" ry="7" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 12 34)"/>
-            <line x1="23" y1="32" x2="23" y2="5" stroke="#333" stroke-width="2.8"/>
-            <circle cx="31" cy="31" r="2.4" fill="#333"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="#2b2f45"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="33" cy="36" r="2.8" fill="#2b2f45"/></svg>
         </button>
 
         <!-- Eighth -->
         <button class="nbar-btn" data-type="eighth" title="Aštuntinė nata">
-          <svg width="36" height="44" viewBox="0 0 36 44">
-            <ellipse cx="11" cy="34" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 34)"/>
-            <line x1="21" y1="32" x2="21" y2="5" stroke="#333" stroke-width="2.8"/>
-            <path d="M21 5 C33 9 35 21 26 29" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="#2b2f45"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 7 C31 11 35 18 30 26" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <!-- Dotted eighth -->
         <button class="nbar-btn" data-type="eighth-dot" title="Aštuntinė nata su tašku">
-          <svg width="42" height="44" viewBox="0 0 42 44">
-            <ellipse cx="11" cy="34" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 34)"/>
-            <line x1="21" y1="32" x2="21" y2="5" stroke="#333" stroke-width="2.8"/>
-            <path d="M21 5 C33 9 35 21 26 29" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
-            <circle cx="30" cy="31" r="2.4" fill="#333"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="#2b2f45"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 7 C31 11 35 18 30 26" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="33" cy="36" r="2.8" fill="#2b2f45"/></svg>
         </button>
 
         <!-- Sixteenth -->
         <button class="nbar-btn" data-type="sixteenth" title="Šešioliktinė nata">
-          <svg width="36" height="50" viewBox="0 0 36 50">
-            <ellipse cx="11" cy="42" rx="10" ry="6.5" fill="#333" stroke="#333" stroke-width="2" transform="rotate(-12 11 42)"/>
-            <line x1="21" y1="40" x2="21" y2="4" stroke="#333" stroke-width="2.8"/>
-            <path d="M21 4 C33 8 34 18 25 24" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
-            <path d="M21 13 C33 17 34 27 25 33" fill="none" stroke="#333" stroke-width="2.8" stroke-linecap="round"/>
-          </svg>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><ellipse cx="15" cy="37" rx="8.6" ry="6.2" transform="rotate(-22 15 37)" fill="#2b2f45"/><path d="M23 35 V7" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 7 C31 11 35 18 30 26" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 15 C31 19 35 26 30 34" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <div class="nbar-sep"></div>
 
         <!-- Rest whole -->
         <button class="nbar-btn" data-type="rest-whole" title="Visos natos pauzė">
-          <span class="glyph-serif">𝄻</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M6 18 H34" stroke="#9aa3b8" stroke-width="1.6" stroke-linecap="round"/><rect x="12" y="18" width="16" height="8" rx="1.5" fill="#2b2f45"/></svg>
         </button>
 
         <!-- Rest half -->
         <button class="nbar-btn" data-type="rest-half" title="Pusinės natos pauzė">
-          <span class="glyph-serif">𝄼</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M6 30 H34" stroke="#9aa3b8" stroke-width="1.6" stroke-linecap="round"/><rect x="12" y="22" width="16" height="8" rx="1.5" fill="#2b2f45"/></svg>
         </button>
 
         <!-- Rest quarter -->
         <button class="nbar-btn" data-type="rest-quarter" title="Ketvirtinės natos pauzė">
-          <span class="glyph-serif">𝄽</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M16 6 L25 16 L18 24 L26 33 C19 30 15 34 21 42" fill="none" stroke="#2b2f45" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <!-- Rest eighth -->
         <button class="nbar-btn" data-type="rest-eighth" title="Aštuntinės natos pauzė">
-          <span class="glyph-serif">𝄾</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><circle cx="15" cy="15" r="3.8" fill="#2b2f45"/><path d="M15 18 C21 20 26 17 28 12 L19 42" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <!-- Rest sixteenth -->
         <button class="nbar-btn" data-type="rest-sixteenth" title="Šešioliktinės natos pauzė">
-          <span class="glyph-serif">𝄿</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><circle cx="17" cy="10" r="3.4" fill="#2b2f45"/><circle cx="13" cy="22" r="3.4" fill="#2b2f45"/><path d="M17 12.5 C22 14 26.5 12 28.5 7 L18 43" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 24.5 C18 26 22.5 24 24.6 19" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
 
         <div class="nbar-sep"></div>
 
         <!-- Sharp -->
         <button class="nbar-btn" data-acc="sharp" title="Diezas (♯)">
-          <span class="glyph-serif">♯</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M16 7 V43 M24 5 V41" stroke="#2b2f45" stroke-width="2.6" stroke-linecap="round"/><path d="M9 21 L31 15 M9 33 L31 27" stroke="#2b2f45" stroke-width="5" stroke-linecap="round"/></svg>
         </button>
 
         <!-- Double sharp -->
         <button class="nbar-btn" data-acc="doublesharp" title="Dublis diezas (𝄪)">
-          <span class="glyph-serif">𝄪</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M12 16 L28 32 M28 16 L12 32" stroke="#2b2f45" stroke-width="3.6" stroke-linecap="round"/><rect x="9" y="13" width="6" height="6" rx="1.5" fill="#2b2f45"/><rect x="25" y="13" width="6" height="6" rx="1.5" fill="#2b2f45"/><rect x="9" y="29" width="6" height="6" rx="1.5" fill="#2b2f45"/><rect x="25" y="29" width="6" height="6" rx="1.5" fill="#2b2f45"/></svg>
         </button>
 
         <!-- Flat -->
         <button class="nbar-btn" data-acc="flat" title="Bemolis (♭)">
-          <span class="glyph-serif">♭</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M15 4 V41" stroke="#2b2f45" stroke-width="3" stroke-linecap="round"/><path d="M15 41 C29 33 30 21 22 21 C18.5 21 16.5 23 15 26" fill="none" stroke="#2b2f45" stroke-width="3.6" stroke-linecap="round"/></svg>
         </button>
 
         <!-- Double flat -->
         <button class="nbar-btn" data-acc="doubleflat" title="Dublis bemolis (𝄫)">
-          <span class="glyph-serif">𝄫</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M8 4 V41 M21 4 V41" stroke="#2b2f45" stroke-width="2.6" stroke-linecap="round"/><path d="M8 41 C17 35 18 25 13 25 C11 25 9.5 26.5 8 29 M21 41 C30 35 31 25 26 25 C24 25 22.5 26.5 21 29" fill="none" stroke="#2b2f45" stroke-width="3.2" stroke-linecap="round"/></svg>
         </button>
 
         <!-- Natural -->
         <button class="nbar-btn" data-acc="natural" title="Bekaras (♮)">
-          <span class="glyph-serif">♮</span>
+          <svg class="nbar-ico" viewBox="0 0 40 48" aria-hidden="true"><path d="M14 4 V34 M26 14 V44" stroke="#2b2f45" stroke-width="2.8" stroke-linecap="round"/><path d="M14 20 L26 16.5 M14 32 L26 28.5" stroke="#2b2f45" stroke-width="5" stroke-linecap="round"/></svg>
         </button>
 
         <div class="nbar-sep"></div>
@@ -563,171 +714,148 @@
           <span style="font-family:var(--font);font-weight:800;font-size:20px;line-height:1;">Aa</span>
         </button>
 
+        <div class="nbar-sep"></div>
+
+        <!-- Staff tools: metre, key signature, bar lines, rhythm line -->
+        <div class="nbar-wrap">
+          <button class="nbar-btn nbar-mark" id="btnMeter" title="Metras – kiek dalių takte">
+            <svg width="30" height="26" viewBox="0 0 30 26"><text x="15" y="12" text-anchor="middle" font-family="Georgia,serif" font-weight="800" font-size="13" fill="#333">3</text><text x="15" y="25" text-anchor="middle" font-family="Georgia,serif" font-weight="800" font-size="13" fill="#333">4</text></svg>
+            <span class="nl">Metras</span>
+          </button>
+          <div class="nbar-menu" id="meterMenu">
+            <button class="pop-btn" data-meter="">Be metro</button>
+            <button class="pop-btn" data-meter="2/4">2/4</button>
+            <button class="pop-btn" data-meter="3/4">3/4</button>
+            <button class="pop-btn" data-meter="4/4">4/4</button>
+          </div>
+        </div>
+        <div class="nbar-wrap">
+          <button class="nbar-btn nbar-mark" id="btnKey" title="Tonacija – diezai ar bemoliai prie rakto">
+            <svg width="30" height="26" viewBox="0 0 30 26"><path d="M1 6 H29 M1 13 H29 M1 20 H29" stroke="#999" stroke-width="1.4"/><text x="10" y="19" text-anchor="middle" font-family="serif" font-size="17" fill="#333">♯</text><text x="21" y="17" text-anchor="middle" font-family="serif" font-size="17" fill="#333">♭</text></svg>
+            <span class="nl">Tonacija</span>
+          </button>
+          <div class="nbar-menu" id="keyMenu">
+            <button class="pop-btn" data-key="0">C-dur / a-moll · be ženklų</button>
+            <button class="pop-btn" data-key="1">G-dur / e-moll · 1 ♯</button>
+            <button class="pop-btn" data-key="2">D-dur / h-moll · 2 ♯</button>
+            <button class="pop-btn" data-key="-1">F-dur / d-moll · 1 ♭</button>
+            <button class="pop-btn" data-key="-2">B-dur / g-moll · 2 ♭</button>
+          </div>
+        </div>
+        <button class="nbar-btn nbar-mark" id="btnBars" title="Taktai – takto brūkšniai pagal metrą">
+          <svg width="30" height="26" viewBox="0 0 30 26"><path d="M1 5 H29 M1 10 H29 M1 15 H29 M1 20 H29" stroke="#999" stroke-width="1.2"/><path d="M10 5 V20 M21 5 V20" stroke="#333" stroke-width="2.4"/></svg>
+          <span class="nl">Taktai</span>
+        </button>
+        <button class="nbar-btn nbar-mark" id="btnRhythmLine" title="Ritmo linija – tik ritmas, be natų aukščio">
+          <svg width="30" height="26" viewBox="0 0 30 26"><path d="M1 19 H29" stroke="#333" stroke-width="1.8"/><ellipse cx="7" cy="19" rx="3.6" ry="2.6" fill="#333"/><path d="M10.3 18 V5" stroke="#333" stroke-width="1.8"/><ellipse cx="17" cy="19" rx="3.6" ry="2.6" fill="#333"/><ellipse cx="25" cy="19" rx="3.6" ry="2.6" fill="#333"/><path d="M20.3 18 V5 M28.3 18 V5 M20.3 5.9 H28.3" stroke="#333" stroke-width="1.8"/></svg>
+          <span class="nl">Ritmo linija</span>
+        </button>
+
       </div><!-- /note-bar -->
 
       <!-- Staff row 1 -->
       <div class="staff-panel">
+        <!-- Staff lines are drawn by the script (their length follows the level). -->
         <svg id="staffSvg" height="130" viewBox="0 -24 1280 130" preserveAspectRatio="xMinYMid meet">
-          <line x1="58" y1="20" x2="1260" y2="20" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="34" x2="1260" y2="34" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="48" x2="1260" y2="48" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="62" x2="1260" y2="62" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="76" x2="1260" y2="76" stroke="#888" stroke-width="1.5"/>
-          <line x1="58"   y1="20" x2="58"   y2="76" stroke="#888" stroke-width="2"/>
-          <line x1="1260" y1="20" x2="1260" y2="76" stroke="#888" stroke-width="2"/>
+          <g class="staff-lines"></g>
           <g id="clefGroupRow1" style="cursor:pointer">
             <title>Spausti – keisti raktą</title>
             <rect x="58" y="-20" width="72" height="120" rx="6" fill="rgba(0,0,0,0)" pointer-events="all" class="clef-hover-bg"/>
-            <text id="clefRow1" x="62" y="88" font-size="88" font-family="serif" fill="#555">𝄞</text>
+            <text id="clefRow1" class="clef-glyph" x="66" y="62" font-size="56" fill="#00285C">&#xE050;</text>
           </g>
           <g id="placedNotes"></g>
-          <g id="playHead" style="display:none">
-            <rect id="playHeadRect" x="64" y="12" width="36" height="72" rx="8"
-                  fill="rgba(80,210,100,0.28)" stroke="#2ecc71" stroke-width="2.5"
-                  pointer-events="none"/>
+          <g id="playHead" class="play-head" style="display:none">
+            <title>Nutempk – grosiu nuo čia</title>
+            <rect x="-13" y="-8" width="26" height="108" fill="transparent"/>
+            <line class="ph-line" x1="0" y1="4" x2="0" y2="92" stroke="#2fb34a" stroke-width="4" stroke-linecap="round"/>
+            <circle class="ph-knob" cx="0" cy="2" r="7" fill="#2fb34a"/>
+            <g class="ph-frog"><text x="0" y="58" text-anchor="middle" font-size="30">🐸</text></g>
           </g>
         </svg>
       </div>
 
       <!-- Staff row 2 -->
-      <div class="staff-panel">
+      <div class="staff-panel" id="staffPanel2">
         <svg id="staffSvg2" height="130" viewBox="0 -24 1280 130" preserveAspectRatio="xMinYMid meet">
-          <line x1="58" y1="20" x2="1260" y2="20" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="34" x2="1260" y2="34" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="48" x2="1260" y2="48" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="62" x2="1260" y2="62" stroke="#888" stroke-width="1.5"/>
-          <line x1="58" y1="76" x2="1260" y2="76" stroke="#888" stroke-width="1.5"/>
-          <line x1="58"   y1="20" x2="58"   y2="76" stroke="#888" stroke-width="2"/>
-          <line x1="1260" y1="20" x2="1260" y2="76" stroke="#888" stroke-width="2"/>
+          <g class="staff-lines"></g>
           <g id="clefGroupRow2" style="cursor:pointer">
             <title>Spausti – keisti raktą</title>
             <rect x="58" y="-20" width="72" height="120" rx="6" fill="rgba(0,0,0,0)" pointer-events="all" class="clef-hover-bg"/>
-            <text id="clefRow2" x="62" y="88" font-size="88" font-family="serif" fill="#555">𝄞</text>
+            <text id="clefRow2" class="clef-glyph" x="66" y="62" font-size="56" fill="#00285C">&#xE050;</text>
           </g>
           <g id="placedNotes2"></g>
-          <g id="playHead2" style="display:none">
-            <rect id="playHeadRect2" x="64" y="12" width="36" height="72" rx="8"
-                  fill="rgba(80,210,100,0.28)" stroke="#2ecc71" stroke-width="2.5"
-                  pointer-events="none"/>
+          <g id="playHead2" class="play-head" style="display:none">
+            <title>Nutempk – grosiu nuo čia</title>
+            <rect x="-13" y="-8" width="26" height="108" fill="transparent"/>
+            <line class="ph-line" x1="0" y1="4" x2="0" y2="92" stroke="#2fb34a" stroke-width="4" stroke-linecap="round"/>
+            <circle class="ph-knob" cx="0" cy="2" r="7" fill="#2fb34a"/>
+            <g class="ph-frog"><text x="0" y="58" text-anchor="middle" font-size="30">🐸</text></g>
           </g>
         </svg>
-        <div class="staff-actions">
-          <button class="sbtn sbtn-zoom"  id="btnZoomOut" title="Atitolinti penklinę">🔎−</button>
-          <button class="sbtn sbtn-zoom"  id="btnZoomIn"  title="Priartinti penklinę">🔎+</button>
-          <button class="sbtn sbtn-play"  id="btnPlay">▶ <span data-i18n="play">Groti</span></button>
-          <button class="sbtn sbtn-stop"  id="btnStop" title="Sustabdyti">⏹ Stop</button>
-          <button class="sbtn sbtn-del"   id="btnDeleteNote" title="Pasirink natą penklinėje, tada spauski čia">✂ <span data-i18n="cutNote">Natą</span></button>
-          <button class="sbtn sbtn-clear" id="btnClear">🗑 <span data-i18n="clearAll">Išvalyti</span></button>
+      </div>
+
+      <!-- Kept outside the staff panels: in MUSICATION I the second staff is
+           hidden until the first one is full, and these must stay visible. -->
+      <div class="staff-actions">
+        <button class="sbtn sbtn-play"  id="btnPlay" title="Groti" aria-label="Groti">▶️</button>
+        <button class="sbtn sbtn-stop"  id="btnStop" title="Sustabdyti" aria-label="Sustabdyti">⏹️</button>
+        <button class="sbtn sbtn-del"   id="btnDeleteNote" title="Pasirink natą penklinėje, tada spausk čia" aria-label="Ištrinti natą">🧽</button>
+        <button class="sbtn sbtn-clear" id="btnClear" title="Išvalyti viską" aria-label="Išvalyti viską">🧹</button>
+        <div class="along-wrap">
+          <button class="sbtn sbtn-along" id="btnAlong" title="Groti kartu su muzikine ištrauka" aria-label="Groti kartu su muzikine ištrauka">🎶</button>
+          <div class="along-menu" id="alongMenu"></div>
+        </div>
+        <div class="page-nav">
+          <button class="sbtn sbtn-page" id="btnPagePrev" title="Ankstesnis lapas" aria-label="Ankstesnis lapas" hidden>⬅️</button>
+          <span class="page-label" id="pageLabel" hidden>1 / 1</span>
+          <button class="sbtn sbtn-page" id="btnPageNext" title="Kitas lapas – rašyk toliau" aria-label="Kitas lapas" hidden>➡️</button>
         </div>
       </div>
 
     </div><!-- /center-col -->
 
-    <!-- ── Right: games & other activities ── -->
+    <!-- ── Right: main categories; Mokymasis / Pamokos open their subcategories in a popup ── -->
     <div class="right-col">
-      <div class="nav-card open">
-        <button type="button" class="nav-card-head" data-nav-toggle>
-          <span class="nch-ico">🎮</span><span class="nch-title" data-i18n="games">Žaidimai</span><span class="nch-chev">▾</span>
-        </button>
-        <div class="nav-card-body"><div class="nav-card-inner">
-          <a class="nav-btn" href="klausa.html" style="--nav-accent:#fb8c00"><span class="nb-ico">🎧</span>Klausymo žaidimai</a>
-          <a class="nav-btn" href="ritmas.html" style="--nav-accent:#43a047"><span class="nb-ico">🥁</span>Ritmo žaidimai</a>
-          <a class="nav-btn" href="melodija.html" style="--nav-accent:#1e88e5"><span class="nb-ico">🎵</span>Melodijos žaidimas</a>
-          <a class="nav-btn" href="atmintis.html" style="--nav-accent:#8e24aa"><span class="nb-ico">🧠</span>Natų atmintis</a>
-          <a class="nav-btn" href="gyvunai.html" style="--nav-accent:#ec407a"><span class="nb-ico">🐄</span>Gyvūnų muzika</a>
-          <a class="nav-btn" href="atspekkas.html" style="--nav-accent:#8bc34a"><span class="nb-ico">🐘</span>Atspėk kas?</a>
-          <a class="nav-btn" href="lasas.html" style="--nav-accent:#1e88e5"><span class="nb-ico">💧</span>Klausos lašas</a>
-        </div></div>
-      </div>
-
-      <div class="nav-card open">
-        <button type="button" class="nav-card-head" data-nav-toggle>
-          <span class="nch-ico">📚</span><span class="nch-title" data-i18n="learning">Mokymasis</span><span class="nch-chev">▾</span>
-        </button>
-        <div class="nav-card-body"><div class="nav-card-inner">
-          <a class="nav-btn" href="pamokeles.html" style="--nav-accent:#fdd835"><span class="nb-ico">📚</span>Pamokėlės</a>
-          <a class="nav-btn" href="testai.html" style="--nav-accent:#e53935"><span class="nb-ico">📝</span>Testai</a>
-        </div></div>
-      </div>
-
-      <div class="nav-card open">
-        <button type="button" class="nav-card-head" data-nav-toggle>
-          <span class="nch-ico">🗂️</span><span class="nch-title" data-i18n="lessons">Pamokos</span><span class="nch-chev">▾</span>
-        </button>
-        <div class="nav-card-body"><div class="nav-card-inner">
-          <button class="nav-btn" id="btnSaveLesson" style="--nav-accent:#16a34a"><span class="nb-ico">💾</span><span data-i18n="save">Išsaugoti</span></button>
-          <button class="nav-btn" id="btnOpenLibrary" style="--nav-accent:#2f6fed"><span class="nb-ico">📂</span><span data-i18n="myLessons">Mano pamokos</span></button>
-          <button class="nav-btn" id="btnPrint" style="--nav-accent:#9e9e9e;opacity:0.62;cursor:not-allowed" title="Netrukus"><span class="nb-ico">🖨️</span><span data-i18n="print">Spausdinti</span></button>
-          <button class="nav-btn" id="btnSettings" style="--nav-accent:#607d8b"><span class="nb-ico">⚙️</span><span data-i18n="settings">Nustatymai</span></button>
-          <button class="nav-btn" id="btnRightHelp" style="--nav-accent:#00acc1"><span class="nb-ico">❓</span><span data-i18n="help">Pagalba</span></button>
-          <button class="nav-btn" id="btnGlossary" style="--nav-accent:#7b1fa2"><span class="nb-ico">📖</span><span data-i18n="glossary">Reikšmės</span></button>
-          <button class="nav-btn" id="btnMisc" style="--nav-accent:#795548"><span class="nb-ico">❔</span><span data-i18n="misc">Kita</span></button>
-        </div></div>
-      </div>
+      <a class="nav-card-head" href="zaidimai.html" data-leave>
+        <span class="nch-ico">🧩</span><span class="nch-title" data-i18n="games">Žaidimai</span>      </a>
+      <button type="button" class="nav-card-head" data-sub-open="learning">
+        <span class="nch-ico">🦉</span><span class="nch-title" data-i18n="learning">Mokymasis</span>      </button>
+      <button type="button" class="nav-card-head" data-sub-open="lessons">
+        <span class="nch-ico">🎒</span><span class="nch-title" data-i18n="lessons">Pamokos</span>      </button>
     </div><!-- /right-col -->
-
-    <!-- ── Lesson library modal ── -->
-    <div class="lib-overlay" id="libOverlay" hidden>
-      <div class="lib-modal">
-        <div class="lib-modal-head">
-          <span>📂 Mano pamokos</span>
-          <button class="lib-close" id="libClose" aria-label="Uždaryti">&times;</button>
-        </div>
-        <input type="text" id="libSearch" class="lib-search" placeholder="🔍 Ieškoti..." />
-        <div class="lib-list" id="libList"></div>
-      </div>
-    </div>
-
-    <!-- ── Generic info modal, reused by Nustatymai / Reikšmės / Kita ── -->
-    <div class="lib-overlay" id="infoOverlay" hidden>
-      <div class="lib-modal">
-        <div class="lib-modal-head">
-          <span id="infoTitle"></span>
-          <button class="lib-close" id="infoClose" aria-label="Uždaryti">&times;</button>
-        </div>
-        <div id="infoBody" style="font-family:var(--font);font-size:14px;color:var(--ink);display:flex;flex-direction:column;gap:10px;overflow-y:auto;"></div>
-      </div>
-    </div>
 
   </div><!-- /main-area -->
 </div><!-- /page -->
 
-<!-- ── Fixed left: 4 settings circles ── -->
+<!-- ── Fixed left: 5 settings circles (emoji only) ── -->
 <div class="left-col">
 
   <!-- Circle 1: Instrumentas -->
   <div class="circle-wrap">
-    <button class="scircle" data-popup="sound">
-      <span class="ico">🎹</span>
-      <span class="lbl">Garsas</span>
+    <button class="scircle" data-popup="sound" title="Instrumentas" aria-label="Instrumentas">
+      <span class="ico">🎻</span>
     </button>
     <div class="popup" id="pop-sound">
       <div class="pop-title">Instrumentas</div>
-      <button class="pop-btn sel" data-sound="piano">🎹 Pianinas</button>
-      <button class="pop-btn" data-sound="violin">🎻 Smuikas</button>
-      <button class="pop-btn" data-sound="flute">🪈 Fleita</button>
-      <button class="pop-btn" data-sound="clarinet">🎷 Klarnetas</button>
-      <button class="pop-btn" data-sound="trumpet">🎺 Trimitas</button>
-      <button class="pop-btn" data-sound="guitar">🎸 Gitara</button>
-      <button class="pop-btn" data-sound="harp">🎼 Arfa</button>
-      <button class="pop-btn" data-sound="drums">🥁 Būgnai</button>
-      <button class="pop-btn" data-sound="shaker">🪇 Barškučiai</button>
-      <button class="pop-btn" data-sound="triangle">📐 Trikampis</button>
-      <button class="pop-btn" data-sound="cymbal">💿 Lėkštės</button>
-      <button class="pop-btn" data-sound="marimba">🪘 Marimba</button>
-      <button class="pop-btn" data-sound="bells">🔔 Varpeliai</button>
-      <button class="pop-btn" data-sound="strings">🎻 Styginių ansamblis</button>
-      <button class="pop-btn" data-sound="organ">🎵 Vargonai</button>
-      <button class="pop-btn" data-sound="choir">🎤 Choras</button>
-      <button class="pop-btn" data-sound="childvoice">🧒 Vaikiškas balsas</button>
+      <div class="snd-col">
+        <div class="snd-head">🎵 Melodiniai</div>
+        <button class="pop-btn sel" data-sound="piano">🎹 Pianinas</button>
+        <button class="pop-btn" data-sound="violin">🎻 Smuikas</button>
+        <button class="pop-btn" data-sound="flute">🪈 Fleita</button>
+      </div>
+      <div class="snd-col">
+        <div class="snd-head">👏 Ritminiai</div>
+        <button class="pop-btn" data-sound="drums">🥁 Būgnas</button>
+        <button class="pop-btn" data-sound="triangle">🔺 Trikampis</button>
+        <button class="pop-btn" data-sound="shaker">🪇 Barškučiai</button>
+      </div>
     </div>
   </div>
 
   <!-- Circle 2: Tempas -->
   <div class="circle-wrap">
-    <button class="scircle" data-popup="tempo">
-      <span class="ico">⏱️</span>
-      <span class="lbl">Tempas</span>
+    <button class="scircle" data-popup="tempo" title="Tempas" aria-label="Tempas">
+      <span class="ico">🐇</span>
     </button>
     <div class="popup" id="pop-tempo" style="min-width:90px;align-items:center;">
       <div class="pop-title" data-i18n="tempoTitle">Greitis</div>
@@ -743,9 +871,8 @@
 
   <!-- Circle: Garsumas -->
   <div class="circle-wrap">
-    <button class="scircle" data-popup="volume">
-      <span class="ico">🔊</span>
-      <span class="lbl">Garsas</span>
+    <button class="scircle" data-popup="volume" title="Garsumas" aria-label="Garsumas">
+      <span class="ico">📢</span>
     </button>
     <div class="popup" id="pop-volume" style="min-width:90px;align-items:center;">
       <div class="pop-title" data-i18n="volumeTitle">Garsumas</div>
@@ -761,47 +888,32 @@
 
   <!-- Circle 3: Klaviatūra -->
   <div class="circle-wrap">
-    <button class="scircle" data-popup="keys">
-      <span class="ico">🎼</span>
-      <span class="lbl">Klavišai</span>
+    <button class="scircle" data-popup="keys" title="Klavišai" aria-label="Klavišai">
+      <span class="ico">🎹</span>
     </button>
     <div class="popup" id="pop-keys">
       <div class="pop-title">Klaviatūra</div>
       <button class="pop-btn sel" data-keys="3,4,5">Pilna (3 okt)</button>
       <button class="pop-btn" data-keys="4,5">Vidurinė (2 okt)</button>
-      <button class="pop-btn" data-keys="4">Tik 4 oktava</button>
+      <button class="pop-btn" data-keys="4">Tik pirmoji oktava</button>
     </div>
   </div>
 
-  <!-- Circle 4: Pagalba / Valyti -->
+  <!-- Circle 4: Fonas - six colours -->
   <div class="circle-wrap">
-    <button class="scircle" data-popup="more">
-      <span class="ico">⚙️</span>
-      <span class="lbl">Daugiau</span>
-    </button>
-    <div class="popup" id="pop-more">
-      <div class="pop-title">Veiksmai</div>
-      <button class="pop-btn" id="popClear">🗑 Valyti viską</button>
-      <button class="pop-btn" id="popHelp">❓ Pagalba</button>
-    </div>
-  </div>
-
-  <!-- Circle 5: Fonas -->
-  <div class="circle-wrap">
-    <button class="scircle" data-popup="bg">
-      <span class="ico">🌅</span>
-      <span class="lbl">Fonas</span>
+    <button class="scircle" data-popup="bg" title="Fonas" aria-label="Fonas">
+      <span class="ico">🎨</span>
     </button>
     <div class="popup" id="pop-bg">
       <div class="pop-title">Fonas</div>
       <div class="bg-orb-row">
-        <button type="button" class="bg-orb" data-theme-orb="none" title="Be fono">⬜</button>
-        <button type="button" class="bg-orb" data-theme-orb="pavasaris" title="Pavasaris" style="--orb-grad:linear-gradient(135deg,#ffc1e3,#7ee8a2)">🌸</button>
-        <button type="button" class="bg-orb" data-theme-orb="vasara" title="Vasara" style="--orb-grad:linear-gradient(135deg,#ffe066,#4fc3f7)">☀️</button>
-        <button type="button" class="bg-orb" data-theme-orb="ruduo" title="Ruduo" style="--orb-grad:linear-gradient(135deg,#ffb46e,#8b5e34)">🍂</button>
-        <button type="button" class="bg-orb" data-theme-orb="ziema" title="Žiema" style="--orb-grad:linear-gradient(135deg,#eaf7ff,#4a76a8)">❄️</button>
-        <button type="button" class="bg-orb" data-theme-orb="beach" title="Paplūdimys" style="--orb-grad:linear-gradient(135deg,#4fc3f7,#0288d1)">🌊</button>
-        <button type="button" class="bg-orb" data-theme-orb="desert" title="Dykuma" style="--orb-grad:linear-gradient(135deg,#ffd27a,#c9862c)">🏜️</button>
+        <button type="button" class="bg-orb" data-theme-orb="pavasaris" title="Pavasaris" aria-label="Pavasaris" style="--orb-grad:linear-gradient(135deg,#ffc1e3,#7ee8a2)">🌸</button>
+        <button type="button" class="bg-orb" data-theme-orb="melynas" title="Mėlyna" aria-label="Mėlyna" style="--orb-grad:linear-gradient(135deg,#9fd8f7,#62b6ea)"></button>
+        <button type="button" class="bg-orb" data-theme-orb="rudas" title="Ruda" aria-label="Ruda" style="--orb-grad:linear-gradient(135deg,#cfa77e,#a9794d)"></button>
+        <button type="button" class="bg-orb" data-theme-orb="violetinis" title="Violetinė" aria-label="Violetinė" style="--orb-grad:linear-gradient(135deg,#cdb0f7,#a583e6)"></button>
+        <button type="button" class="bg-orb" data-theme-orb="zalias" title="Žalia" aria-label="Žalia" style="--orb-grad:linear-gradient(135deg,#c6e557,#99c73b)"></button>
+        <button type="button" class="bg-orb" data-theme-orb="geltonas" title="Geltona" aria-label="Geltona" style="--orb-grad:linear-gradient(135deg,#ffe870,#f2c82c)"></button>
+        <button type="button" class="bg-orb" data-theme-orb="oranzinis" title="Oranžinė" aria-label="Oranžinė" style="--orb-grad:linear-gradient(135deg,#ffbb6b,#f4963a)"></button>
       </div>
     </div>
   </div>
@@ -813,14 +925,70 @@
   <div class="piano-inner" id="piano"></div>
 </div>
 
+<!-- Popups live here, at the end of <body>, and not inside .page: .page is
+     its own stacking layer that sits below the fixed piano and the left
+     buttons, so a popup inside it had its lower part covered by the keys. -->
+<!-- ── Subcategory popup, opened from Mokymasis / Pamokos ── -->
+<div class="lib-overlay" id="subOverlay" hidden>
+  <div class="lib-modal sub-modal">
+    <div class="lib-modal-head">
+      <span id="subTitle"></span>
+      <button class="lib-close" id="subClose" aria-label="Uždaryti">&times;</button>
+    </div>
+    <div class="sub-group" data-sub-group="learning" hidden>
+      <a class="nav-btn" href="pamokeles.html" data-leave><span class="nb-ico">📚</span>Pamokėlės</a>
+      <a class="nav-btn" href="testai.html" data-leave><span class="nb-ico">📝</span>Užduotys</a>
+      <a class="nav-btn" href="istraukos.html" data-leave><span class="nb-ico">🎼</span>Muzikinės ištraukos</a>
+    </div>
+    <div class="sub-group" data-sub-group="lessons" hidden>
+      <button class="nav-btn" id="btnSaveLesson"><span class="nb-ico">💾</span><span data-i18n="save">Išsaugoti</span></button>
+      <button class="nav-btn" id="btnOpenLibrary"><span class="nb-ico">📂</span><span data-i18n="myLessons">Mano pamokos</span></button>
+      <button class="nav-btn" id="btnPrint" style="opacity:0.62;cursor:not-allowed" title="Netrukus"><span class="nb-ico">🖨️</span><span data-i18n="print">Spausdinti</span></button>
+      <button class="nav-btn" id="btnSettings"><span class="nb-ico">⚙️</span><span data-i18n="settings">Nustatymai</span></button>
+      <button class="nav-btn" id="btnRightHelp"><span class="nb-ico">❓</span><span data-i18n="help">Pagalba</span></button>
+      <button class="nav-btn" id="btnGlossary"><span class="nb-ico">📖</span><span data-i18n="glossary">Reikšmės</span></button>
+      <button class="nav-btn" id="btnMisc"><span class="nb-ico">❔</span><span data-i18n="misc">Kita</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Generic info modal, reused by Nustatymai / Reikšmės / Kita ── -->
+<div class="lib-overlay" id="infoOverlay" hidden>
+  <div class="lib-modal">
+    <div class="lib-modal-head">
+      <span id="infoTitle"></span>
+      <button class="lib-close" id="infoClose" aria-label="Uždaryti">&times;</button>
+    </div>
+    <div id="infoBody"></div>
+  </div>
+</div>
+
 <script src="kids.js"></script>
-<script>window.SEASON_BG_NO_FLOATING = true; window.SEASON_BG_DEFAULT = 'vasara';</script>
+<script>window.SEASON_BG_NO_FLOATING = true; window.SEASON_BG_DEFAULT = 'pavasaris';
+  // This screen offers the spring video (the default) and the six colour
+  // backgrounds.
+  window.SEASON_BG_ALLOWED = ['pavasaris', 'melynas', 'rudas', 'violetinis', 'zalias', 'geltonas', 'oranzinis'];
+  // When the spring video became the default, a colour picked earlier was
+  // still saved and would have hidden it - clear that old pick once.
+  try {
+    if (!localStorage.getItem('musication.bg.springDefault')) {
+      localStorage.removeItem('musication.bg.theme.v2');
+      localStorage.setItem('musication.bg.springDefault', '1');
+    }
+  } catch (e) {}</script>
 <script src="seasonBg.js"></script>
 <script src="lessonLibrary.js"></script>
+<script src="excerpts.js"></script>
 <script>
 (function () {
   'use strict';
   var K = window.Kids;
+
+  // Level chosen on the login screen. MUSICATION I is for kindergarten
+  // children: bigger staff and notes, one staff at a time, c1-c3 keyboard.
+  var LEVEL     = (SESSION && SESSION.level) || 'I';
+  var KIDS_MODE = LEVEL === 'I';
+  var TREBLE_OCTAVES = KIDS_MODE ? [4, 5] : [3, 4, 5];
 
   // ── Audio context ────────────────────────────────────────────────────────────
   var PIANO_CTX  = null;
@@ -891,47 +1059,6 @@
     });
   }
 
-  // ── Organ synthesis ──────────────────────────────────────────────────────────
-  function synthOrgan(freq, durSecs, ctx, comp) {
-    var now = ctx.currentTime;
-    var master = ctx.createGain();
-    master.gain.setValueAtTime(0.001, now);
-    master.gain.linearRampToValueAtTime(0.32, now + 0.015);
-    master.gain.setValueAtTime(0.32, now + durSecs);
-    master.gain.exponentialRampToValueAtTime(0.001, now + durSecs + 0.06);
-    master.connect(comp);
-
-    [1, 2, 3, 4].forEach(function (h, i) {
-      var osc = ctx.createOscillator();
-      var g   = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq * h;
-      g.gain.value = [1.0, 0.5, 0.25, 0.12][i];
-      osc.connect(g); g.connect(master);
-      osc.start(now); osc.stop(now + durSecs + 0.1);
-    });
-  }
-
-  // ── Marimba/xylophone synthesis ──────────────────────────────────────────────
-  function synthMarimba(freq, durSecs, ctx, comp) {
-    var now = ctx.currentTime;
-    var decay = Math.min(durSecs, 0.55);
-    var master = ctx.createGain();
-    master.gain.setValueAtTime(0.6, now);
-    master.gain.exponentialRampToValueAtTime(0.001, now + decay);
-    master.connect(comp);
-
-    [1, 2, 3.5, 5.5].forEach(function (h, i) {
-      var osc = ctx.createOscillator();
-      var g   = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq * h;
-      g.gain.value = [1.0, 0.4, 0.15, 0.05][i];
-      osc.connect(g); g.connect(master);
-      osc.start(now); osc.stop(now + decay + 0.08);
-    });
-  }
-
   // ── Bowed strings (violin) — sawtooth core, slow bow attack + gentle vibrato ──
   function synthViolin(freq, durSecs, ctx, comp) {
     var now = ctx.currentTime;
@@ -986,50 +1113,6 @@
     noise.start(now); noise.stop(end + 0.1);
   }
 
-  // ── Trumpet — brighter sawtooth, fast attack, slightly nasal ────────────────
-  function synthTrumpet(freq, durSecs, ctx, comp) {
-    var now = ctx.currentTime;
-    var end = now + durSecs;
-    var master = ctx.createGain();
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.3, now + 0.02);
-    master.gain.setValueAtTime(0.3, Math.max(now + 0.02, end - 0.05));
-    master.gain.exponentialRampToValueAtTime(0.0001, end + 0.1);
-    master.connect(comp);
-
-    var filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass'; filter.frequency.value = freq * 3; filter.Q.value = 1.1;
-    filter.connect(master);
-
-    [1, 2, 3, 4, 5, 6].forEach(function (h, i) {
-      var osc = ctx.createOscillator(); var g = ctx.createGain();
-      osc.type = 'sawtooth'; osc.frequency.value = freq * h;
-      g.gain.value = [0.5, 0.32, 0.24, 0.16, 0.1, 0.06][i];
-      osc.connect(g); g.connect(filter);
-      osc.start(now); osc.stop(end + 0.12);
-    });
-  }
-
-  // ── Guitar — plucked string: fast attack, quick exponential decay ───────────
-  function synthGuitar(freq, durSecs, ctx, comp) {
-    var now = ctx.currentTime;
-    var decay = Math.min(durSecs + 0.4, 1.1);
-    var master = ctx.createGain();
-    master.gain.setValueAtTime(0.55, now);
-    master.gain.exponentialRampToValueAtTime(0.001, now + decay);
-    master.connect(comp);
-
-    [1, 2, 3, 4].forEach(function (h, i) {
-      var osc = ctx.createOscillator(); var g = ctx.createGain();
-      osc.type = 'triangle'; osc.frequency.value = freq * h;
-      var t1 = now + decay * [1, 0.7, 0.45, 0.3][i];
-      g.gain.setValueAtTime([1.0, 0.5, 0.22, 0.1][i], now);
-      g.gain.exponentialRampToValueAtTime(0.001, t1);
-      osc.connect(g); g.connect(master);
-      osc.start(now); osc.stop(t1 + 0.05);
-    });
-  }
-
   // ── Shared: a short burst of white noise, as a raw un-gained buffer source ──
   var NOISE_BUFFER = null;
   function makeNoiseSource(ctx, durSecs) {
@@ -1045,28 +1128,45 @@
     return src;
   }
 
-  // ── Percussion: drums/shaker/triangle/cymbal are unpitched - they ignore
-  // the piano key's frequency and just play their own fixed hit. ─────────────
+  // ── Percussion: drum/shaker/triangle are unpitched - they ignore the piano
+  // key's frequency and just play their own fixed hit. ───────────────────────
+  // Soft-clipping curve for the drum: it adds overtones, so the drum is also
+  // heard on small laptop/tablet speakers that cannot play its low thump.
+  var DRUM_CURVE = (function () {
+    var n = 1024, curve = new Float32Array(n);
+    for (var i = 0; i < n; i++) { var x = i * 2 / n - 1; curve[i] = Math.tanh(2.6 * x); }
+    return curve;
+  })();
+
   function synthDrum(durSecs, ctx, comp) {
     var now = ctx.currentTime;
+    var shaper = ctx.createWaveShaper();
+    shaper.curve = DRUM_CURVE;
     var master = ctx.createGain();
-    master.gain.setValueAtTime(0.9, now);
-    master.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    master.gain.setValueAtTime(1.0, now);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    shaper.connect(master);
     master.connect(comp);
-    var osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(150, now);
-    osc.frequency.exponentialRampToValueAtTime(48, now + 0.22);
-    osc.connect(master);
-    osc.start(now); osc.stop(now + 0.3);
 
+    // Body: a pitch-dropping tone, plus a triangle an octave up for punch.
+    [['sine', 230, 72, 1.0], ['triangle', 460, 130, 0.45]].forEach(function (p) {
+      var osc = ctx.createOscillator(); var g = ctx.createGain();
+      osc.type = p[0];
+      osc.frequency.setValueAtTime(p[1], now);
+      osc.frequency.exponentialRampToValueAtTime(p[2], now + 0.16);
+      g.gain.value = p[3];
+      osc.connect(g); g.connect(shaper);
+      osc.start(now); osc.stop(now + 0.5);
+    });
+
+    // Stick attack: a short, bright click of noise.
     var noise = makeNoiseSource(ctx, 0.05);
-    var nf = ctx.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = 400;
+    var nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1800; nf.Q.value = 0.8;
     var ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.5, now);
-    ng.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    ng.gain.setValueAtTime(0.9, now);
+    ng.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
     noise.connect(nf); nf.connect(ng); ng.connect(comp);
-    noise.start(now); noise.stop(now + 0.07);
+    noise.start(now); noise.stop(now + 0.06);
   }
 
   function synthShaker(durSecs, ctx, comp) {
@@ -1095,52 +1195,51 @@
     });
   }
 
-  function synthCymbal(durSecs, ctx, comp) {
-    var now = ctx.currentTime;
-    var noise = makeNoiseSource(ctx, 1.4);
-    var f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 5000;
-    var g = ctx.createGain();
-    g.gain.setValueAtTime(0.4, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
-    noise.connect(f); f.connect(g); g.connect(comp);
-    noise.start(now); noise.stop(now + 1.4);
-  }
-
   // ── Dispatch ─────────────────────────────────────────────────────────────────
+  // Only the best-sounding instruments are offered: melodic piano / violin /
+  // flute and rhythmic drum / triangle / shaker.
   var SOUND_TYPE   = 'piano';
   var TEMPO_SCALE  = 1.0;
 
-  var UNPITCHED = { drums: 1, shaker: 1, triangle: 1, cymbal: 1 };
+  var UNPITCHED = { drums: 1, shaker: 1, triangle: 1 };
 
   function playNote(noteName, durSecs) {
+    // The rhythm line has no pitch: a melodic instrument becomes the drum.
+    var type = (RHYTHM_LINE && !UNPITCHED[SOUND_TYPE]) ? 'drums' : SOUND_TYPE;
     var freq = PIANO_FREQ[noteName];
-    if (!freq && !UNPITCHED[SOUND_TYPE]) { return; }
+    if (!freq && !UNPITCHED[type]) { return; }
     var ctx = getCtx();
     if (ctx.state !== 'running') { ctx.resume(); }
-    switch (SOUND_TYPE) {
-      case 'organ':    synthOrgan(freq, durSecs, ctx, PIANO_COMP); break;
-      case 'marimba':  synthMarimba(freq, durSecs, ctx, PIANO_COMP); break;
-      case 'violin':
-      case 'strings':  synthViolin(freq, durSecs, ctx, PIANO_COMP); break;
+    switch (type) {
+      case 'violin':   synthViolin(freq, durSecs, ctx, PIANO_COMP); break;
       case 'flute':    synthFlute(freq, durSecs, ctx, PIANO_COMP); break;
-      case 'clarinet': synthFlute(freq, durSecs, ctx, PIANO_COMP); break;
-      case 'trumpet':  synthTrumpet(freq, durSecs, ctx, PIANO_COMP); break;
-      case 'guitar':   synthGuitar(freq, durSecs, ctx, PIANO_COMP); break;
       case 'drums':    synthDrum(durSecs, ctx, PIANO_COMP); break;
       case 'shaker':   synthShaker(durSecs, ctx, PIANO_COMP); break;
       case 'triangle': synthTriangleInst(durSecs, ctx, PIANO_COMP); break;
-      case 'cymbal':   synthCymbal(durSecs, ctx, PIANO_COMP); break;
-      default:         synthPiano(freq, durSecs, ctx, PIANO_COMP); // piano, harp, bells, organ-ish extras, choir, childvoice
+      default:         synthPiano(freq, durSecs, ctx, PIANO_COMP);
     }
   }
 
   // ── Settings circles (popups) ────────────────────────────────────────────────
   function closeAllPopups() {
+    document.querySelectorAll('.nbar-menu.open, .along-menu.open').forEach(function (p) { p.classList.remove('open'); });
     document.querySelectorAll('.popup.open').forEach(function (p) { p.classList.remove('open'); });
     document.querySelectorAll('.scircle.open').forEach(function (b) { b.classList.remove('open'); });
   }
 
   document.addEventListener('click', closeAllPopups);
+
+  // Keeps a popup fully on screen: it is centred on its circle, then nudged
+  // up or down if that would push its top or bottom edge out of the viewport.
+  function keepPopupOnScreen(pop) {
+    var wrap = pop.parentElement.getBoundingClientRect();
+    var h = pop.offsetHeight;
+    var center = wrap.top + wrap.height / 2;
+    var shift = 0;
+    if (center - h / 2 < 16) { shift = 16 - (center - h / 2); }
+    else if (center + h / 2 > window.innerHeight - 16) { shift = window.innerHeight - 16 - (center + h / 2); }
+    pop.style.transform = 'translateY(calc(-50% + ' + shift + 'px))';
+  }
 
   document.querySelectorAll('.scircle').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
@@ -1149,7 +1248,7 @@
       closeAllPopups();
       if (!wasOpen) {
         var pop = document.getElementById('pop-' + btn.dataset.popup);
-        if (pop) { pop.classList.add('open'); btn.classList.add('open'); }
+        if (pop) { pop.classList.add('open'); btn.classList.add('open'); keepPopupOnScreen(pop); }
       }
     });
   });
@@ -1195,7 +1294,10 @@
   volumeSlider.addEventListener('click', function (e) { e.stopPropagation(); });
 
   // Keyboard range buttons
-  var CURRENT_OCTAVES = [3, 4, 5];
+  var CURRENT_OCTAVES = TREBLE_OCTAVES;
+  document.querySelectorAll('[data-keys]').forEach(function (b) {
+    b.classList.toggle('sel', b.dataset.keys === TREBLE_OCTAVES.join(','));
+  });
   document.querySelectorAll('[data-keys]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -1208,22 +1310,12 @@
   });
 
   // Background (season video / photo) orbs are wired centrally by seasonBg.js
-  // via [data-theme-orb] delegation — just close the popup after a pick.
+  // via [data-theme-orb] delegation on `document` — this must NOT call
+  // e.stopPropagation() (unlike the other popup buttons above), or the click
+  // never bubbles up to seasonBg.js's listener and the theme never applies.
+  // Just close the popup after a pick.
   document.querySelectorAll('#pop-bg [data-theme-orb]').forEach(function (btn) {
-    btn.addEventListener('click', function (e) { e.stopPropagation(); closeAllPopups(); });
-  });
-
-  document.getElementById('popClear').addEventListener('click', function (e) {
-    e.stopPropagation();
-    noteList = []; placedEl1.innerHTML = ''; placedEl2.innerHTML = '';
-    selectedNoteIdx = null;
-    closeAllPopups();
-  });
-
-  document.getElementById('popHelp').addEventListener('click', function (e) {
-    e.stopPropagation();
-    closeAllPopups();
-    if (K && K.mascot) { K.mascot('happy', 'Spausk klavišus ir rašyk natas! 🎵'); }
+    btn.addEventListener('click', function () { closeAllPopups(); });
   });
 
   // ── Generic info modal, reused by Nustatymai / Reikšmės / Kita ──────────────
@@ -1250,7 +1342,7 @@
       glossary: 'Reikšmės', misc: 'Kita', play: 'Groti', cutNote: 'Natą', clearAll: 'Išvalyti',
       games: 'Žaidimai', learning: 'Mokymasis', lessons: 'Pamokos',
       tempoTitle: 'Greitis', volumeTitle: 'Garsumas',
-      modeTeacher: 'Mokytojas', modeStudent: 'Mokinys'
+      modeTeacher: 'Mokytojas', modeStudent: 'Mokinys', logout: 'Atsijungti'
     },
     en: {
       newLesson: 'New', save: 'Save', myLessons: 'My lessons',
@@ -1258,7 +1350,7 @@
       glossary: 'Glossary', misc: 'More', play: 'Play', cutNote: 'Note', clearAll: 'Clear',
       games: 'Games', learning: 'Learning', lessons: 'Lessons',
       tempoTitle: 'Tempo', volumeTitle: 'Volume',
-      modeTeacher: 'Teacher', modeStudent: 'Student'
+      modeTeacher: 'Teacher', modeStudent: 'Student', logout: 'Log out'
     }
   };
   function applyLanguage(lang) {
@@ -1269,45 +1361,51 @@
       var key = el.getAttribute('data-i18n');
       if (dict[key]) { el.textContent = dict[key]; }
     });
+    // The sidebar buttons show only an emoji, so their name goes in the tooltip.
+    document.querySelectorAll('.nav-card-head').forEach(function (btn) {
+      btn.title = btn.querySelector('.nch-title').textContent;
+    });
     updateUserModeLabel();
   }
 
-  // ── Teacher / Student mode — a visible, persisted switch (spec: "Pasirinkimas
-  // mokytojas - mokinys"). This first pass only changes the greeting/label;
-  // which buttons a "Mokinys" should or shouldn't see is a separate product
-  // decision this app doesn't guess at yet, so nothing is hidden for now. ─────
-  var MODE_KEY = 'musication.rasymas.mode';
-  var TEACHER_MODE = (function () { try { return localStorage.getItem(MODE_KEY) !== 'student'; } catch (e) { return true; } })();
+  // ── Teacher / Student mode — decided by the login screen (index.html), so
+  // it is no longer a switch here: the top bar and the settings popup only
+  // show who is logged in, and the popup offers "Atsijungti" to change user.
+  // Which buttons a "Mokinys" should or shouldn't see on this screen is a
+  // separate product decision this app doesn't guess at yet, so nothing is
+  // hidden for now. ─────────────────────────────────────────────────────────
+  var TEACHER_MODE = !SESSION || SESSION.role === 'teacher';
   function updateUserModeLabel() {
     var dict = I18N[CURRENT_LANG];
     document.getElementById('userModeLabel').textContent = TEACHER_MODE ? dict.modeTeacher : dict.modeStudent;
   }
-  function setTeacherMode(isTeacher) {
-    TEACHER_MODE = isTeacher;
-    try { localStorage.setItem(MODE_KEY, isTeacher ? 'teacher' : 'student'); } catch (e) {}
-    updateUserModeLabel();
-  }
 
   function renderSettingsModal() {
     var dict = I18N[CURRENT_LANG];
+    // No flag emoji on the language buttons: Windows has no flag glyphs and
+    // shows them as the bare letters "LT" / "GB". The chosen language gets
+    // a tick and the green "selected" look instead.
+    var isLt = CURRENT_LANG === 'lt';
     showInfo('⚙️ ' + dict.settings,
-      '<div>' +
-        '<div style="font-weight:700;margin-bottom:6px;">👤 ' + (CURRENT_LANG === 'lt' ? 'Naudotojas' : 'User') + '</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button class="pop-btn' + (TEACHER_MODE ? ' sel' : '') + '" id="modeTeacherBtn">👩‍🏫 ' + dict.modeTeacher + '</button>' +
-          '<button class="pop-btn' + (!TEACHER_MODE ? ' sel' : '') + '" id="modeStudentBtn">🧒 ' + dict.modeStudent + '</button>' +
+      '<div class="set-wrap">' +
+        '<div class="set-section">' +
+          '<div class="set-label">' + (isLt ? 'Naudotojas' : 'User') + '</div>' +
+          '<div class="set-card">' +
+            '<span class="set-avatar">' + (TEACHER_MODE ? '👩‍🏫' : '🧒') + '</span>' +
+            '<span class="set-name">' + (TEACHER_MODE ? dict.modeTeacher : dict.modeStudent) + '</span>' +
+            '<button class="pop-btn set-logout" id="logoutBtn">🚪 ' + dict.logout + '</button>' +
+          '</div>' +
         '</div>' +
-      '</div>' +
-      '<div>' +
-        '<div style="font-weight:700;margin-bottom:6px;">🌐 ' + (CURRENT_LANG === 'lt' ? 'Kalba' : 'Language') + '</div>' +
-        '<div style="display:flex;gap:8px;">' +
-          '<button class="pop-btn' + (CURRENT_LANG === 'lt' ? ' sel' : '') + '" id="langLtBtn">🇱🇹 Lietuvių</button>' +
-          '<button class="pop-btn' + (CURRENT_LANG === 'en' ? ' sel' : '') + '" id="langEnBtn">🇬🇧 English</button>' +
+        '<div class="set-section">' +
+          '<div class="set-label">' + (isLt ? 'Kalba' : 'Language') + '</div>' +
+          '<div class="set-choice">' +
+            '<button class="pop-btn' + (isLt ? ' sel' : '') + '" id="langLtBtn" aria-pressed="' + isLt + '">' + (isLt ? '✓ ' : '') + 'Lietuvių</button>' +
+            '<button class="pop-btn' + (!isLt ? ' sel' : '') + '" id="langEnBtn" aria-pressed="' + !isLt + '">' + (!isLt ? '✓ ' : '') + 'English</button>' +
+          '</div>' +
         '</div>' +
       '</div>'
     );
-    document.getElementById('modeTeacherBtn').addEventListener('click', function () { setTeacherMode(true); renderSettingsModal(); });
-    document.getElementById('modeStudentBtn').addEventListener('click', function () { setTeacherMode(false); renderSettingsModal(); });
+    document.getElementById('logoutBtn').addEventListener('click', function () { MusicationAuth.logout(); });
     document.getElementById('langLtBtn').addEventListener('click', function () { applyLanguage('lt'); renderSettingsModal(); });
     document.getElementById('langEnBtn').addEventListener('click', function () { applyLanguage('en'); renderSettingsModal(); });
   }
@@ -1388,6 +1486,18 @@
     return SEMI_NAME[semi] + oct;
   }
 
+  // The pitch a written note sounds at: its own accidental first (a natural
+  // cancels the key), otherwise the key signature's sharp / flat.
+  function soundingNote(n) {
+    if (RHYTHM_LINE || !n.note) { return n.note; }
+    if (n.acc) { return getPlayNote(n.note, n.acc); }
+    if (KEY_SIG) {
+      var kind = KEY_SIG > 0 ? 'sharp' : 'flat';
+      if (KEY_LETTERS[kind].slice(0, Math.abs(KEY_SIG)).indexOf(n.note.charAt(0)) >= 0) { return getPlayNote(n.note, kind); }
+    }
+    return n.note;
+  }
+
   document.querySelectorAll('[data-acc]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var acc = btn.dataset.acc;
@@ -1414,6 +1524,7 @@
       var mark = btn.dataset.mark;
       var n = noteList[selectedNoteIdx];
       n.mark = (n.mark === mark) ? null : mark;
+      markDirty();
       redrawAllNotes();
     });
   });
@@ -1424,29 +1535,40 @@
       return;
     }
     var n = noteList[selectedNoteIdx];
-    var text = prompt('Tekstas po nata:', n.lyric || '');
-    if (text === null) { return; }
-    n.lyric = text.trim() || null;
-    redrawAllNotes();
+    askText('Aa', 'Tekstas po nata', n.lyric || '', function (text) {
+      n.lyric = text || null;
+      markDirty();
+      redrawAllNotes();
+    }, true);
   });
 
   // SVG clef click: toggle clef
-  var CLEF_FS  = { treble: '88', bass: '44' };
-  var CLEF_Y   = { treble: '88', bass: '62' };
-  var CLEF_CHR = { treble: '𝄞', bass: '𝄢' };
+  // Clefs come from the Bravura music font (SMuFL): its em is exactly four
+  // staff spaces (4 x 14 = 56) and each clef's origin sits on its own line -
+  // the treble (G) clef on the g1 line (y 62), the bass (F) clef on the
+  // f line (y 34) - so both come out at their true size and place.
+  var CLEF_FS  = { treble: '56', bass: '56' };
+  var CLEF_Y   = { treble: '62', bass: '34' };
+  var CLEF_CHR = { treble: '\uE050', bass: '\uE062' };   // SMuFL gClef / fClef
 
-  function toggleClef(e) {
-    e.stopPropagation();
-    rowClef = rowClef === 'treble' ? 'bass' : 'treble';
+  function setClef(clef) {
+    rowClef = clef;
     ['clefRow1', 'clefRow2'].forEach(function (id) {
       var clefEl = document.getElementById(id);
       clefEl.textContent = CLEF_CHR[rowClef];
       clefEl.setAttribute('font-size', CLEF_FS[rowClef]);
       clefEl.setAttribute('y', CLEF_Y[rowClef]);
     });
-    noteList = []; redrawAllNotes();
-    CURRENT_OCTAVES = rowClef === 'treble' ? [3, 4, 5] : [2, 3, 4];
+    CURRENT_OCTAVES = rowClef === 'treble' ? TREBLE_OCTAVES : [2, 3, 4];
     rebuildPiano();
+    refreshStaff();
+  }
+
+  function toggleClef(e) {
+    e.stopPropagation();
+    if (RHYTHM_LINE) { return; }   // the rhythm line has no pitch, so no clef to change
+    setClef(rowClef === 'treble' ? 'bass' : 'treble');
+    noteList = []; pausedIdx = null; markDirty(); redrawAllNotes();
   }
   document.getElementById('clefGroupRow1').addEventListener('click', toggleClef);
   document.getElementById('clefGroupRow2').addEventListener('click', toggleClef);
@@ -1477,28 +1599,184 @@
   var placedEl1 = document.getElementById('placedNotes');
   var placedEl2 = document.getElementById('placedNotes2');
   var noteList  = [];
-  var X_STEP    = 48;
-  var X_MAX     = 1240;
+  // MUSICATION I: a shorter staff drawn bigger, with more room between the
+  // notes, and the second staff only appears once the first one is full.
+  var VB_W     = KIDS_MODE ? 1000 : 1280;   // staff viewBox width
+  var STAFF_END = VB_W - 20;                 // x of the closing bar line
+  var X_STEP    = KIDS_MODE ? 56 : 48;
+  var X_START   = KIDS_MODE ? 150 : 120;     // first note, clear of the clef
+  var X_MAX     = VB_W - 40;
   var rowClef   = 'treble';
+
+  document.getElementById('topbarLevel').textContent = LEVEL;
+
+  // Note-head size, stem offset/length and staff colours - rounder, bigger
+  // heads with a dark outline read more easily for small children.
+  var HEAD_RX = 11.5, HEAD_RY = 8, STEM_DX = 10.5, STEM_LEN = 34;
+  var STAFF_COLOR = '#8b97ad';
+
+  document.body.classList.toggle('kids', KIDS_MODE);
+
+  // ── Staff tools (Metras / Tonacija / Taktai / Ritmo linija) ──────────────
+  var METER = null;          // '2/4' | '3/4' | '4/4' | null
+  var KEY_SIG = 0;           // number of sharps (> 0) or flats (< 0)
+  var SHOW_BARS = false;     // draw bar lines (taktai) according to the metre
+  var RHYTHM_LINE = false;   // one-line rhythm staff: rhythm only, no pitch
+  var SIG_COLOR = '#00285C';
+  // Where each sharp / flat of the key signature sits (y on the staff).
+  var KEY_POS = {
+    treble: { sharp: [20, 41], flat: [48, 27] },   // F5 C5 / B4 E5
+    bass:   { sharp: [34, 55], flat: [62, 41] }    // F3 C3 / B2 E3
+  };
+  var KEY_LETTERS = { sharp: ['F', 'C'], flat: ['B', 'E'] };
+  var KEY_X = 118, TIME_X = 130;
+
+  // Every note sits on the single line in rhythm-line mode.
+  var RHYTHM_Y = {};
+
+  function staffLine(g, x1, y1, x2, y2, w) {
+    var l = document.createElementNS(svgNS, 'line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+    l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('stroke', STAFF_COLOR); l.setAttribute('stroke-width', w);
+    l.setAttribute('stroke-linecap', 'round');
+    g.appendChild(l);
+  }
+  function svgText(g, x, y, size, txt, family, weight) {
+    var t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-family', family || 'serif');
+    t.setAttribute('font-size', size);
+    if (weight) { t.setAttribute('font-weight', weight); }
+    t.setAttribute('fill', SIG_COLOR);
+    t.setAttribute('pointer-events', 'none');
+    t.textContent = txt;
+    g.appendChild(t);
+  }
+
+  // Staff lines, the percussion clef of the rhythm line, the key signature
+  // and the metre - everything that does not depend on the written notes.
+  function drawStaff(svg, clefId) {
+    svg.setAttribute('viewBox', '0 -24 ' + VB_W + ' 130');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.style.aspectRatio = VB_W + ' / 130';
+    var g = svg.querySelector('.staff-lines');
+    g.innerHTML = '';
+    document.getElementById(clefId).style.display = RHYTHM_LINE ? 'none' : '';
+    if (RHYTHM_LINE) {
+      staffLine(g, 58, 48, STAFF_END, 48, 2.6);
+      staffLine(g, 58, 34, 58, 62, 2.4);
+      staffLine(g, STAFF_END, 34, STAFF_END, 62, 4);
+      // Percussion clef: two thick upright bars.
+      [78, 90].forEach(function (x) {
+        var r = document.createElementNS(svgNS, 'rect');
+        r.setAttribute('x', x); r.setAttribute('y', 34); r.setAttribute('width', 6); r.setAttribute('height', 28);
+        r.setAttribute('rx', 1.5); r.setAttribute('fill', SIG_COLOR);
+        g.appendChild(r);
+      });
+    } else {
+      for (var y = 20; y <= 76; y += 14) { staffLine(g, 58, y, STAFF_END, y, 2.4); }
+      staffLine(g, 58, 20, 58, 76, 2.4);
+      staffLine(g, STAFF_END, 20, STAFF_END, 76, 4);
+      if (KEY_SIG) {
+        var kind = KEY_SIG > 0 ? 'sharp' : 'flat';
+        KEY_POS[rowClef][kind].slice(0, Math.abs(KEY_SIG)).forEach(function (py, i) {
+          svgText(g, KEY_X + 6 + i * 13, py + (kind === 'sharp' ? 9 : 5), 28, kind === 'sharp' ? '♯' : '♭');
+        });
+      }
+    }
+    if (METER) {
+      var p = METER.split('/');
+      var top = RHYTHM_LINE ? 46 : 46, bot = RHYTHM_LINE ? 66 : 75;
+      svgText(g, TIME_X, top, RHYTHM_LINE ? 22 : 31, p[0], 'Georgia, serif', 800);
+      svgText(g, TIME_X, bot, RHYTHM_LINE ? 22 : 31, p[1], 'Georgia, serif', 800);
+    }
+  }
+
+  // The key signature and metre take room after the clef, so the first note
+  // (and how many notes fit on a row) follows them.
+  function relayout() {
+    var keyCount = RHYTHM_LINE ? 0 : Math.abs(KEY_SIG);
+    KEY_X = 118;
+    var x = KEY_X + (keyCount ? keyCount * 13 + 6 : 0);
+    TIME_X = x + 12;
+    x += METER ? 28 : 0;
+    X_START = x + (KIDS_MODE ? 32 : 14);
+    NOTES_PER_ROW = Math.floor((X_MAX - X_START) / X_STEP) + 1;
+    NOTES_PER_PAGE = NOTES_PER_ROW * 2;
+  }
+
+  function refreshStaff() {
+    relayout();
+    drawStaff(document.getElementById('staffSvg'), 'clefRow1');
+    drawStaff(document.getElementById('staffSvg2'), 'clefRow2');
+  }
+
+  // Note names as taught in Lithuania: B is "h", and octaves follow the
+  // Helmholtz naming - lowercase from the small octave up (c, c1, c2, c3 =
+  // C3, C4, C5, C6), uppercase for the great octave (C2). The number only
+  // goes on the C keys of the piano.
+  var LETTER_NAME = { 'C':'c','D':'d','E':'e','F':'f','G':'g','A':'a','B':'h' };
+  function noteLetter(noteName) {
+    var name = LETTER_NAME[noteName.charAt(0)] || '';
+    return parseInt(noteName.slice(1), 10) >= 3 ? name : name.toUpperCase();
+  }
+  function keyLabel(noteName) {
+    var oct = parseInt(noteName.slice(1), 10);
+    return noteLetter(noteName) + (noteName.charAt(0) === 'C' && oct >= 4 ? (oct - 3) : '');
+  }
+
+  // Darker shade of a #rrggbb colour (amt 0..1), for outlines and stems.
+  function shade(hex, amt) {
+    var n = parseInt(hex.slice(1), 16);
+    var f = 1 - amt;
+    var r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+  function isLight(hex) {
+    var n = parseInt(hex.slice(1), 16);
+    return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
+  }
   // How many notes fit on one staff row before overflowing onto row 2.
-  var NOTES_PER_ROW = Math.floor((X_MAX - 120) / X_STEP) + 1;
+  var NOTES_PER_ROW = Math.floor((X_MAX - X_START) / X_STEP) + 1;
+  // A "page" (lapas) is the two staff rows; noteList keeps running on
+  // across pages, only the current page is drawn.
+  var NOTES_PER_PAGE = NOTES_PER_ROW * 2;
+  var currentPage = 0;
+
+  Object.keys(NOTE_Y_TREBLE).concat(Object.keys(NOTE_Y_BASS)).forEach(function (k) { RHYTHM_Y[k] = 48; });
+  refreshStaff();
 
   function getRowNoteY() {
+    if (RHYTHM_LINE) { return RHYTHM_Y; }
     return rowClef === 'treble' ? NOTE_Y_TREBLE : NOTE_Y_BASS;
   }
 
-  // Where a note at a given index in noteList lives: which row/SVG and x position.
+  // Where a note at a given index in noteList lives: which page, row/SVG and x position.
   function notePos(idx) {
-    var row = idx < NOTES_PER_ROW ? 0 : 1;
-    var col = idx - row * NOTES_PER_ROW;
-    return { row: row, x: 120 + col * X_STEP, el: row === 0 ? placedEl1 : placedEl2 };
+    var page = Math.floor(idx / NOTES_PER_PAGE);
+    var local = idx - page * NOTES_PER_PAGE;
+    var row = local < NOTES_PER_ROW ? 0 : 1;
+    var col = local - row * NOTES_PER_ROW;
+    return { page: page, row: row, x: X_START + col * X_STEP, el: row === 0 ? placedEl1 : placedEl2 };
   }
 
-  var DURS = {
-    'whole': 1.8, 'half': 0.9, 'half-dot': 1.35, 'quarter': 0.45, 'quarter-dot': 0.675,
-    'eighth': 0.22, 'eighth-dot': 0.33, 'sixteenth': 0.11,
-    'rest-whole': 1.8, 'rest-half': 0.9, 'rest-quarter': 0.45, 'rest-eighth': 0.22, 'rest-sixteenth': 0.11
+  // The last page you can open: the one holding the last note, or the
+  // empty page right after a full one (so writing can go on there).
+  function lastPage() { return Math.floor(noteList.length / NOTES_PER_PAGE); }
+
+  // Length of each note in beats (a beat = a quarter note); at tempo 1 a
+  // beat lasts BEAT_SECS. Exact beats keep the playback in time with the
+  // metre, the bar lines and a play-along music excerpt.
+  var BEATS = {
+    'whole': 4, 'half': 2, 'half-dot': 3, 'quarter': 1, 'quarter-dot': 1.5,
+    'eighth': 0.5, 'eighth-dot': 0.75, 'sixteenth': 0.25,
+    'rest-whole': 4, 'rest-half': 2, 'rest-quarter': 1, 'rest-eighth': 0.5, 'rest-sixteenth': 0.25
   };
+  var BEAT_SECS = 0.45;
+  var DURS = {};
+  Object.keys(BEATS).forEach(function (k) { DURS[k] = BEATS[k] * BEAT_SECS; });
   // Beaming eligibility: plain (non-dotted) eighths/sixteenths only, matching
   // the exact combinations the spec calls out (two eighths, two sixteenths,
   // four sixteenths, eighth+2 sixteenths, 2 sixteenths+eighth, ...).
@@ -1559,46 +1837,64 @@
     if (y == null) { return null; }
     y += yOffset;
 
-    var noteColor = NOTE_COLOR[noteName.charAt(0)] || '#222';
+    // On the rhythm line pitch does not matter, so every note has one colour.
+    var noteColor = RHYTHM_LINE ? '#7e57c2' : (NOTE_COLOR[noteName.charAt(0)] || '#222');
     var baseType  = type.replace('-dot', '');
     var isDotted  = type.indexOf('-dot') >= 0;
 
     var STAF_TOP = 20 + yOffset, STAF_BOT = 76 + yOffset, LGAP = 14;
+    function ledger(ly) {
+      var ll = document.createElementNS(svgNS, 'line');
+      ll.setAttribute('x1', x - 17); ll.setAttribute('x2', x + 17);
+      ll.setAttribute('y1', ly); ll.setAttribute('y2', ly);
+      ll.setAttribute('stroke', STAFF_COLOR); ll.setAttribute('stroke-width', '2.4');
+      ll.setAttribute('stroke-linecap', 'round');
+      g.appendChild(ll);
+    }
     if (y < STAF_TOP) {
-      for (var ly = STAF_TOP - LGAP; ly >= y; ly -= LGAP) {
-        var ll = document.createElementNS(svgNS, 'line');
-        ll.setAttribute('x1', x - 13); ll.setAttribute('x2', x + 13);
-        ll.setAttribute('y1', ly); ll.setAttribute('y2', ly);
-        ll.setAttribute('stroke', '#777'); ll.setAttribute('stroke-width', '1.5');
-        g.appendChild(ll);
-      }
+      for (var ly = STAF_TOP - LGAP; ly >= y; ly -= LGAP) { ledger(ly); }
     } else if (y > STAF_BOT) {
-      for (var ly = STAF_BOT + LGAP; ly <= y; ly += LGAP) {
-        var ll = document.createElementNS(svgNS, 'line');
-        ll.setAttribute('x1', x - 13); ll.setAttribute('x2', x + 13);
-        ll.setAttribute('y1', ly); ll.setAttribute('y2', ly);
-        ll.setAttribute('stroke', '#777'); ll.setAttribute('stroke-width', '1.5');
-        g.appendChild(ll);
-      }
+      for (var ly2 = STAF_BOT + LGAP; ly2 <= y; ly2 += LGAP) { ledger(ly2); }
     }
 
+    // Kid-friendly note head: big and round, filled with the same colour as
+    // its piano key, a dark outline, a little shine, and the note's letter
+    // written inside it (the same letter as on the key).
     var filled = (baseType !== 'whole' && baseType !== 'half');
+    var dark = shade(noteColor, 0.3);
     var el = document.createElementNS(svgNS, 'ellipse');
     el.setAttribute('cx', x); el.setAttribute('cy', y);
-    el.setAttribute('rx', 10); el.setAttribute('ry', 6.5);
-    el.setAttribute('fill', filled ? noteColor : 'none');
-    el.setAttribute('stroke', noteColor); el.setAttribute('stroke-width', filled ? '2' : '2.5');
+    el.setAttribute('rx', HEAD_RX); el.setAttribute('ry', HEAD_RY);
+    el.setAttribute('fill', filled ? noteColor : '#fff');
+    el.setAttribute('stroke', dark); el.setAttribute('stroke-width', filled ? '2' : '3.2');
     el.setAttribute('transform', 'rotate(-12,' + x + ',' + y + ')');
     g.appendChild(el);
+    if (filled) {
+      var shine = document.createElementNS(svgNS, 'ellipse');
+      shine.setAttribute('cx', x - 5); shine.setAttribute('cy', y - 3.6);
+      shine.setAttribute('rx', 3.6); shine.setAttribute('ry', 1.9);
+      shine.setAttribute('fill', '#fff'); shine.setAttribute('opacity', '0.55');
+      shine.setAttribute('transform', 'rotate(-20,' + (x - 5) + ',' + (y - 3.6) + ')');
+      g.appendChild(shine);
+    }
+    var letterEl = document.createElementNS(svgNS, 'text');
+    letterEl.setAttribute('x', x); letterEl.setAttribute('y', y + 3.8);
+    letterEl.setAttribute('text-anchor', 'middle');
+    letterEl.setAttribute('font-family', "'Baloo 2', var(--font)");
+    letterEl.setAttribute('font-size', '11'); letterEl.setAttribute('font-weight', '800');
+    letterEl.setAttribute('fill', !filled ? dark : isLight(noteColor) ? '#4a3800' : '#fff');
+    letterEl.setAttribute('pointer-events', 'none');
+    letterEl.textContent = noteLetter(noteName);
+    if (!RHYTHM_LINE) { g.appendChild(letterEl); }
 
-    if (acc && ACC_GLYPH[acc]) {
+    if (acc && ACC_GLYPH[acc] && !RHYTHM_LINE) {
       var accEl = document.createElementNS(svgNS, 'text');
-      accEl.setAttribute('x', x - 16);
+      accEl.setAttribute('x', x - 21);
       accEl.setAttribute('y', y + 5);
       accEl.setAttribute('text-anchor', 'middle');
       accEl.setAttribute('font-family', 'serif');
-      accEl.setAttribute('font-size', acc === 'doublesharp' || acc === 'doubleflat' ? '14' : '16');
-      accEl.setAttribute('fill', noteColor);
+      accEl.setAttribute('font-size', acc === 'doublesharp' || acc === 'doubleflat' ? '16' : '19');
+      accEl.setAttribute('fill', dark);
       accEl.textContent = ACC_GLYPH[acc];
       g.appendChild(accEl);
     }
@@ -1606,8 +1902,8 @@
     // Augmentation dot, to the right of the notehead.
     if (isDotted) {
       var dot = document.createElementNS(svgNS, 'circle');
-      dot.setAttribute('cx', x + 15); dot.setAttribute('cy', y - 4);
-      dot.setAttribute('r', '2.3'); dot.setAttribute('fill', noteColor);
+      dot.setAttribute('cx', x + 19); dot.setAttribute('cy', y - 4);
+      dot.setAttribute('r', '3'); dot.setAttribute('fill', dark);
       g.appendChild(dot);
     }
 
@@ -1651,14 +1947,15 @@
     if (baseType === 'whole') { return g; }
 
     var stemUp = beamInfo ? beamInfo.stemUp : (y >= 48 + yOffset);
-    var sx  = stemUp ? x + 9  : x - 9;
+    var sx  = stemUp ? x + STEM_DX : x - STEM_DX;
     var sy1 = y + (stemUp ? -3 : 3);
-    var sy2 = beamInfo ? beamInfo.beamY : (stemUp ? y - 32 : y + 32);
+    var sy2 = beamInfo ? beamInfo.beamY : (stemUp ? y - STEM_LEN : y + STEM_LEN);
 
     var stem = document.createElementNS(svgNS, 'line');
     stem.setAttribute('x1', sx); stem.setAttribute('x2', sx);
     stem.setAttribute('y1', sy1); stem.setAttribute('y2', sy2);
-    stem.setAttribute('stroke', noteColor); stem.setAttribute('stroke-width', '2.2');
+    stem.setAttribute('stroke', dark); stem.setAttribute('stroke-width', '3');
+    stem.setAttribute('stroke-linecap', 'round');
     g.appendChild(stem);
 
     function addFlag(fy) {
@@ -1670,7 +1967,7 @@
         ' '  + (sx + 16*d) + ',' + (fy + 14*d) +
         ' '  + (sx + 6*d)  + ',' + (fy + 22*d));
       fp.setAttribute('fill', 'none');
-      fp.setAttribute('stroke', noteColor); fp.setAttribute('stroke-width', '2.2');
+      fp.setAttribute('stroke', dark); fp.setAttribute('stroke-width', '3');
       fp.setAttribute('stroke-linecap', 'round');
       g.appendChild(fp);
     }
@@ -1707,14 +2004,14 @@
       var row = notePos(i).row;
       var run = [i];
       var j = i + 1;
-      while (j < noteList.length && beamLevel(noteList[j]) && notePos(j).row === row) { run.push(j); j++; }
+      while (j < noteList.length && beamLevel(noteList[j]) && notePos(j).row === row && notePos(j).page === notePos(i).page) { run.push(j); j++; }
       if (run.length >= 2) {
         var firstY = noteY[noteList[run[0]].note];
         var stemUp = firstY >= 48;
         var extreme = null;
         run.forEach(function (idx) {
           var yy = noteY[noteList[idx].note];
-          var sy2 = stemUp ? yy - 32 : yy + 32;
+          var sy2 = stemUp ? yy - STEM_LEN : yy + STEM_LEN;
           if (extreme === null || (stemUp ? sy2 < extreme : sy2 > extreme)) { extreme = sy2; }
         });
         run.forEach(function (idx) { groups[idx] = { members: run, stemUp: stemUp, beamY: extreme }; });
@@ -1731,6 +2028,7 @@
       var gid = info.members[0];
       if (done[gid]) { return; }
       done[gid] = true;
+      if (notePos(gid).page !== currentPage) { return; }
       var el = notePos(gid).el;
       function beamRect(bx0, bx1, y, thick) {
         var r = document.createElementNS(svgNS, 'rect');
@@ -1738,12 +2036,13 @@
         r.setAttribute('x', left); r.setAttribute('width', w);
         r.setAttribute('y', info.stemUp ? y : y - thick);
         r.setAttribute('height', thick);
+        r.setAttribute('rx', 1.5);
         r.setAttribute('fill', '#333');
         el.appendChild(r);
       }
-      var x0 = notePos(info.members[0]).x, x1 = notePos(info.members[info.members.length - 1]).x;
-      var sx0 = info.stemUp ? x0 + 9 : x0 - 9, sx1 = info.stemUp ? x1 + 9 : x1 - 9;
-      beamRect(sx0, sx1, info.beamY, 3.2);
+      function stemX(idx) { var nx = notePos(idx).x; return info.stemUp ? nx + STEM_DX : nx - STEM_DX; }
+      var sx0 = stemX(info.members[0]), sx1 = stemX(info.members[info.members.length - 1]);
+      beamRect(sx0 - 1.5, sx1 + 1.5, info.beamY, 4.5);
 
       var off = info.stemUp ? -9 : 9;
       var k = 0;
@@ -1752,13 +2051,13 @@
           var startK = k;
           while (k + 1 < info.members.length && beamLevel(noteList[info.members[k + 1]]) === 2) { k++; }
           var endK = k;
-          var xa = info.stemUp ? notePos(info.members[startK]).x + 9 : notePos(info.members[startK]).x - 9;
+          var xa = stemX(info.members[startK]);
           if (endK > startK) {
-            var xb = info.stemUp ? notePos(info.members[endK]).x + 9 : notePos(info.members[endK]).x - 9;
-            beamRect(xa, xb, info.beamY + off, 3.2);
+            var xb = stemX(info.members[endK]);
+            beamRect(xa - 1.5, xb + 1.5, info.beamY + off, 4.5);
           } else {
             var toward = startK < info.members.length - 1 ? 1 : -1;
-            beamRect(xa, xa + toward * 11, info.beamY + off, 3.2);
+            beamRect(xa, xa + toward * 13, info.beamY + off, 4.5);
           }
         }
         k++;
@@ -1767,15 +2066,24 @@
   }
 
   function addNote(noteName) {
-    if (noteList.length >= NOTES_PER_ROW * 2) {
-      if (K && K.mascot) { K.mascot('sad', 'Daugiau natų netelpa! 🎵'); }
-      return;
-    }
     var isRest = selectedType.startsWith('rest-');
     var noteY = getRowNoteY();
     if (!isRest && noteY[noteName] == null) { return; }
-    var acc = isRest ? null : selectedAccidental;
+    // A new note always goes after the last one. When this page is full,
+    // the player turns to the next page with the ➡ button first; when they
+    // are just looking back at an earlier page, jump to where it lands.
+    var targetPage = notePos(noteList.length).page;
+    if (targetPage > currentPage) {
+      if (currentPage === targetPage - 1 && noteList.length % NOTES_PER_PAGE === 0) {
+        if (K && K.mascot) { K.mascot('sad', 'Lapas pilnas! Spausk ➡ ir rašyk toliau 🎵'); }
+        updatePageNav();
+        return;
+      }
+      currentPage = targetPage;
+    }
+    var acc = (isRest || RHYTHM_LINE) ? null : selectedAccidental;
     noteList.push({ note: isRest ? null : noteName, type: selectedType, acc: acc });
+    markDirty();
     // Redraw everything rather than just this one note: adding a note can
     // change whether it - or its new neighbour - joins a beam group.
     redrawAllNotes();
@@ -1791,8 +2099,8 @@
 
   function attachNoteClick(el, idx, x, yCtr) {
     var hit = document.createElementNS(svgNS, 'rect');
-    hit.setAttribute('x', x - 18); hit.setAttribute('y', yCtr - 36);
-    hit.setAttribute('width', 36);  hit.setAttribute('height', 72);
+    hit.setAttribute('x', x - 22); hit.setAttribute('y', yCtr - 38);
+    hit.setAttribute('width', 44);  hit.setAttribute('height', 76);
     hit.setAttribute('fill', 'transparent');
     el.appendChild(hit);
     el.style.cursor = 'pointer';
@@ -1802,9 +2110,9 @@
       clearNoteSelection();
       selectedNoteIdx = idx;
       var ring = document.createElementNS(svgNS, 'rect');
-      ring.setAttribute('x', x - 18); ring.setAttribute('y', yCtr - 36);
-      ring.setAttribute('width', 36);  ring.setAttribute('height', 72);
-      ring.setAttribute('rx', '8');
+      ring.setAttribute('x', x - 22); ring.setAttribute('y', yCtr - 38);
+      ring.setAttribute('width', 44);  ring.setAttribute('height', 76);
+      ring.setAttribute('rx', '10');
       ring.setAttribute('fill', 'rgba(255,140,0,0.22)');
       ring.setAttribute('stroke', '#f4a027');
       ring.setAttribute('stroke-width', '2.5');
@@ -1818,20 +2126,108 @@
     placedEl1.innerHTML = '';
     placedEl2.innerHTML = '';
     selectedNoteIdx = null;
+    currentPage = Math.max(0, Math.min(currentPage, lastPage()));
     var noteY = getRowNoteY();
     var beamGroups = computeBeamGroups();
     noteList.forEach(function (n, i) {
       var pos = notePos(i);
+      if (pos.page !== currentPage) { return; }
       var yCtr = n.note ? noteY[n.note] : 48;
       var el = drawNoteGlyph(n.note || 'C4', n.type, pos.x, 0, noteY, n.acc, beamGroups[i], n.lyric, n.mark);
       if (el) { el.classList.add('note-pop'); attachNoteClick(el, i, pos.x, yCtr); pos.el.appendChild(el); }
     });
     drawBeams(beamGroups);
+    drawBarLines();
+    updateSecondRow();
+    updatePageNav();
+    showPausedStick();
   }
+
+  // Taktai: a bar line after the note that fills up (or runs past) each
+  // bar of the metre. A bar line falling at the end of a row is left out -
+  // the row's own closing line is already there.
+  function drawBarLines() {
+    if (!SHOW_BARS || !METER) { return; }
+    var perBar = parseInt(METER, 10);
+    var beats = 0;
+    noteList.forEach(function (n, i) {
+      var before = beats;
+      beats += BEATS[n.type] || 1;
+      if (Math.floor(beats / perBar + 1e-6) <= Math.floor(before / perBar + 1e-6)) { return; }
+      var pos = notePos(i), next = notePos(i + 1);
+      if (pos.page !== currentPage || next.row !== pos.row || next.page !== pos.page) { return; }
+      var bx = pos.x + X_STEP / 2;
+      var l = document.createElementNS(svgNS, 'line');
+      l.setAttribute('x1', bx); l.setAttribute('x2', bx);
+      l.setAttribute('y1', RHYTHM_LINE ? 34 : 20); l.setAttribute('y2', RHYTHM_LINE ? 62 : 76);
+      l.setAttribute('stroke', SIG_COLOR); l.setAttribute('stroke-width', '2.4');
+      l.setAttribute('stroke-linecap', 'round');
+      pos.el.appendChild(l);
+    });
+  }
+
+  // MUSICATION I: the second staff stays hidden until the first one on this
+  // page is full - then it appears, ready for the next note.
+  var staffPanel2 = document.getElementById('staffPanel2');
+  function updateSecondRow() {
+    if (!KIDS_MODE) { return; }
+    staffPanel2.hidden = noteList.length - currentPage * NOTES_PER_PAGE < NOTES_PER_ROW;
+  }
+  updateSecondRow();
+
+  // ── Pages: ⬅ / ➡ buttons beside the staves ────────────────────────────────
+  var btnPagePrev = document.getElementById('btnPagePrev');
+  var btnPageNext = document.getElementById('btnPageNext');
+  var pageLabel   = document.getElementById('pageLabel');
+
+  function updatePageNav() {
+    var last = lastPage();
+    btnPagePrev.hidden = currentPage === 0;
+    btnPageNext.hidden = currentPage >= last;
+    // This page is full and nothing is written after it yet: nudge the
+    // player towards ➡ so they see where to keep writing.
+    btnPageNext.classList.toggle('pulse', currentPage === last - 1 && noteList.length === last * NOTES_PER_PAGE);
+    pageLabel.hidden = last === 0;
+    pageLabel.textContent = (currentPage + 1) + ' / ' + (last + 1);
+  }
+
+  // Turning the page flips both staves like a book page: the old page
+  // swings away until it stands edge-on, the notes swap while it is
+  // invisible, then the new page swings flat. `pageFlipping` lets the
+  // playback hide its stick while the page is mid-air.
+  var staffSvgs   = [document.getElementById('staffSvg'), document.getElementById('staffSvg2')];
+  var FLIP_MS     = 300;
+  var flipTimer   = null;
+  var pageFlipping = false;
+
+  function setFlipClass(cls) {
+    staffSvgs.forEach(function (svg) {
+      svg.classList.remove('flip-out-next', 'flip-in-next', 'flip-out-prev', 'flip-in-prev');
+      if (cls) { void svg.getBoundingClientRect(); svg.classList.add(cls); }
+      svg.parentNode.classList.toggle('flipping', !!cls);
+    });
+  }
+
+  function goToPage(p) {
+    if (p === currentPage) { return; }
+    var dir = p > currentPage ? 'next' : 'prev';
+    currentPage = p;
+    clearTimeout(flipTimer);
+    pageFlipping = true;
+    setFlipClass('flip-out-' + dir);
+    flipTimer = setTimeout(function () {
+      redrawAllNotes();
+      setFlipClass('flip-in-' + dir);
+      flipTimer = setTimeout(function () { setFlipClass(null); pageFlipping = false; }, FLIP_MS);
+    }, FLIP_MS);
+  }
+  btnPagePrev.addEventListener('click', function () { if (currentPage > 0) { goToPage(currentPage - 1); } });
+  btnPageNext.addEventListener('click', function () { if (currentPage < lastPage()) { goToPage(currentPage + 1); } });
 
   function deleteSelectedNote() {
     if (selectedNoteIdx === null) { return; }
     noteList.splice(selectedNoteIdx, 1);
+    markDirty();
     redrawAllNotes();
   }
 
@@ -1845,162 +2241,414 @@
   document.getElementById('staffSvg2').addEventListener('click', function () { clearNoteSelection(); });
 
   function clearCanvas() {
-    noteList = []; placedEl1.innerHTML = ''; placedEl2.innerHTML = '';
-    selectedNoteIdx = null;
+    noteList = []; currentPage = 0; pausedIdx = null;
+    markDirty();
+    redrawAllNotes();
   }
   document.getElementById('btnClear').addEventListener('click', clearCanvas);
-  document.getElementById('btnNew').addEventListener('click', function () {
-    if (noteList.length && !confirm('Pradėti naują pamoką? Neišsaugoti pakeitimai bus prarasti.')) { return; }
-    clearCanvas();
-  });
 
-  // ── Pamokų išsaugojimas ir biblioteka (localStorage) ────────────────────────
-  document.getElementById('btnSaveLesson').addEventListener('click', function () {
-    if (!noteList.length) { alert('Prieš išsaugant įrašykite bent vieną natą.'); return; }
-    var title = prompt('Pamokos pavadinimas:', 'Pamoka ' + new Date().toLocaleDateString('lt-LT'));
-    if (!title) { return; }
-    LessonLibrary.save(title, { notes: noteList, sound: SOUND_TYPE, tempo: TEMPO_SCALE });
-    alert('Pamoka „' + title + '“ išsaugota.');
-  });
+  // ── Saving / opening note sheets (natų lapai). The files themselves are
+  // managed on mano-pamokos.html; it opens one here as ?lesson=<id>, or a
+  // new empty sheet as ?new=1&folder=<folder id>. ──────────────────────────
+  var CURRENT_ID = null;     // the sheet being edited (saving updates it)
+  var NEW_FOLDER = null;     // folder a new sheet is saved into
+  var DIRTY = false;         // written but not saved yet
+  function markDirty() { DIRTY = true; }
 
-  var libOverlay = document.getElementById('libOverlay');
-  var libSearch  = document.getElementById('libSearch');
-  var libList    = document.getElementById('libList');
-
-  function fmtDate(ts) {
-    return new Date(ts).toLocaleDateString('lt-LT') + ' ' + new Date(ts).toLocaleTimeString('lt-LT', { hour: '2-digit', minute: '2-digit' });
+  function currentState() {
+    return {
+      notes: noteList, sound: SOUND_TYPE, tempo: TEMPO_SCALE, clef: rowClef,
+      meter: METER, keySig: KEY_SIG, bars: SHOW_BARS, rhythm: RHYTHM_LINE, along: ALONG_ID
+    };
   }
 
-  function renderLibrary(query) {
-    var records = LessonLibrary.search(query);
-    libList.innerHTML = '';
-    if (!records.length) {
-      var empty = document.createElement('div');
-      empty.className = 'lib-empty';
-      empty.textContent = query ? 'Nieko nerasta.' : 'Kol kas nėra išsaugotų pamokų.';
-      libList.appendChild(empty);
+  function applyState(state) {
+    if (state.clef && state.clef !== rowClef && !state.rhythm) { setClef(state.clef); }
+    METER = state.meter || null;
+    KEY_SIG = state.keySig || 0;
+    SHOW_BARS = !!state.bars;
+    RHYTHM_LINE = !!state.rhythm;
+    ALONG_ID = state.along || null;
+    noteList = state.notes || [];
+    currentPage = 0; pausedIdx = null;
+    if (state.sound) {
+      // Lessons saved earlier may name an instrument that is no longer
+      // offered - those play on the piano.
+      SOUND_TYPE = document.querySelector('[data-sound="' + state.sound + '"]') ? state.sound : 'piano';
+      document.querySelectorAll('[data-sound]').forEach(function (b) {
+        b.classList.toggle('sel', b.dataset.sound === SOUND_TYPE);
+      });
+    }
+    if (state.tempo) {
+      TEMPO_SCALE = state.tempo;
+      tempoSlider.value = state.tempo;
+      updateTempoLabel();
+    }
+    updateToolButtons();
+    refreshStaff();
+    redrawAllNotes();
+  }
+
+  // A small "type a name" dialog in the page's own info popup - the
+  // browser's prompt() does not work in the desktop (Electron) app.
+  function askText(title, label, value, onOk, allowEmpty) {
+    showInfo(title,
+      '<label style="display:flex;flex-direction:column;gap:6px;font-weight:700;">' + label +
+      '<input id="askInput" type="text" style="border:2px solid #cfe9cc;border-radius:12px;padding:10px 12px;font:600 17px var(--font);outline:none;"></label>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">' +
+      '<button class="pop-btn" id="askCancel" style="text-align:center">Atšaukti</button>' +
+      '<button class="pop-btn sel" id="askOk" style="text-align:center">💾 Gerai</button></div>');
+    var input = document.getElementById('askInput');
+    input.value = value || '';
+    setTimeout(function () { input.focus(); input.select(); }, 30);
+    function ok() {
+      var v = input.value.trim();
+      if (!v && !allowEmpty) { input.focus(); return; }
+      infoOverlay.hidden = true;
+      onOk(v);
+    }
+    document.getElementById('askOk').addEventListener('click', ok);
+    document.getElementById('askCancel').addEventListener('click', function () { infoOverlay.hidden = true; });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { ok(); } });
+  }
+
+  document.getElementById('btnSaveLesson').addEventListener('click', function () {
+    if (!noteList.length) {
+      if (K && K.mascot) { K.mascot('sad', 'Pirma parašyk bent vieną natą 🎵'); }
       return;
     }
-    records.forEach(function (rec) {
-      var row = document.createElement('div');
-      row.className = 'lib-row';
-      row.innerHTML =
-        '<div class="lib-row-info">' +
-          '<div class="lib-row-title"></div>' +
-          '<div class="lib-row-date"></div>' +
-        '</div>' +
-        '<button class="lib-row-btn lib-row-open">Atidaryti</button>' +
-        '<button class="lib-row-btn lib-row-del">🗑</button>';
-      row.querySelector('.lib-row-title').textContent = rec.title;
-      row.querySelector('.lib-row-date').textContent = fmtDate(rec.updatedAt);
-      row.querySelector('.lib-row-open').addEventListener('click', function () {
-        var state = LessonLibrary.load(rec.id);
-        if (!state) { return; }
-        noteList = state.notes || [];
-        redrawAllNotes();
-        if (state.sound) {
-          SOUND_TYPE = state.sound;
-          document.querySelectorAll('[data-sound]').forEach(function (b) {
-            b.classList.toggle('sel', b.dataset.sound === state.sound);
-          });
-        }
-        if (state.tempo) {
-          TEMPO_SCALE = state.tempo;
-          tempoSlider.value = state.tempo;
-          updateTempoLabel();
-        }
-        libOverlay.hidden = true;
+    var rec = CURRENT_ID ? LessonLibrary.get(CURRENT_ID) : null;
+    askText('💾 ' + I18N[CURRENT_LANG].save, 'Natų lapo pavadinimas',
+      rec ? rec.title : 'Natos ' + new Date().toLocaleDateString('lt-LT'),
+      function (title) {
+        if (rec) { LessonLibrary.update(CURRENT_ID, { title: title, state: currentState() }); }
+        else { CURRENT_ID = LessonLibrary.save(title, currentState(), { kind: 'natos', folderId: NEW_FOLDER }); }
+        DIRTY = false;
+        if (K && K.mascot) { K.mascot('cheer', '„' + title + '“ išsaugota! ⭐'); }
       });
-      row.querySelector('.lib-row-del').addEventListener('click', function () {
-        if (!confirm('Ištrinti pamoką „' + rec.title + '“?')) { return; }
-        LessonLibrary.remove(rec.id);
-        renderLibrary(libSearch.value);
-      });
-      libList.appendChild(row);
-    });
+  });
+
+  // "Mano pamokos" and the other pages: leaving would lose unsaved notes.
+  function leave(href) {
+    if (DIRTY && noteList.length && !confirm('Natos dar neišsaugotos. Vis tiek išeiti?')) { return; }
+    location.href = href;
+  }
+  document.getElementById('btnOpenLibrary').addEventListener('click', function () { leave('mano-pamokos.html'); });
+  document.querySelectorAll('a[data-leave]').forEach(function (a) {
+    a.addEventListener('click', function (e) { e.preventDefault(); leave(a.getAttribute('href')); });
+  });
+
+  // ── Staff tool buttons ──────────────────────────────────────────────────
+  var meterMenu = document.getElementById('meterMenu');
+  var keyMenu = document.getElementById('keyMenu');
+  function closeToolMenus() {
+    meterMenu.classList.remove('open'); keyMenu.classList.remove('open');
+    document.getElementById('alongMenu').classList.remove('open');
+  }
+  document.addEventListener('click', closeToolMenus);
+
+  function updateToolButtons() {
+    document.getElementById('btnMeter').classList.toggle('active', !!METER);
+    document.getElementById('btnKey').classList.toggle('active', KEY_SIG !== 0);
+    document.getElementById('btnBars').classList.toggle('active', SHOW_BARS);
+    document.getElementById('btnRhythmLine').classList.toggle('active', RHYTHM_LINE);
+    meterMenu.querySelectorAll('[data-meter]').forEach(function (b) { b.classList.toggle('sel', (b.dataset.meter || null) === METER); });
+    keyMenu.querySelectorAll('[data-key]').forEach(function (b) { b.classList.toggle('sel', parseInt(b.dataset.key, 10) === KEY_SIG); });
+    document.getElementById('btnAlong').classList.toggle('on', !!ALONG_ID);
   }
 
-  document.getElementById('btnOpenLibrary').addEventListener('click', function () {
-    libSearch.value = '';
-    renderLibrary('');
-    libOverlay.hidden = false;
+  function toggleMenu(menu, e) {
+    e.stopPropagation();
+    var open = menu.classList.contains('open');
+    closeToolMenus(); closeAllPopups();
+    if (!open) { menu.classList.add('open'); }
+  }
+  document.getElementById('btnMeter').addEventListener('click', function (e) { toggleMenu(meterMenu, e); });
+  document.getElementById('btnKey').addEventListener('click', function (e) {
+    if (RHYTHM_LINE) {
+      e.stopPropagation();
+      if (K && K.mascot) { K.mascot('happy', 'Ritmo linijai tonacijos nereikia 🥁'); }
+      return;
+    }
+    toggleMenu(keyMenu, e);
   });
-  document.getElementById('libClose').addEventListener('click', function () { libOverlay.hidden = true; });
-  libOverlay.addEventListener('click', function (e) { if (e.target === libOverlay) { libOverlay.hidden = true; } });
-  libSearch.addEventListener('input', function () { renderLibrary(libSearch.value); });
+
+  function staffChanged() {
+    markDirty();
+    updateToolButtons();
+    refreshStaff();
+    redrawAllNotes();
+  }
+  meterMenu.querySelectorAll('[data-meter]').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      METER = b.dataset.meter || null;
+      // Picking a metre brings the bar lines with it ("Taktai" can still
+      // switch them off); no metre means no bars.
+      SHOW_BARS = !!METER;
+      closeToolMenus();
+      staffChanged();
+    });
+  });
+  keyMenu.querySelectorAll('[data-key]').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      KEY_SIG = parseInt(b.dataset.key, 10);
+      closeToolMenus();
+      staffChanged();
+    });
+  });
+  // Bar lines follow the metre; without one, 4/4 is the natural choice.
+  document.getElementById('btnBars').addEventListener('click', function () {
+    SHOW_BARS = !SHOW_BARS;
+    if (SHOW_BARS && !METER) { METER = '4/4'; }
+    staffChanged();
+  });
+  document.getElementById('btnRhythmLine').addEventListener('click', function () {
+    RHYTHM_LINE = !RHYTHM_LINE;
+    staffChanged();
+  });
+
+  // ── Play along with a music excerpt (groti kartu) ─────────────────────────
+  var EXC = window.MusicationExcerpts;
+  var ALONG_ID = null;
+  var alongMenu = document.getElementById('alongMenu');
+
+  function renderAlongMenu() {
+    EXC.all().then(function (items) {
+      alongMenu.innerHTML = '';
+      function item(label, id) {
+        var b = document.createElement('button');
+        b.className = 'pop-btn' + (ALONG_ID === id ? ' sel' : '');
+        b.textContent = (ALONG_ID === id ? '✓ ' : '') + label;
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          ALONG_ID = id;
+          markDirty();
+          updateToolButtons();
+          closeToolMenus();
+          if (id && K && K.mascot) { K.mascot('happy', 'Spausk ▶ – grosime kartu! 🎶'); }
+        });
+        alongMenu.appendChild(b);
+      }
+      var head = document.createElement('div');
+      head.className = 'am-head';
+      head.textContent = '🎶 Groti kartu su ištrauka' + (METER ? ' (' + METER + ')' : '');
+      alongMenu.appendChild(head);
+      item('Be ištraukos', null);
+      items.filter(function (x) { return !METER || x.meter === METER; }).forEach(function (x) {
+        item(EXC.KIND_ICON[x.kind] + ' ' + x.title + (METER ? '' : ' · ' + x.meter), x.id);
+      });
+    });
+  }
+  document.getElementById('btnAlong').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var open = alongMenu.classList.contains('open');
+    closeToolMenus(); closeAllPopups();
+    if (!open) { renderAlongMenu(); alongMenu.classList.add('open'); }
+  });
+
+  // Starts the chosen excerpt in step with the written notes: one beat of
+  // the excerpt = one quarter note of the playback.
+  function startAlong() {
+    if (!ALONG_ID || EXC.playingId() === ALONG_ID) { return; }
+    EXC.get(ALONG_ID).then(function (it) {
+      if (!it || !isPlaying) { return; }
+      EXC.play(it, { bpm: 60 * TEMPO_SCALE / BEAT_SECS, loop: true, volume: 0.55 * VOLUME_LEVEL });
+    });
+  }
+  function stopAlong() { if (EXC.playingId()) { EXC.stop(); } }
+
+  // Opened from "Mano pamokos" / a lesson.
+  (function openFromUrl() {
+    var q = new URLSearchParams(location.search);
+    var id = q.get('lesson');
+    if (id) {
+      var state = LessonLibrary.load(id);
+      if (state && LessonLibrary.get(id)) { CURRENT_ID = id; applyState(state); DIRTY = false; }
+    }
+    NEW_FOLDER = q.get('folder') || null;
+    updateToolButtons();
+  })();
 
   document.getElementById('btnDeleteNote').addEventListener('click', deleteSelectedNote);
 
-  // ── Zoom the staff in/out (spec: "priartinti penklinę ar atitolinti") ──────
-  var staffZoom = 1;
-  function applyStaffZoom() {
-    document.querySelectorAll('.staff-panel').forEach(function (p) {
-      p.style.transform = 'scale(' + staffZoom + ')';
-      p.style.transformOrigin = 'top center';
-    });
-  }
-  document.getElementById('btnZoomIn').addEventListener('click', function () {
-    staffZoom = Math.min(1.6, +(staffZoom + 0.1).toFixed(2));
-    applyStaffZoom();
-  });
-  document.getElementById('btnZoomOut').addEventListener('click', function () {
-    staffZoom = Math.max(0.6, +(staffZoom - 0.1).toFixed(2));
-    applyStaffZoom();
-  });
-
   var playbackId = 0;
+  var isPlaying = false;
+  var playingIdx = 0;      // the note sounding right now
+  var pausedIdx = null;    // after Stop: the note the stick waits on (null = no stick)
+
+  // One play-head "stick" per staff row (a vertical line drawn at x = 0 and
+  // moved with a translate). It first shows when Play is pressed. Stop
+  // leaves it standing on the note it reached, and Play carries on from
+  // there. It can be dragged to any note: while playing the music jumps
+  // there at once, while stopped Play will start from there.
+  var playHeadEls = [document.getElementById('playHead'), document.getElementById('playHead2')];
+  function hidePlayHeads() { playHeadEls.forEach(function (g) { g.style.display = 'none'; }); }
+
+  // A new note starts: the stick pulses, and the frog hops (not on a rest).
+  function beat(row, hop) {
+    var g = playHeadEls[row];
+    g.classList.remove('beat', 'hop');
+    void g.getBoundingClientRect();
+    g.classList.add('beat');
+    if (hop) { g.classList.add('hop'); }
+  }
+
+  function placeStick(row, x) {
+    playHeadEls[row === 0 ? 1 : 0].style.display = 'none';
+    playHeadEls[row].setAttribute('transform', 'translate(' + x.toFixed(2) + ',0)');
+    playHeadEls[row].style.display = 'block';
+  }
+
+  // Play starts from the stopped stick when it is on the page being looked
+  // at, otherwise from that page's first note (from the very beginning
+  // when that page is still empty).
+  function pausedOnThisPage() {
+    return pausedIdx !== null && pausedIdx < noteList.length && notePos(pausedIdx).page === currentPage;
+  }
+  function playFromIdx() {
+    if (pausedOnThisPage()) { return pausedIdx; }
+    var first = currentPage * NOTES_PER_PAGE;
+    return first < noteList.length ? first : 0;
+  }
+
+  // While stopped: stand the stick on its note, or hide it when that note
+  // is on another page / gone.
+  function showPausedStick() {
+    if (!playHeadEls || isPlaying) { return; }
+    if (!pausedOnThisPage()) { hidePlayHeads(); return; }
+    var pos = notePos(pausedIdx);
+    placeStick(pos.row, pos.x);
+  }
 
   // ── Stop: invalidate the current playback so every still-pending
   // scheduled note/play-head callback (guarded by `playbackId === pid`)
-  // becomes a no-op, and hide the play-heads immediately. ────────────────────
-  document.getElementById('btnStop').addEventListener('click', function () {
+  // becomes a no-op; the stick stays on the note it had reached. ───────────
+  function stopPlayback() {
+    if (!isPlaying) { return; }
     playbackId++;
-    var ph1 = document.getElementById('playHead'), ph2 = document.getElementById('playHead2');
-    if (ph1) { ph1.style.display = 'none'; }
-    if (ph2) { ph2.style.display = 'none'; }
-  });
+    isPlaying = false;
+    pausedIdx = playingIdx;
+    stopAlong();
+    showPausedStick();
+  }
+  document.getElementById('btnStop').addEventListener('click', stopPlayback);
 
   document.getElementById('btnPlay').addEventListener('click', function () {
     if (!noteList.length) { return; }
+    startPlayback(playFromIdx());
+  });
+
+  // ── Dragging the stick: it follows the finger / mouse (across both rows)
+  // and when let go snaps to the nearest note. If the music was playing it
+  // carries on from that note; if stopped, the stick waits there for Play. ──
+  function svgPointX(svg, clientX, clientY) {
+    var pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+
+  function stickTarget(clientX, clientY) {
+    var first = currentPage * NOTES_PER_PAGE;
+    var row = 0, best = Infinity;
+    staffSvgs.forEach(function (svg, r) {
+      var b = svg.getBoundingClientRect();
+      var d = Math.abs(clientY - (b.top + b.height / 2));
+      if (d < best) { best = d; row = r; }
+    });
+    var rowStart = first + row * NOTES_PER_ROW;
+    if (rowStart >= noteList.length) { row = 0; rowStart = first; }
+    var rowCount = Math.min(NOTES_PER_ROW, noteList.length - rowStart);
+    var x = Math.max(X_START - X_STEP / 2, Math.min(STAFF_END + 2, svgPointX(staffSvgs[row], clientX, clientY)));
+    var col = Math.max(0, Math.min(rowCount - 1, Math.round((x - X_START) / X_STEP)));
+    return { row: row, x: x, idx: rowStart + col };
+  }
+
+  playHeadEls.forEach(function (g) {
+    g.addEventListener('pointerdown', function (e) {
+      if (pageFlipping || (!isPlaying && !pausedOnThisPage())) { return; }
+      e.preventDefault(); e.stopPropagation();
+      var wasPlaying = isPlaying;
+      playbackId++;
+      isPlaying = false;
+      document.body.classList.add('dragging-stick');
+      function move(ev) {
+        var t = stickTarget(ev.clientX, ev.clientY);
+        placeStick(t.row, t.x);
+      }
+      function up(ev) {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        window.removeEventListener('pointercancel', up);
+        document.body.classList.remove('dragging-stick');
+        pausedIdx = stickTarget(ev.clientX, ev.clientY).idx;
+        if (wasPlaying) { startPlayback(pausedIdx); } else { showPausedStick(); }
+      }
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
+      move(e);
+    });
+  });
+
+  function startPlayback(fromIdx) {
     playbackId++;
     var pid = playbackId;
-    var playHeads = [
-      { g: document.getElementById('playHead'),  rect: document.getElementById('playHeadRect') },
-      { g: document.getElementById('playHead2'), rect: document.getElementById('playHeadRect2') }
-    ];
-    playHeads.forEach(function (p) { p.g.style.display = 'none'; });
+    isPlaying = true;
+    pausedIdx = null;
 
+    // steps[i] = when note i starts (seconds from now) and where it sits.
+    var steps = [];
     var t = 0;
-    var noteY = getRowNoteY();
     noteList.forEach(function (n, i) {
+      if (i < fromIdx) { return; }
       var pos = notePos(i);
       var dur = (DURS[n.type] || 0.45) / TEMPO_SCALE;
 
       if (n.note) {
         (function (note, delay, d) {
           setTimeout(function () { if (playbackId === pid) playNote(note, d * 1.6); }, delay * 1000);
-        })(getPlayNote(n.note, n.acc), t, dur);
+        })(soundingNote(n), t, dur);
       }
 
-      (function (px2, pyCtr, delay, row) {
-        setTimeout(function () {
-          if (playbackId !== pid) { return; }
-          var active = playHeads[row], other = playHeads[row === 0 ? 1 : 0];
-          other.g.style.display = 'none';
-          active.rect.setAttribute('x', px2 - 18);
-          active.rect.setAttribute('y', pyCtr - 36);
-          active.g.style.display = 'block';
-        }, delay * 1000);
-      })(pos.x, n.note ? noteY[n.note] : 48, t, pos.row);
-
-      t += dur + 0.04;
+      steps.push({ start: t, x: pos.x, row: pos.row, page: pos.page, i: i });
+      t += dur;
     });
+    var total = t;
+    startAlong();
 
-    setTimeout(function () { if (playbackId === pid) { playHeads.forEach(function (p) { p.g.style.display = 'none'; }); } }, t * 1000);
-  });
+    // The stick stands exactly on a note at the moment that note starts to
+    // sound, then glides at an even speed so it reaches the next note right
+    // when that one starts - a long note makes it travel slowly, a short one
+    // quickly. Its position comes from the clock on every animation frame
+    // (not from one timer per note), so the movement is smooth and stays in
+    // step with the sound. After the last note of a row it glides one note
+    // width further before jumping to the next row / disappearing. When the
+    // music runs on past this page's two rows, the page turns by itself.
+    var startedAt = performance.now();
+    var idx = 0;
+    var beatIdx = -1;
+    function frame(now) {
+      if (playbackId !== pid) { return; }
+      var elapsed = (now - startedAt) / 1000;
+      if (elapsed >= total) { isPlaying = false; pausedIdx = null; hidePlayHeads(); stopAlong(); return; }
+      while (idx < steps.length - 1 && elapsed >= steps[idx + 1].start) { idx++; }
+      var cur = steps[idx], next = steps[idx + 1];
+      playingIdx = cur.i;
+      if (beatIdx !== idx) { beatIdx = idx; beat(cur.row, !!(noteList[cur.i] && noteList[cur.i].note)); }
+      if (cur.page !== currentPage) { goToPage(cur.page); }
+      if (pageFlipping) { hidePlayHeads(); requestAnimationFrame(frame); return; }
+      var segEnd = next ? next.start : total;
+      var toX = (next && next.row === cur.row && next.page === cur.page) ? next.x : Math.min(cur.x + X_STEP, STAFF_END + 2);
+      var k = Math.min(1, Math.max(0, (elapsed - cur.start) / (segEnd - cur.start)));
+      placeStick(cur.row, cur.x + (toX - cur.x) * k);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
 
   // ── Piano keyboard ───────────────────────────────────────────────────────────
-  var SOLF_NAMES   = { 'C':'C','D':'D','E':'E','F':'F','G':'G','A':'A','B':'H' };
   var WHITE_NOTES  = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
   var BLACK_AFTER  = [true, true, false, true, true, true, false];
   var BLACK_PREFIX = ['Cs', 'Ds', null, 'Fs', 'Gs', 'As', null];
@@ -2014,12 +2662,14 @@
       div.style.left = (gIdx * kw + kw - bkw / 2) + 'px';
     } else {
       var letter = noteName.charAt(0);
-      var label = SOLF_NAMES[letter] + (letter === 'C' ? noteName.slice(1) : '');
       var span = document.createElement('span');
-      span.textContent = label;
+      span.textContent = keyLabel(noteName);
       span.style.color = NOTE_COLOR[letter] || '#888';
-      span.style.fontWeight = 'bold';
-      span.style.fontSize = Math.max(9, Math.min(14, Math.floor(kw * 0.18))) + 'px';
+      span.style.fontWeight = '800';
+      span.style.fontFamily = 'var(--heading-font)';
+      span.style.fontSize = Math.max(11, Math.min(20, Math.floor(kw * 0.3))) + 'px';
+      // Yellow on white is hard to read - give the letters a soft outline.
+      span.style.textShadow = '0 0 2px rgba(0,0,0,0.25)';
       div.appendChild(span);
     }
     div.addEventListener('pointerdown', function (e) {
@@ -2062,33 +2712,22 @@
   rebuildPiano();
   window.addEventListener('resize', rebuildPiano);
 
-  // The games sidebar now has much bigger cards - cap its height so it never
-  // grows down behind the fixed piano keyboard and becomes unclickable there.
-  function fitRightCol() {
-    var col = document.querySelector('.right-col');
-    var pianoWrap = document.querySelector('.piano-wrap');
-    if (!col || !pianoWrap) { return; }
-    var colTop = col.getBoundingClientRect().top;
-    var pianoTop = pianoWrap.getBoundingClientRect().top;
-    var avail = pianoTop - colTop - 12;
-    col.style.maxHeight = Math.max(200, avail) + 'px';
-  }
-  fitRightCol();
-  window.addEventListener('resize', fitRightCol);
-  // Re-measure once the 'Inter' webfont finishes swapping in (it loads async
-  // and can reflow text height after our first measurement) and once more
-  // after full page load, so the cap always matches the real layout.
-  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fitRightCol); }
-  window.addEventListener('load', fitRightCol);
-
-  // Collapsible sidebar cards (Žaidimai / Mokymasis / Pamokos) - the smooth
-  // open/close "unfold" itself is pure CSS (grid-template-rows 0fr -> 1fr in
-  // the stylesheet above), this just flips the .open class per card.
-  document.querySelectorAll('[data-nav-toggle]').forEach(function (btn) {
+  var subOverlay = document.getElementById('subOverlay');
+  var subTitle = document.getElementById('subTitle');
+  function closeSub() { subOverlay.hidden = true; }
+  document.querySelectorAll('[data-sub-open]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var card = btn.closest('.nav-card');
-      if (card) { card.classList.toggle('open'); fitRightCol(); }
+      var group = btn.dataset.subOpen;
+      subTitle.textContent = btn.querySelector('.nch-title').textContent;
+      subOverlay.querySelectorAll('[data-sub-group]').forEach(function (g) {
+        g.hidden = g.dataset.subGroup !== group;
+      });
+      subOverlay.hidden = false;
     });
+  });
+  document.getElementById('subClose').addEventListener('click', closeSub);
+  subOverlay.addEventListener('click', function (e) {
+    if (e.target === subOverlay || e.target.closest('.nav-btn')) { closeSub(); }
   });
 
   setTimeout(function () {

@@ -1,0 +1,7 @@
+{
+  "cleanUrls": false,
+  "directoryListing": false,
+  "redirects": [
+    { "source": "/", "destination": "/html/index.html", "type": 302 }
+  ]
+}
