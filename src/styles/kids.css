@@ -1,0 +1,451 @@
+/* Shared kid-friendly theme for the Make Music mini-games, lessons and tests.
+   Used by klausa.html, ritmas.html, melodija.html, pamokeles.html, testai.html. */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+
+:root {
+  --bg: #1a1a2e;
+  --bg2: #2a2a55;
+  --panel: #232347;
+  --panel2: #2c2c5a;
+  --text: #f3f3fb;
+  --soft: #b9b9d6;
+  --accent: #7ee8a2;
+  --accent2: #ffd166;
+  --bad: #ff7a7a;
+  --border: #3a3a63;
+  /* Boomwhacker note colours */
+  --do: #e53935;  /* C */
+  --re: #fb8c00;  /* D */
+  --mi: #fdd835;  /* E */
+  --fa: #43a047;  /* F */
+  --sol:#1e88e5;  /* G */
+  --la: #8e24aa;  /* A */
+  --si: #ec407a;  /* B */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 50% -10%, var(--bg2), var(--bg));
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 16px 56px;
+  gap: 16px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ---------- Floating background notes/stars ----------
+   A soft, purely-decorative layer so every kids.css page (games, lessons,
+   the hub) shares the same friendly night-sky feel without each page having
+   to draw its own background. Fixed + behind everything + no pointer events,
+   so it never interferes with taps. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.55), transparent),
+    radial-gradient(2px 2px at 80% 10%, rgba(255,255,255,0.45), transparent),
+    radial-gradient(1.5px 1.5px at 60% 70%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(2px 2px at 30% 85%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 90% 50%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1.5px 1.5px at 45% 40%, rgba(255,255,255,0.4), transparent);
+  background-size: 100% 100%;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle { from { opacity: 0.5; } to { opacity: 1; } }
+
+.bg-notes { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.bg-notes span {
+  position: absolute;
+  bottom: -10%;
+  font-size: 28px;
+  color: rgba(255,255,255,0.10);
+  animation: floatUp linear infinite;
+}
+@keyframes floatUp {
+  from { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  to   { transform: translateY(-115vh) rotate(25deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+  .bg-notes span { animation: none; display: none; }
+}
+
+/* ---------- Top bar (back, title, stars) ---------- */
+.topbar {
+  width: min(720px, 96vw);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.back {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 15px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(10,10,22,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  transition: 0.2s;
+  white-space: nowrap;
+}
+.back:hover { color: var(--text); border-color: var(--soft); background: rgba(10,10,22,0.65); }
+.topbar .spacer { flex: 1 1 auto; }
+.stars-box {
+  font-size: 20px;
+  color: var(--accent2);
+  background: rgba(20,15,0,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,209,102,0.35);
+  border-radius: 999px;
+  padding: 6px 16px;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+}
+.stars-box b { color: #fff; }
+@keyframes starPop { 0%{transform:scale(1)} 40%{transform:scale(1.5)} 100%{transform:scale(1)} }
+.stars-box.pop { animation: starPop 0.45s ease; }
+
+h1, h2, p.lead, .hint { text-shadow: 0 2px 8px rgba(0,0,0,0.65), 0 0 3px rgba(0,0,0,0.6); }
+h1 { font-size: 30px; font-weight: 800; text-align: center; line-height: 1.15; }
+h1 small { display: block; font-size: 15px; font-weight: 500; color: var(--soft); margin-top: 8px; text-shadow: 0 1px 5px rgba(0,0,0,0.7); }
+h2 { font-size: 24px; font-weight: 800; text-align: center; }
+p.lead { color: var(--soft); font-size: 17px; text-align: center; max-width: 620px; line-height: 1.5; }
+
+/* ---------- Screens (one page = many activities) ---------- */
+.screen { display: none; width: min(720px, 96vw); flex-direction: column; align-items: center; gap: 18px; }
+.screen.active { display: flex; animation: screenIn 0.35s cubic-bezier(.16,1,.3,1) both; }
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.active { animation: none; }
+}
+
+/* ---------- Menu grid of activity cards ---------- */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 128px;
+  padding: 24px 14px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 22px;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+  animation: cardIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-card { animation: none; }
+}
+.menu-card:hover {
+  background: var(--panel2);
+  border-color: var(--accent);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 9px 0 rgba(0,0,0,0.25), 0 0 22px rgba(126,232,162,0.35);
+}
+.menu-card:active { transform: translateY(0) scale(1); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.menu-card .ico { font-size: 48px; line-height: 1; transition: transform 0.15s ease; }
+.menu-card:hover .ico { transform: scale(1.15) rotate(-4deg); }
+.menu-card .name { font-size: 18px; font-weight: bold; }
+.menu-card .sub { font-size: 13px; color: var(--soft); }
+
+/* ---------- Big choice buttons (high/low, loud/quiet ...) ---------- */
+.choices { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.choice {
+  flex: 1 1 200px;
+  max-width: 280px;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s, border-color 0.15s;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+}
+.choice .ico { font-size: 60px; line-height: 1; }
+.choice:hover:not(:disabled) { background: var(--panel2); transform: translateY(-2px); }
+.choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.choice:disabled { opacity: 0.5; cursor: default; }
+.choice.correct {
+  background: var(--accent); color: #0e2a17; border-color: var(--accent);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), 0 0 26px rgba(126,232,162,0.65);
+  animation: choiceCorrect 0.45s ease;
+}
+.choice.wrong {
+  background: var(--bad); color: #3a0d0d; border-color: var(--bad);
+  animation: choiceWrong 0.5s ease;
+}
+@keyframes choiceCorrect {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.09); }
+  60%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+@keyframes choiceWrong {
+  10%, 30%, 50%, 70% { transform: translateX(-8px); }
+  20%, 40%, 60%      { transform: translateX(8px); }
+  80%                { transform: translateX(-4px); }
+  90%                { transform: translateX(4px); }
+  100%               { transform: translateX(0); }
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  padding: 14px 26px;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.25);
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.btn-primary { background: var(--accent); color: #0e2a17; }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-amber { background: var(--accent2); color: #3a2c00; }
+.btn-ghost {
+  background: rgba(10,10,22,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--soft); background: rgba(10,10,22,0.65); transform: none; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn.playing { animation: btnPulse 0.55s ease-in-out infinite; }
+@keyframes btnPulse {
+  0%, 100% { box-shadow: 0 5px 0 rgba(0,0,0,0.25), 0 0 0 rgba(126,232,162,0); }
+  50%      { box-shadow: 0 5px 0 rgba(0,0,0,0.25), 0 0 22px rgba(126,232,162,0.65); }
+}
+.controls { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* ---------- Hint / feedback line ---------- */
+.hint { min-height: 28px; font-size: 19px; font-weight: 600; text-align: center; transition: 0.2s; }
+.hint.ok { color: var(--accent); animation: hintPop 0.3s ease; }
+.hint.no { color: var(--bad); animation: hintShake 0.4s ease; }
+@keyframes hintPop {
+  0%   { transform: scale(0.9); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+@keyframes hintShake {
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+/* ---------- Phaser mini-game stage (Klausyk - atspėk) ----------
+   Frosted glass, not a solid slab: the canvas itself is transparent
+   (see the `transparent: true` Phaser.Game config), and this wrapper only
+   blurs + gently tints whatever is behind it (the season background),
+   so the scene stays legible without hiding the video. */
+.phaser-stage {
+  width: min(600px, 94vw);
+  aspect-ratio: 800 / 620;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(16,16,31,0.32);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .phaser-stage { background: #10101f; }
+}
+.phaser-stage canvas { display: block; }
+
+/* ---------- Scoreboard ---------- */
+.scoreboard { display: flex; gap: 28px; font-size: 16px; color: var(--soft); text-shadow: 0 1px 4px rgba(0,0,0,0.7); }
+.scoreboard b { color: var(--text); font-size: 22px; font-weight: 800; }
+
+/* ---------- Progress dots ---------- */
+.progress-dots { display: flex; gap: 8px; }
+.progress-dots .dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--border);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.5);
+  transition: background 0.15s;
+}
+.progress-dots .dot.done { background: var(--accent); animation: dotPop 0.3s ease; }
+.progress-dots .dot.cur  { background: var(--accent2); animation: dotPop 0.3s ease; }
+@keyframes dotPop {
+  0%   { transform: scale(0.5); }
+  60%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Colored solfège notes / piano ---------- */
+.note-dot {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #1a1a2e;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+}
+.solf-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+.piano { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.pkey {
+  width: 64px; height: 120px;
+  border: none; border-radius: 0 0 10px 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  gap: 4px; padding-bottom: 10px;
+  font-size: 16px; color: #1a1a2e; cursor: pointer;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+  transition: transform 0.08s, filter 0.1s;
+}
+.pkey small { font-size: 12px; opacity: 0.8; }
+.pkey:active { transform: translateY(3px); }
+.pkey.lit { filter: brightness(1.4); transform: translateY(3px); }
+
+/* ---------- Rhythm display ---------- */
+.rhythm-row { display: flex; gap: 14px; justify-content: center; align-items: flex-end; flex-wrap: wrap; min-height: 90px; }
+.beat {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 14px; border-radius: 14px; background: var(--panel);
+  border: 1px solid var(--border); min-width: 64px;
+}
+.beat.flash { background: var(--accent2); color: #3a2c00; }
+.beat .glyph { font-size: 34px; line-height: 1; }
+.beat .syl { font-size: 16px; color: var(--soft); }
+.beat.flash .syl { color: #3a2c00; }
+.tap-pad {
+  width: min(420px, 90vw); height: 130px;
+  border-radius: 20px; border: 3px dashed var(--border);
+  background: var(--panel); color: var(--text);
+  font-size: 26px; cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.tap-pad:active { background: var(--accent2); color: #3a2c00; }
+
+/* ---------- Mascot: animated SVG owl ----------
+   Mood reads through motion (bob/blink/flap/droop), not a swapped emoji. */
+#kids-mascot {
+  position: fixed;
+  right: 16px; bottom: 16px;
+  display: flex; align-items: flex-end; gap: 10px;
+  z-index: 500; pointer-events: none;
+}
+#kids-mascot .owl {
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.28));
+  transform-origin: center bottom;
+  animation: owlBob 2.6s ease-in-out infinite;
+}
+#kids-mascot .owl-belly { fill: #f5e6c8; }
+#kids-mascot .owl-wing, #kids-mascot .owl-ear { fill: #8b5e34; }
+#kids-mascot .owl-eye-white { fill: #fff; }
+#kids-mascot .owl-pupil { fill: #2b2b2b; }
+#kids-mascot .owl-beak { fill: #f4a020; }
+#kids-mascot .owl-wing { transform-box: fill-box; transform-origin: top center; }
+#kids-mascot .owl-eye {
+  transform-box: fill-box; transform-origin: center;
+  animation: owlBlink 5s ease-in-out infinite;
+}
+#kids-mascot .owl-eye-r { animation-delay: 0.08s; }
+
+@keyframes owlBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-5px) rotate(-1.5deg); }
+}
+@keyframes owlBlink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(0.12); }
+}
+
+/* Happy / cheer: bouncy squash-and-stretch + wing flap + wide eyes */
+#kids-mascot.happy .owl { animation: owlBounce 0.55s cubic-bezier(.34,1.56,.64,1) infinite; }
+@keyframes owlBounce {
+  0%, 100% { transform: translateY(0) scale(1,1); }
+  35%      { transform: translateY(-16px) scale(1.05,0.94); }
+  55%      { transform: translateY(0) scale(0.96,1.05); }
+}
+#kids-mascot.happy .owl-wing-l { animation: owlFlapL 0.28s ease-in-out infinite alternate; }
+#kids-mascot.happy .owl-wing-r { animation: owlFlapR 0.28s ease-in-out infinite alternate; }
+@keyframes owlFlapL { from { transform: rotate(0deg); } to { transform: rotate(-30deg); } }
+@keyframes owlFlapR { from { transform: rotate(0deg); } to { transform: rotate(30deg); } }
+#kids-mascot.happy .owl-pupil { animation: owlPupilPop 0.5s ease; }
+@keyframes owlPupilPop { 0% { r: 5.5; } 40% { r: 6.8; } 100% { r: 5.5; } }
+
+/* Sad: droopy half-closed eyes, slower tilted-down motion, wings still */
+#kids-mascot.sad .owl { animation: owlDroop 2.2s ease-in-out infinite; }
+@keyframes owlDroop {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(3px) rotate(4deg); }
+}
+#kids-mascot.sad .owl-eye { animation: none; transform: scaleY(0.45); }
+
+#kids-mascot .bubble {
+  max-width: 220px;
+  background: #fff; color: #1a1a2e;
+  padding: 10px 14px; border-radius: 14px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  opacity: 0; transform: translateY(8px) scale(0.92); transform-origin: bottom right;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(.34,1.56,.64,1);
+}
+#kids-mascot.show .bubble { opacity: 1; transform: translateY(0) scale(1); }
+
+/* ---------- Confetti ---------- */
+.confetti {
+  position: fixed; top: -10px; width: 10px; height: 16px;
+  z-index: 60; pointer-events: none; border-radius: 2px;
+}
+@keyframes fall { to { transform: translateY(105vh) rotate(540deg); opacity: 0.9; } }
+
+/* ---------- Illustration helpers (lessons) ---------- */
+.illus { font-size: 70px; line-height: 1; }
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 18px; padding: 22px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 24px; }
+  .pkey { width: 44px; height: 96px; }
+  .choice .ico { font-size: 48px; }
+}
