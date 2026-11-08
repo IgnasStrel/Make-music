@@ -1294,15 +1294,23 @@
   });
   volumeSlider.addEventListener('click', function (e) { e.stopPropagation(); });
 
-  // Keyboard range buttons
-  var CURRENT_OCTAVES = TREBLE_OCTAVES;
+  // Keyboard range buttons. The chosen range stays when the clef changes or
+  // a lesson is opened.
+  var KEY_CHOICE = TREBLE_OCTAVES.join(',');
+  // "Pilna" always keeps c1 in the middle: the small octave before it, c2
+  // after it - and in the bass clef also the great octave below, so its low
+  // notes stay on the keyboard. The bass clef otherwise shows C to c1.
+  function keyboardOctaves() {
+    if (rowClef === 'bass') { return KEY_CHOICE === '3,4,5' ? [2, 3, 4, 5] : [2, 3, 4]; }
+    return KEY_CHOICE.split(',').map(Number);
+  }
   document.querySelectorAll('[data-keys]').forEach(function (b) {
-    b.classList.toggle('sel', b.dataset.keys === TREBLE_OCTAVES.join(','));
+    b.classList.toggle('sel', b.dataset.keys === KEY_CHOICE);
   });
   document.querySelectorAll('[data-keys]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
-      CURRENT_OCTAVES = btn.dataset.keys.split(',').map(Number);
+      KEY_CHOICE = btn.dataset.keys;
       document.querySelectorAll('[data-keys]').forEach(function (b) { b.classList.remove('sel'); });
       btn.classList.add('sel');
       closeAllPopups();
@@ -1560,7 +1568,6 @@
       clefEl.setAttribute('font-size', CLEF_FS[rowClef]);
       clefEl.setAttribute('y', CLEF_Y[rowClef]);
     });
-    CURRENT_OCTAVES = rowClef === 'treble' ? TREBLE_OCTAVES : [2, 3, 4];
     rebuildPiano();
     refreshStaff();
   }
@@ -2685,7 +2692,7 @@
   }
 
   function rebuildPiano() {
-    var octaves    = CURRENT_OCTAVES;
+    var octaves    = keyboardOctaves();
     var totalWhite = octaves.length * 7 + 1;
     // A bit thinner than a full window-width fill - same octave range, narrower keys.
     var kw  = Math.max(14, Math.floor((window.innerWidth / totalWhite) * 0.8));
