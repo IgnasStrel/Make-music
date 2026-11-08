@@ -233,14 +233,27 @@
         <path d="M30 18 Q24 14 24 22 V78 Q24 86 31 82 L80 54 Q87 50 80 46 Z" fill="rgba(40,12,90,0.65)" stroke="url(#playGrad)" stroke-width="6" stroke-linejoin="round"/>
       </svg>
     </button>
-    <!-- Always the newest installer: every GitHub release carries it under
-         the same name (electron-app/package.json → win.artifactName). -->
-    <a class="dl" id="dlApp" href="https://github.com/IgnasStrel/Make-music/releases/latest/download/MUSICATION-Setup.exe" hidden>
+    <!-- The newest installer on GitHub. Until the script below finds it, the
+         button opens the newest release's page, so it never leads nowhere. -->
+    <a class="dl" id="dlApp" href="https://github.com/IgnasStrel/Make-music/releases/latest" hidden>
       ⬇️ Atsisiųsti programą · Download the app <small>Windows</small>
     </a>
     <script>
-      // Inside the installed app there is nothing to download.
-      if (!/Electron/i.test(navigator.userAgent)) { document.getElementById('dlApp').hidden = false; }
+      (function () {
+        // Inside the installed app there is nothing to download.
+        if (/Electron/i.test(navigator.userAgent)) { return; }
+        var a = document.getElementById('dlApp');
+        a.hidden = false;
+        // Straight to the newest release's installer (MUSICATION-Setup.exe
+        // from 1.5.0 on; older releases carry the version in the name).
+        fetch('https://api.github.com/repos/IgnasStrel/Make-music/releases/latest')
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (rel) {
+            var exe = rel && (rel.assets || []).filter(function (x) { return /\.exe$/i.test(x.name); })[0];
+            if (exe) { a.href = exe.browser_download_url; }
+          })
+          .catch(function () {});
+      })();
     </script>
   </section>
 
@@ -458,8 +471,16 @@
     btn.addEventListener('click', function () { show(btn.dataset.back); });
   });
 
+  // For now the last step only asks "teacher or student?" - no name or
+  // password. Set to true to ask for them again.
+  var ASK_PASSWORD = false;
+
   // 4: teacher / student, then the login form
   function selectRole(role) {
+    if (!ASK_PASSWORD) {
+      if (MusicationAuth.enter(role, { level: level, lang: lang })) { location.replace(MusicationAuth.HOME_PAGE); }
+      return;
+    }
     selectedRole = role;
     roleButtons.forEach(function (btn) {
       var on = btn.dataset.role === role;

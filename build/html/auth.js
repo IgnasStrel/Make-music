@@ -58,6 +58,16 @@
     return session;
   }
 
+  // Logs in as the role's first account without asking for a password -
+  // used while the login screen only asks "teacher or student?"
+  // (index.html → ASK_PASSWORD). Returns the session, or null.
+  function enter(role, extra) {
+    for (var i = 0; i < USERS.length; i++) {
+      if (USERS[i].role === role) { return login(role, USERS[i].username, USERS[i].password, extra); }
+    }
+    return null;
+  }
+
   function logout() {
     try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
     location.replace(LOGIN_PAGE);
@@ -80,6 +90,7 @@
     HOME_PAGE: HOME_PAGE,
     getSession: getSession,
     login: login,
+    enter: enter,
     logout: logout,
     requireLogin: requireLogin
   };
