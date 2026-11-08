@@ -6,8 +6,9 @@ function getIndexPath() {
   // Opens on index.html - the login screen where a teacher or a student
   // signs in. After logging in it goes to rasymas.html, the main
   // note-writing screen, whose sidebar "Žaidimai" button opens the games
-  // list (zaidimai.html). That list currently offers one game, "Judėk
-  // kartu"; the older games are still in build/html but are not listed.
+  // list (zaidimai.html): "Judėk kartu" and "Gyvūnų orkestras" (level 1)
+  // and "Gyvūnų orkestras 2" (level 2); the older games are still in
+  // build/html but are not listed.
   // setWindowOpenHandler below still covers the zaidimai.html pop-out used
   // from smoosic.html (the full notation editor).
   if (app.isPackaged) {

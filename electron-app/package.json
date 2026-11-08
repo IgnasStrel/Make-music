@@ -1,6 +1,6 @@
 {
   "name": "musication-desktop",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Desktop app wrapper for the MUSICATION kids' notation & ear-training games",
   "main": "main.js",
@@ -41,7 +41,8 @@
         "nsis"
       ],
       "icon": "icon.png",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "artifactName": "MUSICATION-Setup.${ext}"
     },
     "mac": {
       "target": [
@@ -58,7 +59,8 @@
     "publish": {
       "provider": "github",
       "owner": "IgnasStrel",
-      "repo": "Make-music"
+      "repo": "Make-music",
+      "releaseType": "release"
     }
   },
   "dependencies": {

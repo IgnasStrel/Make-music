@@ -12,8 +12,10 @@
     worker: { password: "worker123", role: "worker", label: "Darbuotojas" }
   };
 
-  var DOWNLOAD_PATH = "../electron-app/dist-installer/MUSICATION%20Setup%201.4.0.exe";
-  var DOWNLOAD_NAME = "MUSICATION Setup 1.4.0.exe";
+  // Always the newest installer: every GitHub release carries it under the
+  // same name (electron-app/package.json → win.artifactName).
+  var DOWNLOAD_PATH = "https://github.com/IgnasStrel/Make-music/releases/latest/download/MUSICATION-Setup.exe";
+  var DOWNLOAD_NAME = "MUSICATION-Setup.exe";
   var SESSION_KEY = "mm_session";
 
   // ---------- Tabs ----------
