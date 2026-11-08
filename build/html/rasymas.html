@@ -897,7 +897,7 @@
     <div class="popup" id="pop-keys">
       <div class="pop-title">Klaviatūra</div>
       <button class="pop-btn sel" data-keys="3,4,5">Pilna (3 okt)</button>
-      <button class="pop-btn" data-keys="4,5">Vidurinė (2 okt)</button>
+      <button class="pop-btn" data-keys="3,4">Vidurinė (2 okt)</button>
       <button class="pop-btn" data-keys="4">Tik pirmoji oktava</button>
     </div>
   </div>
@@ -989,10 +989,11 @@
   var K = window.Kids;
 
   // Level chosen on the login screen. MUSICATION I is for kindergarten
-  // children: bigger staff and notes, one staff at a time, c1-c3 keyboard.
+  // children: bigger staff and notes, one staff at a time, a c-c2 keyboard
+  // with c1 in the middle.
   var LEVEL     = (SESSION && SESSION.level) || 'I';
   var KIDS_MODE = LEVEL === 'I';
-  var TREBLE_OCTAVES = KIDS_MODE ? [4, 5] : [3, 4, 5];
+  var TREBLE_OCTAVES = KIDS_MODE ? [3, 4] : [3, 4, 5];
 
   // ── Audio context ────────────────────────────────────────────────────────────
   var PIANO_CTX  = null;
@@ -1300,11 +1301,11 @@
   // Keyboard range buttons. The chosen range stays when the clef changes or
   // a lesson is opened.
   var KEY_CHOICE = TREBLE_OCTAVES.join(',');
-  // "Pilna" always keeps c1 in the middle: the small octave before it, c2
-  // after it - and in the bass clef also the great octave below, so its low
-  // notes stay on the keyboard. The bass clef otherwise shows C to c1.
+  // "Pilna" and "Vidurinė" keep c1 in the middle, with the small octave
+  // before it: Pilna c-c3, Vidurinė c-c2. In the bass clef Pilna also gets
+  // the great octave below, so the low notes stay on the keyboard.
   function keyboardOctaves() {
-    if (rowClef === 'bass') { return KEY_CHOICE === '3,4,5' ? [2, 3, 4, 5] : [2, 3, 4]; }
+    if (rowClef === 'bass' && KEY_CHOICE === '3,4,5') { return [2, 3, 4, 5]; }
     return KEY_CHOICE.split(',').map(Number);
   }
   document.querySelectorAll('[data-keys]').forEach(function (b) {
