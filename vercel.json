@@ -10,7 +10,8 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/html/index.html"
+      "status": 307,
+      "headers": { "Location": "/html/index.html" }
     },
     {
       "src": "/(.*)",
