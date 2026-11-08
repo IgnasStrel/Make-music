@@ -6,450 +6,1328 @@
 <title>MUSICATION — Gyvūnų orkestras 🎼</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="lt-font.css">
+<script src="auth.js"></script>
+<script>
+  // Reached from Žaidimai (zaidimai.html); like every page, only after logging in.
+  var SESSION = MusicationAuth.requireLogin();
+</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; overflow: hidden; }
   body {
-    font-family: 'Baloo 2', 'Segoe UI', sans-serif;
-    position: relative;
-    background: linear-gradient(180deg, var(--sky-a, #8fd3ff) 0%, var(--sky-b, #bfe8ff) 45%, var(--sky-c, #d9f4c8) 72%, var(--sky-d, #b6e28a) 100%);
-    transition: background 0.6s ease;
+    font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
+    color: #4a2e14;
+    /* The orchestra plays on a wooden table, as in the sketch. */
+    background-color: #8f5c2c;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(60, 30, 8, 0.22) 0 2px, transparent 2px 48px),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 9px),
+      linear-gradient(#a26c37, #7d4d22);
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; touch-action: manipulation; }
+  .app { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+
+  /* ───────── Orchestra scene: the biggest part of the screen ───────── */
+  .scene { position: relative; flex: 1 1 auto; min-height: 170px; overflow: hidden; --sh: 320px; --sw: 1200px; }
+  .sky, .far, .decor, .floor { position: absolute; left: 0; right: 0; }
+  .sky { top: 0; bottom: 0; background: var(--sky); }
+  .far { bottom: 15%; height: 44%; background: var(--far, none); }
+  .floor {
+    bottom: 0; height: 17%;
+    background: var(--floor); border-top: 5px solid var(--floor-edge);
+    box-shadow: inset 0 12px 14px -10px rgba(0, 0, 0, 0.3);
+  }
+  .decor { top: 0; bottom: 0; pointer-events: none; }
+  .decor.front { z-index: 5; }
+  .dc { position: absolute; line-height: 1; font-size: calc(min(var(--sh), var(--sw) * 0.42) * var(--z, 0.1)); }
+  .dc.mn { font-weight: 800; text-shadow: 0 3px 0 rgba(255, 255, 255, 0.6); }
+  .bunting { height: calc(min(var(--sh), var(--sw) * 0.42) * 0.17); }
+  .bunting svg { width: 100%; height: 100%; display: block; }
+
+  .w-forest {
+    --sky: linear-gradient(180deg, #63c0f2 0%, #9fdcfb 46%, #d3f1fd 72%, #bfe6a6 100%);
+    --far: radial-gradient(70% 100% at 16% 100%, #86c96a 98%, transparent 100%),
+           radial-gradient(62% 92% at 84% 100%, #72ba5a 98%, transparent 100%),
+           radial-gradient(48% 66% at 50% 100%, #a3da84 98%, transparent 100%),
+           linear-gradient(transparent 76%, #7ccbe7 76%);
+    --floor: repeating-linear-gradient(90deg, transparent 0 calc(12.5% - 3px), rgba(90, 45, 12, 0.35) calc(12.5% - 3px) 12.5%),
+             linear-gradient(#d99f5f, #bd7c40 55%, #9b6131);
+    --floor-edge: #eab679;
+  }
+  .w-sea {
+    --sky: linear-gradient(180deg, #7fd3fb 0%, #c4ebfd 37%, #46b6ea 38%, #2c9bd6 66%, #1f84c2 100%);
+    --far: radial-gradient(14px 7px at 50% 0, rgba(255, 255, 255, 0.55) 98%, transparent) 0 0 / 46px 18px repeat-x;
+    --floor: radial-gradient(3px 3px at 20% 30%, #d9b56a 98%, transparent) 0 0 / 38px 26px,
+             linear-gradient(#f8e2a6, #e9c47b);
+    --floor-edge: #fff3cf;
+  }
+  .w-sea .far { bottom: auto; top: 37%; height: 18px; }
+  .w-circus {
+    --sky: radial-gradient(ellipse at 50% 70%, transparent 35%, rgba(90, 0, 30, 0.4) 100%),
+           repeating-conic-gradient(from 0deg at 50% -40%, #e8463f 0deg 6deg, #fff0d4 6deg 12deg);
+    --floor: linear-gradient(#e14d4d, #b42f2f);
+    --floor-edge: #f7c948;
+  }
+  .w-space {
+    --sky: radial-gradient(1.6px 1.6px at 20px 30px, #fff 98%, transparent) 0 0 / 140px 110px,
+           radial-gradient(1.1px 1.1px at 95px 70px, #fff 98%, transparent) 0 0 / 140px 110px,
+           radial-gradient(2px 2px at 60px 95px, #fff6c8 98%, transparent) 0 0 / 170px 130px,
+           radial-gradient(circle at 74% 26%, rgba(150, 90, 255, 0.45), transparent 42%),
+           radial-gradient(circle at 18% 70%, rgba(40, 160, 255, 0.25), transparent 40%),
+           linear-gradient(#08061f, #1c154c 60%, #382a77);
+    --floor: radial-gradient(ellipse 34px 9px at 22% 40%, #9aa1b6 98%, transparent),
+             radial-gradient(ellipse 48px 11px at 71% 62%, #9aa1b6 98%, transparent),
+             radial-gradient(ellipse 24px 7px at 46% 76%, #a3a9bd 98%, transparent),
+             linear-gradient(#d3d7e3, #a9afc2);
+    --floor-edge: #eef0f6;
   }
 
-  .topbar { position: relative; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
-  .game-title { font-size: 19px; font-weight: 800; color: #1e3a1e; text-shadow: 0 1px 0 rgba(255,255,255,0.5); flex: 1; }
-  .tb-btn {
-    border: none; border-radius: 999px; cursor: pointer;
-    background: rgba(255,255,255,0.88); box-shadow: 0 3px 0 rgba(0,0,0,0.12);
-    font-size: 20px; width: 42px; height: 42px;
+  /* The five musicians */
+  .cast {
+    position: absolute; left: 4%; right: 4%; top: 16%; bottom: 6%; z-index: 4;
+    display: flex; justify-content: space-around; align-items: flex-end;
+    --s: min(calc(var(--sh) * 0.4), calc(var(--sw) * 0.105));
+  }
+  .mus { position: relative; display: flex; flex-direction: column; align-items: center; border-radius: 24px; }
+  .mus:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
+  .mus .body {
+    position: relative; display: block; font-size: var(--s); line-height: 1;
+    transform-origin: 50% 100%;
+    animation-duration: 3s; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
+    animation-delay: var(--dl, 0s);
+  }
+  .mus .ani { display: block; filter: hue-rotate(var(--hue, 0deg)) drop-shadow(0 6px 4px rgba(0, 0, 0, 0.25)); transform-origin: 50% 100%; }
+  .mus .inst {
+    position: absolute; right: -0.24em; bottom: 0.02em; font-size: 0.5em;
+    transform-origin: 30% 80%; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3));
+  }
+  .mus .shadow { display: block; width: calc(var(--s) * 0.9); height: calc(var(--s) * 0.13); margin-top: calc(var(--s) * -0.06); border-radius: 50%; background: rgba(0, 0, 0, 0.22); filter: blur(2px); }
+  .mus .spot {
+    position: absolute; left: 50%; bottom: -6%; width: calc(var(--s) * 1.6); height: calc(var(--s) * 1.6);
+    transform: translateX(-50%) scale(0.5); border-radius: 50%; opacity: 0; z-index: -1;
+    background: radial-gradient(circle, rgba(255, 244, 160, 0.95), rgba(255, 214, 80, 0.4) 45%, transparent 70%);
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .mus.playing .spot { opacity: 1; transform: translateX(-50%) scale(1); }
+
+  /* Waiting: each animal breathes / sways in its own way… */
+  .idle-breathe .body { animation-name: breathe; animation-duration: 3.2s; }
+  .idle-sway .body    { animation-name: sway;    animation-duration: 2.6s; }
+  .idle-hop .body     { animation-name: hopIdle; animation-duration: 3.4s; }
+  .idle-wobble .body  { animation-name: wobble;  animation-duration: 3s; }
+  .idle-shuffle .body { animation-name: shuffle; animation-duration: 2.8s; }
+  /* …and playing is clearly livelier: a bob on every beat. */
+  .mus.playing .body { animation: groove var(--beat, 0.6s) ease-in-out infinite alternate; }
+  .mus.joy .body { animation: joy 0.9s ease-out; }
+  .ani.h { animation: squash 0.28s ease-out; }
+  .inst.h { animation: strike 0.26s ease-out; }
+  .fnote {
+    position: absolute; left: 50%; bottom: 82%; z-index: 6; pointer-events: none;
+    font-size: calc(var(--s) * 0.34); font-weight: 800; line-height: 1;
+    text-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+    animation: noteUp 1.3s ease-out both;
+  }
+
+  /* ── Top: home + music (left), wooden sign (middle), animals + help (right) ── */
+  .top { position: absolute; left: 14px; right: 14px; top: 10px; z-index: 10; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+  .top .grp { display: flex; gap: 12px; pointer-events: auto; }
+  .cbtn {
+    --b: #7e57c2; --tb: clamp(46px, 7.4vh, 66px);
+    width: var(--tb); height: var(--tb); border-radius: 50%; border: 4px solid #fff;
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--b) 50%, #fff), var(--b) 62%, color-mix(in srgb, var(--b) 78%, #000));
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.22), 0 8px 14px rgba(0, 0, 0, 0.2);
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.12s, box-shadow 0.12s;
+    color: #fff; font-weight: 800; font-size: calc(var(--tb) * 0.55); line-height: 1;
+    transition: transform 0.12s;
   }
-  .tb-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(0,0,0,0.14); }
-  .tb-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+  .cbtn:hover, .pillbtn:hover { transform: translateY(-2px) scale(1.04); }
+  .cbtn:active, .pillbtn:active { transform: translateY(2px) scale(0.97); }
+  .cbtn svg { width: 56%; height: 56%; fill: #fff; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2)); }
+  .cbtn.music { --b: #1e88e5; }
+  .cbtn.help { --b: #f5a800; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2); }
+  .pillbtn {
+    height: clamp(46px, 7.4vh, 66px); padding: 0 16px; border-radius: 999px; border: 4px solid #fff;
+    background: linear-gradient(#5fc95a, #2f9f36); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.22), 0 8px 14px rgba(0, 0, 0, 0.2);
+    display: flex; align-items: center; gap: 2px; font-size: clamp(20px, 3.5vh, 32px); line-height: 1;
+    transition: transform 0.12s;
+  }
+  .pillbtn span { filter: hue-rotate(var(--hue, 0deg)); }
+  .sign { position: absolute; left: 50%; top: 10px; z-index: 9; transform: translateX(-50%); --ph: clamp(40px, 6.6vh, 62px); pointer-events: none; }
+  .plank {
+    position: relative; width: clamp(150px, 34vw, 500px); height: var(--ph); border-radius: 14px;
+    border: 4px solid #74451b;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 3px, transparent 3px 26px), linear-gradient(#cf9150, #a8692f);
+    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.28), 0 6px 0 rgba(60, 30, 8, 0.4);
+  }
+  .plank::before, .plank::after { content: ''; position: absolute; top: 50%; width: 9px; height: 9px; margin-top: -4.5px; border-radius: 50%; background: #74451b; }
+  .plank::before { left: 12px; } .plank::after { right: 12px; }
+  .leaf { position: absolute; top: 50%; font-size: calc(var(--ph) * 0.8); line-height: 1; }
+  .leaf.l { left: calc(var(--ph) * -0.5); transform: translateY(-50%) rotate(-30deg); }
+  .leaf.r { right: calc(var(--ph) * -0.5); transform: translateY(-50%) scaleX(-1) rotate(-30deg); }
+  .emblem {
+    position: absolute; left: 50%; top: 50%; width: calc(var(--ph) * 1.5); height: calc(var(--ph) * 1.5);
+    transform: translate(-50%, -50%); border-radius: 50%; border: 4px solid #8a5418;
+    background: radial-gradient(circle at 40% 35%, #ffe28e, #f1b53c 62%, #c9861d);
+    box-shadow: 0 5px 0 rgba(60, 30, 8, 0.4);
+    display: flex; align-items: center; justify-content: center; font-size: calc(var(--ph) * 0.72); line-height: 1;
+  }
+  .emblem .mnote { position: absolute; right: 14%; bottom: 10%; font-size: 0.55em; font-weight: 800; color: #fff; text-shadow: 0 2px 0 #8a5418; }
 
-  .stage { position: relative; z-index: 5; height: calc(100vh - 64px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 6px 12px; }
+  /* ───────── The 8-bar map ───────── */
+  .board-wrap { flex: none; padding: 8px 14px 0; }
+  .board {
+    position: relative; max-width: 1500px; margin: 0 auto; padding: 8px 10px 10px; border-radius: 22px;
+    background: #fbf3e2;
+    box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.7), 0 6px 0 rgba(60, 30, 8, 0.45), 0 12px 24px rgba(0, 0, 0, 0.25);
+    --rh: clamp(40px, 7vh, 80px); --hh: clamp(32px, 5.2vh, 50px);
+  }
+  .grid { display: grid; grid-template-columns: minmax(56px, 1.3fr) repeat(8, minmax(0, 1fr)); grid-template-rows: var(--hh); grid-auto-rows: var(--rh); gap: 6px; }
+  .hc { display: flex; align-items: center; justify-content: center; }
+  .hc.corner svg { width: calc(var(--hh) * 0.55); height: calc(var(--hh) * 0.55); fill: #8a7a66; }
+  .hc.num span {
+    width: min(calc(var(--hh) - 6px), 92%); aspect-ratio: 1; border-radius: 50%; border: 3px solid #fff;
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--n) 55%, #fff), var(--n) 62%);
+    color: #fff; font-weight: 800; font-size: calc(var(--hh) * 0.5); line-height: 1;
+    display: flex; align-items: center; justify-content: center; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18); transition: transform 0.2s;
+  }
+  .hc.num.now span { transform: scale(1.18); box-shadow: 0 0 0 3px #fff, 0 0 14px var(--n); }
+  .av {
+    border-radius: 14px; position: relative; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--t) 72%, var(--c) 28%);
+  }
+  .av .av-ani { font-size: calc(var(--rh) * 0.66); line-height: 1; filter: hue-rotate(var(--hue, 0deg)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2)); }
+  .av .av-inst { position: absolute; right: 8%; bottom: 6%; font-size: calc(var(--rh) * 0.32); line-height: 1; }
+  .av:active .av-ani { transform: scale(0.92); }
+  .cell {
+    position: relative; border-radius: 12px; background: var(--t);
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+  }
+  .cell:hover { background: color-mix(in srgb, var(--t) 80%, #fff); }
+  .cell.now { background: color-mix(in srgb, var(--t) 45%, #fff); }
+  .cell .dot {
+    width: min(64%, calc(var(--rh) * 0.66)); aspect-ratio: 1; border-radius: 50%;
+    border: 3px dashed color-mix(in srgb, var(--c) 42%, transparent);
+    transition: transform 0.22s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .cell.on .dot {
+    border: 4px solid #fff;
+    background: radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--c) 45%, #fff), var(--c) 56%, color-mix(in srgb, var(--c) 78%, #000));
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.28);
+  }
+  .cell.pop .dot { animation: pop 0.35s cubic-bezier(.34, 1.56, .64, 1); }
+  .cell.fire .dot { animation: fire 0.5s ease-out; }
+  .cell.bye .dot { transform: scale(0); }
+  .spark { position: absolute; left: 50%; top: 50%; font-size: calc(var(--rh) * 0.5); pointer-events: none; animation: spark 0.45s ease-out forwards; }
 
-  /* ── Orchestra scene: 5 animals, priority #1 per spec section 18 ── */
-  .scene { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; max-width: 720px; }
-  .animal {
-    width: 92px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  /* Where the music is now: one vertical line moving 1 → 8 → 1 … */
+  .head { position: absolute; left: 0; top: 0; height: 0; width: 0; z-index: 3; pointer-events: none; will-change: transform; }
+  .head::before { content: ''; position: absolute; left: -2.5px; top: 0; bottom: 0; width: 5px; border-radius: 3px; background: #1e6fe0; box-shadow: 0 0 6px rgba(30, 111, 224, 0.5); }
+  .head .knob {
+    position: absolute; left: -12px; top: -12px; width: 24px; height: 24px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #8dbcff, #1e6fe0 65%); border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
-  .animal-circle {
-    width: 84px; height: 84px; border-radius: 50%;
-    border: 5px solid var(--a-color, #fff);
-    background: radial-gradient(circle at 35% 30%, #ffffff, #f3f8ee 70%);
-    box-shadow: 0 6px 0 rgba(0,0,0,0.12), 0 8px 14px rgba(0,0,0,0.14);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 42px; position: relative;
-    animation: idleBreathe 3s ease-in-out infinite;
-    transition: transform 0.15s, box-shadow 0.15s;
+  .head.glide { transition: transform 0.45s ease; }
+  .head.idle { opacity: 0.5; }
+  .hint {
+    position: absolute; z-index: 4; pointer-events: none; font-size: calc(var(--rh) * 0.8); line-height: 1;
+    animation: hintIn 0.3s ease 2.5s both, tapHint 1.3s ease-in-out 2.8s infinite;
   }
-  @keyframes idleBreathe { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.035) rotate(-1.5deg); } }
-  .animal-circle .inst-badge {
-    position: absolute; bottom: -6px; right: -6px; font-size: 22px;
-    background: #fff; border-radius: 50%; width: 30px; height: 30px;
-    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  }
-  .animal-name { font-size: 13px; font-weight: 700; color: #1e3a1e; text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
-  .animal.playing .animal-circle {
-    animation: playPulse 0.32s ease-in-out;
-    box-shadow: 0 0 0 6px rgba(255,193,7,0.55), 0 8px 14px rgba(0,0,0,0.18);
-  }
-  @keyframes playPulse { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1.08); } }
 
-  /* ── 8-bar timeline grid, priority #3 ── */
-  .grid-wrap { background: rgba(255,255,255,0.55); border-radius: 20px; padding: 10px 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
-  .grid-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
-  .row-label { width: 34px; font-size: 24px; text-align: center; flex: none; }
-  .bar-cell {
-    width: 34px; height: 34px; border-radius: 50%; flex: none;
-    border: none; cursor: pointer; background: rgba(255,255,255,0.85);
-    box-shadow: inset 0 0 0 2px rgba(0,0,0,0.12);
-    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  /* ───────── ▶ ⏸ ⏹ 🔄 ───────── */
+  .controls { flex: none; display: flex; justify-content: center; gap: clamp(12px, 6vw, 110px); padding: 12px 14px 14px; }
+  .tbtn {
+    --l: #6fd36a; --b: #2fa83a; --d: #1d7a27;
+    position: relative; width: clamp(76px, 15vw, 200px); height: clamp(50px, 8vh, 72px); border-radius: 22px;
+    background: linear-gradient(var(--l), var(--b));
+    box-shadow: 0 6px 0 var(--d), 0 10px 16px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+    display: flex; align-items: center; justify-content: center; transition: transform 0.1s, box-shadow 0.1s;
   }
-  .bar-cell:hover { transform: scale(1.1); }
-  .bar-cell.on {
-    background: radial-gradient(circle at 35% 30%, #fff6c8, #ffcd3c 70%);
-    box-shadow: inset 0 0 0 2px #ffb300, 0 0 8px rgba(255,193,7,0.6);
-  }
-  .bar-cell.current { box-shadow: inset 0 0 0 3px #2f80ed, 0 0 0 4px rgba(47,128,237,0.25); }
-  .bar-cell.on.current { box-shadow: inset 0 0 0 3px #2f80ed, 0 0 10px rgba(255,193,7,0.7); }
-  .bar-cell.bump { animation: cellBump 0.3s ease; }
-  @keyframes cellBump { 0% { transform: scale(1); } 45% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  .tbtn svg { width: auto; height: 58%; fill: #fff; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.22)); }
+  .tbtn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--d), 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.35); }
+  .tbtn.on { box-shadow: 0 0 0 4px #fff, 0 6px 0 4px var(--d), 0 10px 16px rgba(0, 0, 0, 0.3); }
+  .tbtn.pause { --l: #ffd54a; --b: #f5b400; --d: #b98400; }
+  .tbtn.stopb { --l: #ff7a6e; --b: #e5392f; --d: #a8231b; }
+  .tbtn.loopb { --l: #5aa8ff; --b: #1e6fe0; --d: #1450a8; }
+  .tbtn .i-undo { display: none; }
+  .tbtn.undo .i-sync { display: none; }
+  .tbtn.undo .i-undo { display: block; }
+  .tbtn.undo::after { content: ''; position: absolute; left: 14%; right: 14%; bottom: 7px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.85); transform-origin: left; animation: drain 6s linear forwards; }
+  .nudge { animation: nudge 1.2s ease-in-out infinite; }
+  .shake { animation: shake 0.4s ease; }
 
-  /* ── Transport controls, priority #4 ── */
-  .transport { display: flex; align-items: center; gap: 14px; }
-  .tr-btn {
-    border: none; border-radius: 999px; cursor: pointer;
-    background: linear-gradient(180deg, #8ee38a, #5cc85a); color: #16401a;
-    font-family: inherit; font-size: 26px; width: 62px; height: 62px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.16), 0 10px 18px rgba(0,0,0,0.14);
+  /* ───────── Pickers and help ───────── */
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(30, 18, 6, 0.5); display: flex; align-items: center; justify-content: center; padding: 22px; }
+  .dlg {
+    position: relative; width: 100%; max-width: 1000px; max-height: calc(100vh - 44px); overflow: visible;
+    background: #fff8ea; border: 6px solid #f3d18a; border-radius: 32px; padding: 22px 24px 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35); animation: dlgIn 0.3s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .dlg-ico { text-align: center; font-size: 46px; line-height: 1; margin-bottom: 12px; }
+  .dlg-row { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; }
+  .dlg-x, .dlg-ok {
+    position: absolute; right: -20px; width: 64px; height: 64px; border-radius: 50%; border: 5px solid #fff;
+    color: #fff; font-size: 32px; font-weight: 800; line-height: 1; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.22);
+  }
+  .dlg-x { top: -20px; background: radial-gradient(circle at 35% 30%, #ff9a90, #e5392f 65%); }
+  .dlg-ok { bottom: -20px; background: radial-gradient(circle at 35% 30%, #8fe08a, #2fa83a 65%); }
+  .world {
+    position: relative; width: clamp(130px, 20vw, 210px); aspect-ratio: 1; border-radius: 26px; overflow: hidden;
+    border: 5px solid #fff; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     transition: transform 0.15s;
   }
-  .tr-btn.stop { background: linear-gradient(180deg, #ff9e9e, #ef6a6a); color: #4a1414; }
-  .tr-btn.small { width: 50px; height: 50px; font-size: 21px; background: rgba(255,255,255,0.88); color: #234; box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
-  .tr-btn:hover { transform: translateY(-2px); }
-  .tr-btn:active { transform: translateY(2px); }
-
-  /* ── Modals (music-world picker, animal legend) ── */
-  .modal-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay[hidden] { display: none; }
-  .modal { background: #fff; border-radius: 20px; padding: 22px 26px; width: 100%; max-width: 440px; max-height: 84vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
-  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .modal-head h3 { font-size: 19px; }
-  .modal-close { border: none; background: transparent; font-size: 24px; cursor: pointer; color: #667; }
-  .world-row { display: flex; flex-direction: column; gap: 10px; }
-  .world-btn {
-    display: flex; align-items: center; gap: 12px; border: 2px solid #eee; border-radius: 14px;
-    padding: 10px 14px; background: #fff; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700; color: #234;
+  .world:hover { transform: translateY(-4px) rotate(-1deg); }
+  .world .wsky { position: absolute; inset: 0; background: var(--sky); }
+  .world .wico { position: relative; font-size: clamp(56px, 8.5vw, 96px); line-height: 1; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.3)); }
+  .world .wname { position: relative; font-weight: 800; font-size: 20px; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); background: rgba(0, 0, 0, 0.32); border-radius: 999px; padding: 0 14px; }
+  .world.sel { box-shadow: 0 0 0 7px #ffd54a, 0 6px 0 rgba(0, 0, 0, 0.15); }
+  .pick {
+    position: relative; width: clamp(110px, 16vw, 170px); aspect-ratio: 0.85; border-radius: 26px;
+    border: 5px solid var(--c); background: var(--t);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: transform 0.15s, filter 0.2s;
   }
-  .world-btn.on { border-color: #ffb300; background: #fff8e2; }
-  .world-ico { font-size: 26px; }
-  .legend-row { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eee; padding: 10px 0; }
-  .legend-row:last-child { border-bottom: none; }
-  .legend-ico { font-size: 34px; flex: none; }
-  .legend-text { flex: 1; }
-  .legend-text b { font-size: 15px; }
-  .legend-text span { display: block; font-size: 13px; color: #666; }
-  .legend-play { border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 17px; background: #eef; cursor: pointer; flex: none; }
+  .pick:not(.sel) { filter: grayscale(0.9) opacity(0.5); border-color: #c9c2b4; }
+  .pick .pk-ani { font-size: clamp(50px, 7vw, 80px); line-height: 1; filter: hue-rotate(var(--hue, 0deg)); }
+  .pick .pk-inst { position: absolute; right: 9%; top: 44%; font-size: clamp(26px, 3.4vw, 40px); line-height: 1; }
+  .pick .pk-check {
+    position: absolute; top: -14px; right: -14px; width: 42px; height: 42px; border-radius: 50%; border: 4px solid #fff;
+    background: #2fa83a; color: #fff; font-weight: 800; font-size: 24px; display: flex; align-items: center; justify-content: center;
+  }
+  .pick:not(.sel) .pk-check { display: none; }
+  .pick .pk-name { font-weight: 800; font-size: 16px; margin-top: 6px; }
+  .pick.bounce { animation: pop 0.4s cubic-bezier(.34, 1.56, .64, 1); }
+  .hsteps { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: clamp(6px, 1.8vw, 20px); padding: 8px 4px; }
+  .hs {
+    position: relative; width: clamp(84px, 13vw, 150px); aspect-ratio: 1; border-radius: 26px; background: #fff;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08);
+    animation: hl 4s infinite; animation-delay: var(--d);
+  }
+  .hs .big { font-size: clamp(46px, 7vw, 80px); line-height: 1; }
+  .hs .sm { position: absolute; right: 8%; bottom: 8%; font-size: clamp(24px, 3.4vw, 40px); line-height: 1; }
+  .hs .mini-cell { width: 66%; height: 66%; border-radius: 18px; background: #e4e2f8; display: flex; align-items: center; justify-content: center; }
+  .hs .mini-dot { width: 62%; aspect-ratio: 1; border-radius: 50%; border: 4px solid #fff; background: radial-gradient(circle at 34% 30%, #b3adf0, #6a5fd6 60%); animation: dotfill 4s infinite; }
+  .hs .finger { position: absolute; right: 2%; bottom: -4%; font-size: clamp(32px, 4.6vw, 54px); line-height: 1; animation: fingerTap 4s infinite; }
+  .hs .mini-play { width: 70%; height: 48%; border-radius: 16px; background: linear-gradient(#6fd36a, #2fa83a); box-shadow: 0 5px 0 #1d7a27; display: flex; align-items: center; justify-content: center; }
+  .hs .mini-play svg { height: 60%; fill: #fff; }
+  .hs .notes { position: absolute; right: 6%; top: 6%; font-size: clamp(24px, 3.4vw, 40px); line-height: 1; }
+  .arr { font-size: clamp(24px, 3.6vw, 44px); font-weight: 800; color: #c89a4a; }
+  .adult { text-align: center; margin-top: 14px; font-weight: 700; font-size: 16px; color: #8a6a40; }
+
+  /* ───────── Motion ───────── */
+  @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.035, 1.055); } }
+  @keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+  @keyframes hopIdle { 0%, 64%, 100% { transform: translateY(0) rotate(0); } 72% { transform: translateY(-7%) rotate(-4deg); } 80% { transform: translateY(0) rotate(0); } 88% { transform: translateY(-4%) rotate(4deg); } }
+  @keyframes wobble { 0%, 100% { transform: skewX(0) scale(1, 1); } 25% { transform: skewX(4deg) scale(1.02, 0.98); } 75% { transform: skewX(-4deg) scale(0.98, 1.02); } }
+  @keyframes shuffle { 0%, 100% { transform: translateX(-4%); } 50% { transform: translateX(4%); } }
+  @keyframes groove { from { transform: translateY(0) rotate(-4deg) scale(1.06); } to { transform: translateY(-7%) rotate(4deg) scale(1.1); } }
+  @keyframes joy { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-28%) rotate(-8deg); } 55% { transform: translateY(0); } 75% { transform: translateY(-14%) rotate(6deg); } }
+  @keyframes squash { 0% { transform: scale(1, 1); } 30% { transform: scale(1.12, 0.88); } 60% { transform: scale(0.95, 1.08) translateY(-5%); } 100% { transform: scale(1, 1); } }
+  @keyframes strike { 0% { transform: rotate(0); } 35% { transform: rotate(-20deg) translateY(-10%) scale(1.18); } 100% { transform: rotate(0); } }
+  @keyframes noteUp {
+    0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(var(--s) * -0.9)) scale(1.1) rotate(var(--rot, 0deg)); opacity: 0; }
+  }
+  @keyframes pop { 0% { transform: scale(0.3); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  @keyframes fire { 0% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 70%, transparent); } 40% { transform: scale(1.28); } 100% { transform: scale(1); box-shadow: 0 0 0 16px transparent; } }
+  @keyframes spark { from { transform: translate(-50%, -50%) scale(0.4); opacity: 1; } to { transform: translate(-50%, -90%) scale(1.4); opacity: 0; } }
+  @keyframes hintIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes tapHint { 0%, 100% { transform: translate(-20%, 0) scale(1); } 50% { transform: translate(-20%, -18%) scale(0.9); } }
+  @keyframes nudge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  @keyframes dlgIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes hl { 0%, 24%, 100% { transform: scale(1); box-shadow: 0 5px 0 rgba(0, 0, 0, 0.08); } 6%, 18% { transform: scale(1.1); box-shadow: 0 0 0 6px #ffd54a, 0 8px 16px rgba(0, 0, 0, 0.15); } }
+  @keyframes dotfill { 0%, 34% { transform: scale(0); } 40%, 96% { transform: scale(1); } 100% { transform: scale(0); } }
+  @keyframes fingerTap { 0%, 22% { transform: translate(30%, 30%); opacity: 0; } 27% { transform: translate(0, 0); opacity: 1; } 32% { transform: scale(0.82); } 37% { transform: scale(1); } 46% { opacity: 1; } 54%, 100% { opacity: 0; } }
+  /* Scenery that lives a little */
+  .drift  { animation: drift 16s ease-in-out infinite alternate; }
+  .drift2 { animation: drift 21s ease-in-out infinite alternate-reverse; }
+  .flutter { animation: flutter 7s ease-in-out infinite; }
+  .bob    { animation: bob 3s ease-in-out infinite; }
+  .bob2   { animation: bob 3.6s ease-in-out infinite reverse; }
+  .swim   { animation: swim 14s linear infinite; }
+  .swim2  { animation: swim 18s linear infinite reverse; }
+  .rise   { animation: rise 5s ease-in infinite; }
+  .rise2  { animation: rise 6.5s ease-in 1.5s infinite; }
+  .float  { animation: bob 4s ease-in-out infinite; }
+  .float2 { animation: bob 4.6s ease-in-out infinite reverse; }
+  .spin   { animation: spin 40s linear infinite; }
+  .twinkle  { animation: twinkle 2.2s ease-in-out infinite; }
+  .twinkle2 { animation: twinkle 3s ease-in-out 0.8s infinite; }
+  .fly    { animation: fly 9s ease-in-out infinite; }
+  .ufo    { animation: ufo 12s ease-in-out infinite alternate; }
+  @keyframes drift { from { transform: translateX(-6vw); } to { transform: translateX(6vw); } }
+  @keyframes flutter { 0%, 100% { transform: translate(0, 0) rotate(-8deg); } 25% { transform: translate(6vw, -4%) rotate(8deg); } 50% { transform: translate(10vw, 6%) rotate(-6deg); } 75% { transform: translate(4vw, 10%) rotate(6deg); } }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-12%) rotate(4deg); } }
+  @keyframes swim { from { transform: translateX(-20vw) scaleX(-1); } to { transform: translateX(80vw) scaleX(-1); } }
+  @keyframes rise { 0% { transform: translateY(0) scale(0.7); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-160%) scale(1.1); opacity: 0; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes twinkle { 0%, 100% { transform: scale(0.8); opacity: 0.55; } 50% { transform: scale(1.15); opacity: 1; } }
+  @keyframes fly { 0%, 100% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(-4vw, -10%) rotate(-6deg); } }
+  @keyframes ufo { from { transform: translateX(-5vw); } to { transform: translateX(8vw) translateY(10%); } }
+
+  @media (max-width: 700px) {
+    .sign { display: none; }
+    .cast { --s: min(calc(var(--sh) * 0.4), calc(var(--sw) * 0.16)); }
+  }
+  @media (max-width: 640px) {
+    .top { left: 8px; right: 8px; }
+    .top .grp { gap: 6px; }
+    .pillbtn { padding: 0 8px; font-size: 18px; }
+    .leaf { display: none; }
+    .controls { gap: 10px; }
+  }
 </style>
 </head>
 <body>
+<div class="app">
 
-  <div class="topbar">
-    <span class="game-title">🎼 Gyvūnų orkestras</span>
-    <button class="tb-btn" id="btnHome" title="Į pirmąjį puslapį">🏠</button>
-    <button class="tb-btn" id="btnGames" title="Žaidimų pasirinkimas">🎮</button>
-    <button class="tb-btn" id="btnInfo" title="Žaidimo aprašymas">ℹ️</button>
-  </div>
+  <section class="scene" id="scene">
+    <div class="sky"></div>
+    <div class="far"></div>
+    <div class="decor" id="decor" aria-hidden="true"></div>
+    <div class="floor"></div>
+    <div class="cast" id="cast"></div>
+    <div class="decor front" id="decorFront" aria-hidden="true"></div>
 
-  <div class="stage">
-    <div class="scene" id="scene"></div>
-    <div class="grid-wrap" id="gridWrap"></div>
-    <div class="transport">
-      <button class="tr-btn small" id="btnMusic" title="Muzikinis pasaulis">🎵</button>
-      <button class="tr-btn stop" id="btnStop" title="Stop">⏹️</button>
-      <button class="tr-btn" id="btnPlay" title="Groti / Pauzė">▶️</button>
-      <button class="tr-btn small" id="btnAnimals" title="Apie gyvūnus">🐾</button>
+    <div class="sign" aria-hidden="true">
+      <span class="leaf l">🌿</span>
+      <div class="plank"></div>
+      <span class="leaf r">🌿</span>
+      <div class="emblem">🐾<span class="mnote">♪</span></div>
     </div>
-  </div>
 
-  <div class="modal-overlay" id="musicOverlay" hidden>
-    <div class="modal">
-      <div class="modal-head"><h3>🎵 Muzikinis pasaulis</h3><button class="modal-close" id="musicClose">&times;</button></div>
-      <div class="world-row" id="worldRow"></div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="animalsOverlay" hidden>
-    <div class="modal">
-      <div class="modal-head"><h3>🐾 Gyvūnai ir instrumentai</h3><button class="modal-close" id="animalsClose">&times;</button></div>
-      <div id="legendBody"></div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="infoOverlay" hidden>
-    <div class="modal">
-      <div class="modal-head"><h3>ℹ️ Apie žaidimą</h3><button class="modal-close" id="infoClose">&times;</button></div>
-      <div style="font-size:14.5px;line-height:1.6;color:#333">
-        <p style="margin-bottom:10px"><b>Vaikas nekuria ritmo — vaikas kuria orkestrą.</b> Paspausk gyvūną, kad jį išgirstum. Paspausk taškelį ties taktu, kuriame nori, kad gyvūnas įsijungtų — kelis, vieną ar visus penkis.</p>
-        <p style="margin-bottom:10px">Paspaudus ▶️, kūrinys groja 8 taktų ratu ir kartojasi be pertraukos — vaikas gali bet kada keisti savo pasirinkimus.</p>
-        <p>Nėra teisingo ar neteisingo derinio — kiekviena kompozicija tinka.</p>
+    <div class="top">
+      <div class="grp">
+        <button class="cbtn" id="btnHome" title="Į žaidimų sąrašą" aria-label="Į žaidimų sąrašą">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </button>
+        <button class="cbtn music" id="btnMusic" title="Muzika" aria-label="Pasirinkti muziką">
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+        </button>
+      </div>
+      <div class="grp">
+        <button class="pillbtn" id="btnAnimals" title="Gyvūnai" aria-label="Pasirinkti gyvūnus"></button>
+        <button class="cbtn help" id="btnHelp" title="Pagalba" aria-label="Pagalba">?</button>
       </div>
     </div>
+  </section>
+
+  <section class="board-wrap">
+    <div class="board" id="board">
+      <div class="grid" id="grid"></div>
+      <div class="head idle" id="head"><span class="knob"></span></div>
+      <div class="hint" id="hint" hidden>👆</div>
+    </div>
+  </section>
+
+  <nav class="controls">
+    <button class="tbtn" id="btnPlay" title="Groti" aria-label="Groti">
+      <svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>
+    </button>
+    <button class="tbtn pause" id="btnPause" title="Pauzė" aria-label="Pauzė">
+      <svg viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>
+    </button>
+    <button class="tbtn stopb" id="btnStop" title="Sustabdyti" aria-label="Sustabdyti">
+      <svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>
+    </button>
+    <button class="tbtn loopb" id="btnClear" title="Pradėti iš naujo (paspaudus dar kartą – grąžinti)" aria-label="Išvalyti taškelius">
+      <svg class="i-sync" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+      <svg class="i-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+    </button>
+  </nav>
+</div>
+
+<!-- 🎵 Which music (world) -->
+<div class="ov" id="musicDlg" hidden>
+  <div class="dlg">
+    <div class="dlg-ico">🎵</div>
+    <div class="dlg-row" id="worldList"></div>
+    <button class="dlg-x" data-close aria-label="Uždaryti">✕</button>
   </div>
+</div>
+
+<!-- 🐾 Which animals are on stage -->
+<div class="ov" id="animalsDlg" hidden>
+  <div class="dlg">
+    <div class="dlg-ico">🐾</div>
+    <div class="dlg-row" id="pickList"></div>
+    <button class="dlg-ok" data-close aria-label="Gerai">✓</button>
+  </div>
+</div>
+
+<!-- ❓ Help: pick → mark → play → listen, in pictures -->
+<div class="ov" id="helpDlg" hidden>
+  <div class="dlg">
+    <div class="hsteps">
+      <div class="hs" style="--d:0s"><span class="big">🐘</span><span class="sm">🥁</span></div>
+      <span class="arr">➜</span>
+      <div class="hs" style="--d:1s"><span class="mini-cell"><span class="mini-dot"></span></span><span class="finger">👆</span></div>
+      <span class="arr">➜</span>
+      <div class="hs" style="--d:2s"><span class="mini-play"><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg></span></div>
+      <span class="arr">➜</span>
+      <div class="hs" style="--d:3s"><span class="big">🐘</span><span class="notes">🎶</span><span class="sm">🥁</span></div>
+    </div>
+    <p class="adult">Pasirink gyvūną → pažymėk taktą → paleisk → klausyk</p>
+    <button class="dlg-ok" data-close aria-label="Gerai">✓</button>
+  </div>
+</div>
 
 <script>
 (function () {
   'use strict';
 
-  // ══════════════════════════════════════════════════════════════════════
-  // V1 spec: 5 fixed animal/instrument/rhythm units — the child never edits
-  // an animal's own rhythm, only WHEN (which of the 8 bars) it plays.
-  // ══════════════════════════════════════════════════════════════════════
+  var BARS = 8, STEPS = 8, CYCLE = BARS * STEPS;   // 8 bars, each counted in eighth notes
+  var STORE = 'musication.orkestras.v1';
+
+  // ───────────────────────────── The musicians ─────────────────────────────
+  // Instrument, rhythm and look are fixed: the child only chooses WHEN (in
+  // which bars) each animal plays. pattern: one bar in eighth notes; 1 and 2
+  // are two strokes of the instrument (BUM / ČI, or the bell's two notes).
   var ANIMALS = [
-    { id: 'elephant', icon: '🐘', name: 'Dramblys',    inst: '🥁', instName: 'Būgnas',      color: '#c9a67a', sound: 'drum',       hits: [0, 0.34, 0.68] },
-    { id: 'monkey',   icon: '🐒', name: 'Beždžionėlė', inst: '🪇', instName: 'Barškutis',   color: '#b98a5e', sound: 'shaker',     hits: [0, 0.16, 0.42, 0.58] },
-    { id: 'bird',     icon: '🐦', name: 'Paukštelis',  inst: '🔔', instName: 'Varpelis',    color: '#7ec8e3', sound: 'bell',       hits: [0, 0.5] },
-    { id: 'octopus',  icon: '🐙', name: 'Aštuonkojis', inst: '🪘', instName: 'Tambūrinas',  color: '#e8b4d8', sound: 'tambourine', hits: [0, 0.34, 0.68] },
-    { id: 'crab',     icon: '🦀', name: 'Krabas',      inst: '🪵', instName: 'Lazdelės',    color: '#f2a6c5', sound: 'sticks',     hits: [0, 0.25, 0.5, 0.75] }
+    { id: 'elephant', ico: '🐘', face: '🐘', inst: '🥁', name: 'Dramblys', instName: 'Būgnas', sound: 'drum',
+      color: '#6a5fd6', tint: '#e4e2f8', idle: 'breathe', pattern: [1, 0, 1, 0, 1, 0, 0, 0] },   // BUM – BUM – BUM
+    { id: 'monkey', ico: '🐒', face: '🐵', inst: '🪇', name: 'Beždžionėlė', instName: 'Barškutis', sound: 'shaker',
+      color: '#f28a1a', tint: '#fde3c6', idle: 'sway', pattern: [0, 0, 1, 1, 0, 0, 1, 1] },      // ČI-ČI – ČI-ČI
+    { id: 'bird', ico: '🐦', face: '🐦', inst: '🔔', name: 'Paukštelis', instName: 'Varpelis', sound: 'bell',
+      color: '#1f86d6', tint: '#d7eaf6', idle: 'hop', hue: 207, pattern: [1, 0, 0, 0, 2, 0, 0, 0] },       // TING – TING
+    { id: 'octopus', ico: '🐙', face: '🐙', inst: '🪘', name: 'Aštuonkojis', instName: 'Tambūrinas', sound: 'tambourine',
+      color: '#a24fc9', tint: '#efe0f6', idle: 'wobble', hue: 280, pattern: [1, 0, 0, 2, 0, 0, 1, 0] },    // BUM – ČI – BUM
+    { id: 'crab', ico: '🦀', face: '🦀', inst: '🥢', name: 'Krabas', instName: 'Lazdelės', sound: 'sticks',
+      color: '#e5392f', tint: '#fadbd6', idle: 'shuffle', pattern: [1, 0, 1, 0, 1, 0, 1, 0] }    // TA – TA – TA – TA
   ];
-  var TOTAL_BARS = 8;
-
-  var WORLDS = [
-    { id: 'forest', icon: '🌳', name: 'Miškas',    bpm: 92,  chord: [130.8, 164.8, 196.0], sky: ['#8fd3ff', '#bfe8ff', '#d9f4c8', '#b6e28a'] },
-    { id: 'sea',     icon: '🌊', name: 'Jūra',      bpm: 86,  chord: [146.8, 174.6, 220.0], sky: ['#6fc3ff', '#a9e3ff', '#bdeeff', '#8fd0e8'] },
-    { id: 'circus',  icon: '🎪', name: 'Cirkas',    bpm: 108, chord: [196.0, 246.9, 293.7], sky: ['#ffd6e8', '#ffe8c2', '#fff3d0', '#ffc7a3'] },
-    { id: 'space',   icon: '🚀', name: 'Kosmosas',  bpm: 100, chord: [110.0, 138.6, 164.8], sky: ['#2b2350', '#4a3a7a', '#6a4f9a', '#8a6fc0'] }
-  ];
-  var worldIndex = 0;
-
-  // ── Web Audio: tiny synth per instrument + a soft ambient pad ───────────
-  var ACTX = null;
-  function ctx() { if (!ACTX) { ACTX = new (window.AudioContext || window.webkitAudioContext)(); } return ACTX; }
-
-  function hit(sound, t, gainOut) {
-    var c = ctx();
-    if (sound === 'drum') {
-      var osc = c.createOscillator(), g = c.createGain();
-      osc.type = 'sine'; osc.frequency.setValueAtTime(120, t); osc.frequency.exponentialRampToValueAtTime(48, t + 0.18);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-      osc.connect(g); g.connect(gainOut); osc.start(t); osc.stop(t + 0.24);
-    } else if (sound === 'sticks') {
-      var buf = noiseBuffer(0.05); var src = c.createBufferSource(); src.buffer = buf;
-      var hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2800;
-      var g2 = c.createGain(); g2.gain.setValueAtTime(0.7, t); g2.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-      src.connect(hp); hp.connect(g2); g2.connect(gainOut); src.start(t); src.stop(t + 0.07);
-    } else if (sound === 'shaker') {
-      var buf2 = noiseBuffer(0.09); var src2 = c.createBufferSource(); src2.buffer = buf2;
-      var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 6500; bp.Q.value = 0.7;
-      var g3 = c.createGain(); g3.gain.setValueAtTime(0.5, t); g3.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      src2.connect(bp); bp.connect(g3); g3.connect(gainOut); src2.start(t); src2.stop(t + 0.1);
-    } else if (sound === 'bell') {
-      [1568, 2349].forEach(function (freq, i) {
-        var osc2 = c.createOscillator(), g4 = c.createGain();
-        osc2.type = 'sine'; osc2.frequency.value = freq;
-        g4.gain.setValueAtTime(0.0001, t); g4.gain.exponentialRampToValueAtTime(i === 0 ? 0.5 : 0.25, t + 0.01);
-        g4.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-        osc2.connect(g4); g4.connect(gainOut); osc2.start(t); osc2.stop(t + 0.52);
-      });
-    } else if (sound === 'tambourine') {
-      var buf3 = noiseBuffer(0.12); var src3 = c.createBufferSource(); src3.buffer = buf3;
-      var hp2 = c.createBiquadFilter(); hp2.type = 'highpass'; hp2.frequency.value = 4500;
-      var g5 = c.createGain(); g5.gain.setValueAtTime(0.55, t); g5.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-      src3.connect(hp2); hp2.connect(g5); g5.connect(gainOut); src3.start(t); src3.stop(t + 0.15);
-      var osc3 = c.createOscillator(), g6 = c.createGain();
-      osc3.type = 'sine'; osc3.frequency.setValueAtTime(180, t); osc3.frequency.exponentialRampToValueAtTime(90, t + 0.12);
-      g6.gain.setValueAtTime(0.0001, t); g6.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g6.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
-      osc3.connect(g6); g6.connect(gainOut); osc3.start(t); osc3.stop(t + 0.16);
-    }
-  }
-  var noiseBufCache = {};
-  function noiseBuffer(dur) {
-    var key = dur.toFixed(3);
-    if (noiseBufCache[key]) { return noiseBufCache[key]; }
-    var c = ctx();
-    var buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
-    var d = buf.getChannelData(0);
-    for (var i = 0; i < d.length; i++) { d[i] = (Math.random() * 2 - 1) * (1 - i / d.length); }
-    noiseBufCache[key] = buf;
-    return buf;
-  }
-  function playAnimalPattern(animal, atTime, gainOut) {
-    animal.hits.forEach(function (offset) { hit(animal.sound, atTime + offset * barSeconds(), gainOut); });
-  }
-  function previewAnimal(animal) {
-    var c = ctx();
-    var master = c.createGain(); master.gain.value = 0.6; master.connect(c.destination);
-    playAnimalPattern(animal, c.currentTime + 0.02, master);
-    pulseAnimal(animal.id);
-  }
-
-  // ── Soft ambient pad, one per world, only while PLAYING ─────────────────
-  var padNodes = null;
-  function startPad(world) {
-    stopPad();
-    var c = ctx();
-    var master = c.createGain(); master.gain.value = 0; master.connect(c.destination);
-    master.gain.linearRampToValueAtTime(0.06, c.currentTime + 1.2);
-    var oscs = world.chord.map(function (freq) {
-      var o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
-      var g = c.createGain(); g.gain.value = 1 / world.chord.length;
-      o.connect(g); g.connect(master); o.start();
-      return o;
-    });
-    padNodes = { master: master, oscs: oscs };
-  }
-  function stopPad() {
-    if (!padNodes) { return; }
-    var c = ctx();
-    var m = padNodes.master, oscs = padNodes.oscs;
-    m.gain.cancelScheduledValues(c.currentTime);
-    m.gain.setValueAtTime(m.gain.value, c.currentTime);
-    m.gain.linearRampToValueAtTime(0.0001, c.currentTime + 0.4);
-    setTimeout(function () { oscs.forEach(function (o) { try { o.stop(); } catch (e) {} }); }, 500);
-    padNodes = null;
-  }
-
-  // ══════════════════════════════════════════════════════════════════════
-  // Scene + grid DOM
-  // ══════════════════════════════════════════════════════════════════════
-  var scene = document.getElementById('scene');
-  var animalEls = {};
   ANIMALS.forEach(function (a) {
-    var wrap = document.createElement('div');
-    wrap.className = 'animal'; wrap.id = 'animal-' + a.id;
-    wrap.innerHTML =
-      '<div class="animal-circle" style="--a-color:' + a.color + '">' + a.icon + '<span class="inst-badge">' + a.inst + '</span></div>' +
-      '<span class="animal-name">' + a.name + '</span>';
-    wrap.addEventListener('click', function () { previewAnimal(a); });
-    scene.appendChild(wrap);
-    animalEls[a.id] = wrap;
+    for (a.first = 0; !a.pattern[a.first]; a.first++) {}
   });
-  function pulseAnimal(id) {
-    var el = animalEls[id];
-    el.classList.remove('playing'); void el.offsetWidth; el.classList.add('playing');
-    setTimeout(function () { el.classList.remove('playing'); }, 500);
-  }
 
-  var gridWrap = document.getElementById('gridWrap');
-  var activeBars = {}; // animal.id -> Set-like object {1:true, 5:true, ...}
-  var cellEls = {}; // animal.id -> [cell1..cell8]
-  ANIMALS.forEach(function (a) {
-    activeBars[a.id] = {};
-    var row = document.createElement('div');
-    row.className = 'grid-row';
-    var label = document.createElement('div');
-    label.className = 'row-label'; label.textContent = a.icon;
-    row.appendChild(label);
-    cellEls[a.id] = [];
-    for (var bar = 1; bar <= TOTAL_BARS; bar++) {
-      (function (bar) {
-        var cell = document.createElement('button');
-        cell.className = 'bar-cell'; cell.type = 'button';
-        cell.addEventListener('click', function () {
-          if (activeBars[a.id][bar]) { delete activeBars[a.id][bar]; cell.classList.remove('on'); }
-          else { activeBars[a.id][bar] = true; cell.classList.add('on'); }
-          cell.classList.remove('bump'); void cell.offsetWidth; cell.classList.add('bump');
-        });
-        row.appendChild(cell);
-        cellEls[a.id].push(cell);
-      })(bar);
-    }
-    gridWrap.appendChild(row);
-  });
-  function updateCurrentColumn(bar) {
-    ANIMALS.forEach(function (a) {
-      cellEls[a.id].forEach(function (cell, i) { cell.classList.toggle('current', i === (bar - 1)); });
-    });
-  }
-
-  // ══════════════════════════════════════════════════════════════════════
-  // Master clock — single lookahead scheduler drives music + visuals for
-  // every animal at once (spec section 32: one master clock, never separate
-  // per-animal timers).
-  // ══════════════════════════════════════════════════════════════════════
-  var isPlaying = false;
-  var currentBar = 1;
-  var nextBarTime = 0;
-  var schedulerTimer = null;
-  var LOOKAHEAD_MS = 25;
-  var SCHEDULE_AHEAD = 0.12;
-  var masterGain = null;
-
-  function barSeconds() { return (60 / WORLDS[worldIndex].bpm) * 2; }
-
-  function scheduleBar(bar, time) {
-    var delayMs = Math.max(0, (time - ctx().currentTime) * 1000);
-    setTimeout(function () { if (isPlaying) { updateCurrentColumn(bar); } }, delayMs);
-    ANIMALS.forEach(function (a) {
-      if (activeBars[a.id][bar]) {
-        playAnimalPattern(a, time, masterGain);
-        setTimeout(function () { if (isPlaying) { pulseAnimal(a.id); } }, delayMs);
+  // Emoji are drawn differently on every system (Windows draws the bird red
+  // and the octopus orange). Measure the colour the emoji really has and
+  // turn it toward its row's colour (hue), so the animal matches its row.
+  function emojiHue(ch) {
+    try {
+      var cv = document.createElement('canvas'), g = cv.getContext('2d');
+      cv.width = cv.height = 40;
+      g.font = '32px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(ch, 20, 22);
+      var d = g.getImageData(0, 0, 40, 40).data, r = 0, gr = 0, b = 0, n = 0;
+      for (var i = 0; i < d.length; i += 4) {
+        if (d[i + 3] > 200) { r += d[i]; gr += d[i + 1]; b += d[i + 2]; n++; }
       }
-    });
+      if (n < 20) { return null; }
+      r /= n; gr /= n; b /= n;
+      var mx = Math.max(r, gr, b), c = mx - Math.min(r, gr, b);
+      if (c < 40) { return null; }                 // greyish: nothing to match
+      var h = mx === r ? ((gr - b) / c + 6) % 6 : mx === gr ? (b - r) / c + 2 : (r - gr) / c + 4;
+      return h * 60;
+    } catch (e) { return null; }
   }
-  function advance() { nextBarTime += barSeconds(); currentBar = (currentBar % TOTAL_BARS) + 1; }
-  function scheduler() {
-    while (nextBarTime < ctx().currentTime + SCHEDULE_AHEAD) {
-      scheduleBar(currentBar, nextBarTime);
-      advance();
+  ANIMALS.forEach(function (a) {
+    a.rot = '0deg';
+    var h = a.hue == null ? null : emojiHue(a.ico);
+    if (h === null) { return; }
+    var turn = ((a.hue - h) % 360 + 360) % 360;
+    if (turn > 30 && turn < 330) { a.rot = Math.round(turn) + 'deg'; }
+  });
+  function byId(id) { return ANIMALS.filter(function (a) { return a.id === id; })[0]; }
+
+  // ───────────────────────────── Music worlds ─────────────────────────────
+  // Each is 8 bars long with one chord per bar; melody notes are
+  // [note, length in eighths] ('r' = rest). decor: [emoji, css, motion, in front
+  // of the stage floor?].
+  var WORLDS = [
+    { id: 'forest', musicId: 'forest_01', ico: '🌳', name: 'Miškas', bpm: 96,
+      chords: ['C', 'Am', 'F', 'G', 'C', 'Am', 'G', 'C'],
+      melody: [
+        [['C5', 2], ['E5', 2], ['G5', 4]], [['A5', 2], ['G5', 2], ['E5', 4]],
+        [['F5', 2], ['A5', 2], ['C6', 2], ['A5', 2]], [['G5', 6], ['r', 2]],
+        [['E5', 2], ['G5', 2], ['C6', 4]], [['C6', 2], ['B5', 2], ['A5', 4]],
+        [['G5', 2], ['F5', 2], ['D5', 4]], [['C5', 6], ['r', 2]]
+      ],
+      decor: [
+        ['🌳', 'left:-5%;bottom:9%;--z:.68'], ['🌳', 'right:-6%;bottom:10%;--z:.72'],
+        ['☁️', 'left:15%;top:6%;--z:.16', 'drift'], ['☁️', 'left:64%;top:10%;--z:.13', 'drift2'],
+        ['🦋', 'left:40%;top:30%;--z:.08', 'flutter'],
+        ['🌸', 'left:1%;bottom:2%;--z:.12', '', 1], ['🌼', 'left:7%;bottom:5%;--z:.08', '', 1],
+        ['🌷', 'right:1.5%;bottom:3%;--z:.12', '', 1], ['🌸', 'right:7.5%;bottom:1%;--z:.08', '', 1]
+      ] },
+    { id: 'sea', musicId: 'sea_01', ico: '🌊', name: 'Jūra', bpm: 84,
+      chords: ['F', 'Dm', 'Bb', 'C', 'F', 'Dm', 'C', 'F'],
+      melody: [
+        [['A4', 4], ['C5', 4]], [['D5', 6], ['C5', 2]],
+        [['A#4', 4], ['D5', 4]], [['C5', 8]],
+        [['A4', 2], ['C5', 2], ['F5', 4]], [['E5', 2], ['D5', 2], ['A4', 4]],
+        [['G4', 4], ['C5', 4]], [['A4', 2], ['G4', 2], ['F4', 4]]
+      ],
+      decor: [
+        ['🌴', 'left:-4%;bottom:9%;--z:.62'], ['🌴', 'right:-5%;bottom:11%;--z:.54'],
+        ['☀️', 'left:72%;top:16%;--z:.15', 'spin'], ['⛵', 'left:24%;top:27%;--z:.11', 'bob'],
+        ['🐠', 'left:10%;top:50%;--z:.08', 'swim'], ['🐟', 'left:60%;top:45%;--z:.07', 'swim2'],
+        ['🫧', 'left:36%;top:56%;--z:.06', 'rise'], ['🫧', 'left:82%;top:58%;--z:.05', 'rise2'],
+        ['🐚', 'left:2%;bottom:3%;--z:.1', '', 1], ['⭐', 'right:3%;bottom:2%;--z:.1', '', 1]
+      ] },
+    { id: 'circus', musicId: 'circus_01', ico: '🎪', name: 'Cirkas', bpm: 108,
+      chords: ['G', 'C', 'D', 'G', 'G', 'C', 'D', 'G'],
+      melody: [
+        [['D5', 1], ['D5', 1], ['G5', 2], ['B5', 2], ['G5', 2]], [['C6', 2], ['B5', 1], ['A5', 1], ['G5', 2], ['E5', 2]],
+        [['F#5', 2], ['A5', 2], ['D6', 2], ['A5', 2]], [['B5', 2], ['G5', 2], ['D5', 4]],
+        [['D5', 1], ['E5', 1], ['G5', 2], ['B5', 2], ['D6', 2]], [['E6', 2], ['C6', 2], ['G5', 2], ['E5', 2]],
+        [['F#5', 1], ['G5', 1], ['A5', 2], ['C6', 2], ['F#5', 2]], [['G5', 6], ['r', 2]]
+      ],
+      decor: [
+        ['bunting', 'left:0;right:0;top:3%'],
+        ['🎪', 'left:-2%;bottom:11%;--z:.42'], ['🎪', 'right:-3%;bottom:11%;--z:.36'],
+        ['🎈', 'left:13%;top:26%;--z:.14', 'float'], ['🎈', 'left:84%;top:30%;--z:.12', 'float2'],
+        ['⭐', 'left:31%;top:24%;--z:.07', 'twinkle'], ['⭐', 'left:66%;top:20%;--z:.06', 'twinkle2'],
+        ['🎉', 'left:2%;bottom:3%;--z:.1', '', 1], ['🎊', 'right:2%;bottom:3%;--z:.1', '', 1]
+      ] },
+    { id: 'space', musicId: 'space_01', ico: '🚀', name: 'Kosmosas', bpm: 90,
+      chords: ['Am', 'F', 'C', 'G', 'Am', 'F', 'E', 'Am'],
+      melody: [
+        [['E5', 2], ['A5', 2], ['C6', 4]], [['A5', 4], ['F5', 4]],
+        [['G5', 2], ['E5', 2], ['C5', 4]], [['D5', 2], ['G5', 2], ['B5', 4]],
+        [['C6', 2], ['B5', 2], ['A5', 4]], [['F5', 2], ['A5', 2], ['C6', 4]],
+        [['B5', 2], ['G#5', 2], ['E5', 4]], [['A5', 8]]
+      ],
+      decor: [
+        ['🪐', 'left:4%;top:24%;--z:.26', 'spin'], ['🌙', 'left:77%;top:31%;--z:.15'],
+        ['🚀', 'left:59%;top:19%;--z:.13', 'fly'], ['🛸', 'left:27%;top:17%;--z:.1', 'ufo'],
+        ['☄️', 'left:20%;top:6%;--z:.08', 'twinkle2'],
+        ['✨', 'left:17%;top:44%;--z:.07', 'twinkle'], ['✨', 'left:89%;top:47%;--z:.06', 'twinkle2'],
+        ['⭐', 'left:45%;top:37%;--z:.05', 'twinkle']
+      ] }
+  ];
+  // Coloured notes in the air, in every world.
+  var AIR_NOTES = [
+    ['♪', 'left:9%;top:40%;--z:.11;color:#8e5bd0', 'bob'], ['♫', 'left:31%;top:31%;--z:.1;color:#f2b705', 'bob2'],
+    ['♪', 'left:61%;top:35%;--z:.1;color:#1e88e5', 'bob'], ['♫', 'left:85%;top:43%;--z:.11;color:#e5392f', 'bob2']
+  ];
+
+  // ───────────────────────────── State ─────────────────────────────
+  // Saved for this browser session in the shape of the V1 data structure:
+  // { musicId, bpm, totalBars, animals: [{ id, instrument, pattern, activeBars }] }.
+  var state = { world: 'forest', visible: ANIMALS.map(function (a) { return a.id; }), active: {} };
+  ANIMALS.forEach(function (a) { state.active[a.id] = []; });
+  var firstOpen = true;
+  try {
+    var saved = JSON.parse(sessionStorage.getItem(STORE) || 'null');
+    if (saved && saved.animals) {
+      WORLDS.forEach(function (w) { if (w.musicId === saved.musicId) { state.world = w.id; } });
+      var vis = [];
+      saved.animals.forEach(function (r) {
+        if (!state.active[r.id]) { return; }
+        state.active[r.id] = (r.activeBars || []).filter(function (b) { return b >= 1 && b <= BARS; });
+        if (r.onStage !== false) { vis.push(r.id); }
+      });
+      if (vis.length) { state.visible = ANIMALS.map(function (a) { return a.id; }).filter(function (id) { return vis.indexOf(id) >= 0; }); }
+      firstOpen = false;
     }
-    schedulerTimer = setTimeout(scheduler, LOOKAHEAD_MS);
+  } catch (e) {}
+
+  function world() { return WORLDS.filter(function (w) { return w.id === state.world; })[0] || WORLDS[0]; }
+  function onStage(id) { return state.visible.indexOf(id) >= 0; }
+  function isOn(id, bar) { return state.active[id].indexOf(bar) >= 0; }    // bar: 1..8
+  function save() {
+    var w = world();
+    var song = {
+      musicId: w.musicId, bpm: w.bpm, totalBars: BARS,
+      animals: ANIMALS.map(function (a) {
+        return { id: a.id, instrument: a.sound, pattern: a.pattern, activeBars: state.active[a.id].slice(), onStage: onStage(a.id) };
+      })
+    };
+    try { sessionStorage.setItem(STORE, JSON.stringify(song)); } catch (e) {}
+  }
+
+  // ───────────────────────────── Sound ─────────────────────────────
+  var C = null, comp = null, pvBus = null, NOISE = null;
+  function ac() {
+    if (!C) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { return null; }
+      C = new AC();
+      comp = C.createDynamicsCompressor();
+      comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3.5;
+      comp.attack.value = 0.004; comp.release.value = 0.25;
+      var out = C.createGain();
+      out.gain.value = 0.9;
+      comp.connect(out); out.connect(C.destination);
+      pvBus = C.createGain(); pvBus.gain.value = 0.9; pvBus.connect(comp);
+      NOISE = C.createBuffer(1, C.sampleRate * 2, C.sampleRate);
+      var d = NOISE.getChannelData(0);
+      for (var i = 0; i < d.length; i++) { d[i] = Math.random() * 2 - 1; }
+    }
+    if (C.state === 'suspended') { C.resume(); }
+    return C;
+  }
+  function env(t, out, peak, a, hold, rel) {
+    var g = C.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + a);
+    if (hold > 0) { g.gain.setValueAtTime(peak, t + a + hold); }
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + hold + rel);
+    g.connect(out);
+    return g;
+  }
+  function osc(t, to, type, freq, end) {
+    var o = C.createOscillator();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    o.connect(to); o.start(t); o.stop(end);
+    return o;
+  }
+  function noise(t, to, dur) {
+    var s = C.createBufferSource();
+    s.buffer = NOISE; s.connect(to); s.start(t, Math.random() * 1.5, dur + 0.02);
+  }
+  function filt(type, f, q, to) {
+    var b = C.createBiquadFilter();
+    b.type = type; b.frequency.value = f; if (q) { b.Q.value = q; }
+    b.connect(to);
+    return b;
+  }
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+  var PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  function chord(name) {
+    var m = /^([A-G])([#b]?)(m?)$/.exec(name);
+    var root = (PC[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 12) % 12;
+    return { root: root, tones: [root, root + (m[3] ? 3 : 4), root + 7] };
+  }
+  // The pitch class pc placed in the octave lo .. lo+11 (MIDI numbers).
+  function inRange(pc, lo) { return lo + ((pc - lo) % 12 + 12) % 12; }
+  function noteMidi(n) { var m = /^([A-G])(#?)(\d)$/.exec(n); return 12 * (+m[3] + 1) + PC[m[1]] + (m[2] ? 1 : 0); }
+  WORLDS.forEach(function (w) {
+    w.ch = w.chords.map(chord);
+    w.mel = w.melody.map(function (bar) {
+      var row = [null, null, null, null, null, null, null, null], s = 0;
+      bar.forEach(function (n) { if (n[0] !== 'r') { row[s] = { m: noteMidi(n[0]), len: n[1] }; } s += n[1]; });
+      return row;
+    });
+  });
+
+  // The animals' instruments: short, clear and easy to tell apart.
+  var SOUNDS = {
+    drum: function (t, out) {
+      var o = osc(t, env(t, out, 0.95, 0.004, 0, 0.45), 'sine', 150, t + 0.5);
+      o.frequency.exponentialRampToValueAtTime(52, t + 0.3);
+      osc(t, env(t, out, 0.22, 0.003, 0, 0.15), 'triangle', 110, t + 0.2);   // heard on small speakers too
+      noise(t, filt('lowpass', 1000, 0, env(t, out, 0.3, 0.002, 0, 0.05)), 0.06);
+    },
+    shaker: function (t, out) {
+      noise(t, filt('highpass', 5200, 0, env(t, out, 0.3, 0.012, 0.012, 0.06)), 0.1);
+    },
+    bell: function (t, out, m) {
+      var f = hz(m);
+      osc(t, env(t, out, 0.24, 0.003, 0, 1.4), 'sine', f, t + 1.45);
+      osc(t, env(t, out, 0.07, 0.002, 0, 0.5), 'sine', f * 2.76, t + 0.55);
+      osc(t, env(t, out, 0.035, 0.002, 0, 0.2), 'sine', f * 5.4, t + 0.25);
+    },
+    tambourine: function (t, out, kind) {
+      function jingle(at, peak, rel) { noise(at, filt('bandpass', 8200, 0.8, env(at, out, peak, 0.003, 0.01, rel)), rel + 0.05); }
+      if (kind === 1) {      // BUM: the skin and the jingles
+        var o = osc(t, env(t, out, 0.5, 0.003, 0, 0.18), 'sine', 220, t + 0.2);
+        o.frequency.exponentialRampToValueAtTime(120, t + 0.15);
+        jingle(t, 0.22, 0.12);
+      } else {               // ČI: a shake of the jingles
+        jingle(t, 0.2, 0.08);
+        jingle(t + 0.035, 0.24, 0.14);
+      }
+    },
+    sticks: function (t, out) {
+      osc(t, env(t, out, 0.35, 0.001, 0, 0.05), 'sine', 2300, t + 0.07);
+      osc(t, env(t, out, 0.1, 0.001, 0, 0.03), 'sine', 3500, t + 0.05);
+      noise(t, filt('bandpass', 3000, 1.5, env(t, out, 0.12, 0.001, 0, 0.015)), 0.03);
+    }
+  };
+  // The bell rings notes of the bar's chord, so it always fits the music.
+  function hitSound(a, kind, t, out, bar) {
+    if (a.sound === 'bell') {
+      var ch = world().ch[bar];
+      SOUNDS.bell(t, out, inRange(kind === 2 ? ch.tones[1] : ch.tones[0], 76));
+    } else {
+      SOUNDS[a.sound](t, out, kind);
+    }
+  }
+
+  // Background music voices.
+  function pluck(t, out, f, dur, g) { osc(t, env(t, out, g, 0.004, 0, Math.max(0.12, dur)), 'triangle', f, t + dur + 0.05); }
+  function mallet(t, out, f, dur, g) {
+    var d = Math.min(1, dur + 0.25);
+    osc(t, env(t, out, g, 0.004, 0, d), 'sine', f, t + d + 0.02);
+    osc(t, env(t, out, g * 0.22, 0.002, 0, 0.06), 'sine', f * 4, t + 0.08);
+  }
+  function flute(t, out, f, dur, g) {
+    var o = osc(t, env(t, out, g, 0.07, Math.max(0, dur - 0.2), 0.25), 'sine', f, t + dur + 0.3);
+    var l = C.createOscillator(), lg = C.createGain();
+    l.frequency.value = 5; lg.gain.value = f * 0.006;
+    l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur + 0.3);
+  }
+  function organ(t, out, f, dur, g) { osc(t, filt('lowpass', 2400, 0, env(t, out, g, 0.005, dur * 0.55, 0.07)), 'square', f, t + dur + 0.1); }
+  function tuba(t, out, f, dur, g) { osc(t, filt('lowpass', 700, 0, env(t, out, g, 0.012, dur * 0.3, dur * 0.5)), 'sawtooth', f, t + dur); }
+  function pad(t, out, f, dur, g) {
+    var lp = filt('lowpass', 1300, 0, env(t, out, g, 0.4, Math.max(0, dur - 0.9), 0.5));
+    osc(t, lp, 'triangle', f, t + dur + 0.1).detune.value = -7;
+    osc(t, lp, 'triangle', f, t + dur + 0.1).detune.value = 7;
+  }
+  function softBass(t, out, f, dur, g) { osc(t, env(t, out, g, 0.015, dur * 0.4, dur * 0.6), 'triangle', f, t + dur + 0.05); }
+  function blip(t, out, f, g) { osc(t, env(t, out, g, 0.003, 0, 0.22), 'sine', f, t + 0.25); }
+  function chime(t, out, f, dur, g) {
+    var d = Math.min(1.8, dur + 0.6);
+    osc(t, env(t, out, g, 0.004, 0, d), 'sine', f, t + d);
+    osc(t, env(t, out, g * 0.25, 0.003, 0, d * 0.4), 'sine', f * 2.01, t + d * 0.4 + 0.02);
+  }
+
+  // Accompaniment per world (every beat has a sound: an easy-to-feel pulse)
+  // and the melody's instrument.
+  var STYLE = {
+    forest: function (ch, st, t, out, sd) {      // pizzicato bass on 1 & 3, soft guitar on 2 & 4
+      if (st === 0) { pluck(t, out, hz(inRange(ch.root, 43)), sd * 3, 0.3); }
+      if (st === 4) { pluck(t, out, hz(inRange(ch.tones[2], 43)), sd * 3, 0.26); }
+      if (st === 2 || st === 6) { ch.tones.forEach(function (p) { pluck(t, out, hz(inRange(p, 55)), sd * 1.5, 0.055); }); }
+    },
+    sea: function (ch, st, t, out, sd) {         // long waves of bass and a rocking arpeggio
+      if (st === 0) { softBass(t, out, hz(inRange(ch.root, 41)), sd * 7, 0.3); }
+      if (st === 4) { softBass(t, out, hz(inRange(ch.tones[2], 41)), sd * 3.5, 0.16); }
+      blip(t, out, hz(inRange(ch.tones[[0, 1, 2, 1, 0, 1, 2, 1][st]], 64)), 0.045);
+    },
+    circus: function (ch, st, t, out, sd) {      // oom-pah
+      if (st === 0) { tuba(t, out, hz(inRange(ch.root, 40)), sd * 1.6, 0.3); }
+      if (st === 4) { tuba(t, out, hz(inRange(ch.tones[2], 40)), sd * 1.6, 0.26); }
+      if (st === 2 || st === 6) { ch.tones.forEach(function (p) { organ(t, out, hz(inRange(p, 60)), sd * 0.8, 0.035); }); }
+    },
+    space: function (ch, st, t, out, sd) {       // a floating pad, slow bass and twinkling stars
+      if (st === 0) { ch.tones.forEach(function (p) { pad(t, out, hz(inRange(p, 57)), sd * 8, 0.04); }); }
+      if (st === 0 || st === 4) { softBass(t, out, hz(inRange(ch.root, 40)), sd * 3.5, 0.26); }
+      blip(t, out, hz(inRange(ch.tones[[0, 2, 1, 2, 0, 2, 1, 2][st]], 81)), st % 2 ? 0.025 : 0.04);
+    }
+  };
+  var LEAD = {
+    forest: function (t, out, f, d) { mallet(t, out, f, d, 0.16); },
+    sea: function (t, out, f, d) { flute(t, out, f, d, 0.12); },
+    circus: function (t, out, f, d) { organ(t, out, f, Math.min(d, 0.5), 0.08); },
+    space: function (t, out, f, d) { chime(t, out, f, d, 0.1); }
+  };
+  function music(w, bar, st, t, out, sd) {
+    STYLE[w.id](w.ch[bar], st, t, out, sd);
+    var n = w.mel[bar][st];
+    if (n) { LEAD[w.id](t, out, hz(n.m), n.len * sd); }
+  }
+
+  // A soft ending instead of a cut: the home chord, a sparkle, and every
+  // musician's last stroke together.
+  function finale(t, out) {
+    var ch = world().ch[0];
+    softBass(t, out, hz(inRange(ch.root, 43)), 1.8, 0.32);
+    ch.tones.forEach(function (p, i) { chime(t + i * 0.06, out, hz(inRange(p, 67)), 1.4, 0.09); });
+    chime(t + 0.22, out, hz(inRange(ch.root, 79)), 1.6, 0.08);
+    noise(t, filt('highpass', 6000, 0, env(t, out, 0.06, 0.01, 0, 1.2)), 1.3);
+    ANIMALS.forEach(function (a) { if (onStage(a.id)) { hitSound(a, 1, t, out, 0); } });
+  }
+
+  // ───────────────────────────── Master clock ─────────────────────────────
+  // ONE clock (the audio clock) drives the music, the animals, their
+  // animation and the moving line. Steps are counted from the start and
+  // folded into the 64-step cycle, so bar 8 runs straight into bar 1 again.
+  var clock = { running: false, ending: false, pos: 0, from: 0, sd: 0.3, startTime: 0, nextStep: 0, stopAt: null, endStep: 0, timer: 0, endTimer: 0 };
+  var bus = null, mBus = null, aBus = null;
+  var vq = [];             // visual events waiting for their audio time
+  var pvUntil = {};        // a tapped animal stays "playing" until then
+  var LOOKAHEAD = 0.15;
+
+  function stepTime(n) { return clock.startTime + n * clock.sd; }
+  function newBus() {
+    bus = C.createGain(); bus.connect(comp);
+    mBus = C.createGain(); mBus.gain.value = 0.55; mBus.connect(bus);
+    aBus = C.createGain(); aBus.gain.value = 1; aBus.connect(bus);
+  }
+  function fadeOut(b, at, len) {
+    b.gain.cancelScheduledValues(at);
+    b.gain.setValueAtTime(1, at);
+    b.gain.linearRampToValueAtTime(0.0001, at + len);
+    setTimeout(function () { try { b.disconnect(); } catch (e) {} }, Math.max(0, (at - C.currentTime + len) * 1000) + 80);
   }
 
   function play() {
-    if (isPlaying) { return; }
-    isPlaying = true;
-    var c = ctx();
-    if (c.state !== 'running') { c.resume(); }
-    if (!masterGain) { masterGain = c.createGain(); masterGain.gain.value = 0.7; masterGain.connect(c.destination); }
-    startPad(WORLDS[worldIndex]);
-    nextBarTime = c.currentTime + 0.06;
-    scheduler();
-    document.getElementById('btnPlay').textContent = '⏸️';
-  }
-  function pause() {
-    if (!isPlaying) { return; }
-    isPlaying = false;
-    clearTimeout(schedulerTimer);
-    stopPad();
-    document.getElementById('btnPlay').textContent = '▶️';
-  }
-  function stop() {
-    pause();
-    currentBar = 1;
-    updateCurrentColumn(0);
-    ANIMALS.forEach(function (a) { animalEls[a.id].classList.remove('playing'); });
+    if (!ac()) { return; }
+    if (clock.ending) { finishEnding(); }
+    if (clock.running) { return; }
+    var w = world();
+    clock.sd = 60 / w.bpm / 2;
+    newBus();
+    clock.from = clock.pos;
+    clock.startTime = C.currentTime + 0.06 - clock.pos * clock.sd;
+    clock.nextStep = Math.max(0, Math.ceil(clock.pos - 1e-6));
+    clock.stopAt = null;
+    clock.running = true;
+    $('cast').style.setProperty('--beat', (60 / w.bpm).toFixed(3) + 's');
+    if (clock.pos % STEPS > 1e-6) { onBar(Math.floor(clock.pos / STEPS), false); }
+    schedule();
+    clock.timer = setInterval(schedule, 25);
+    loop(); ui();
   }
 
-  document.getElementById('btnPlay').addEventListener('click', function () { isPlaying ? pause() : play(); });
-  document.getElementById('btnStop').addEventListener('click', stop);
-
-  // ══════════════════════════════════════════════════════════════════════
-  // 🎵 Music-world picker
-  // ══════════════════════════════════════════════════════════════════════
-  function applyWorldColors() {
-    var w = WORLDS[worldIndex];
-    document.documentElement.style.setProperty('--sky-a', w.sky[0]);
-    document.documentElement.style.setProperty('--sky-b', w.sky[1]);
-    document.documentElement.style.setProperty('--sky-c', w.sky[2]);
-    document.documentElement.style.setProperty('--sky-d', w.sky[3]);
+  function schedule() {
+    if (!clock.running) { return; }
+    var horizon = C.currentTime + LOOKAHEAD;
+    while (stepTime(clock.nextStep) < horizon) {
+      if (clock.stopAt !== null && clock.nextStep >= clock.stopAt) { beginEnding(stepTime(clock.nextStep)); return; }
+      scheduleStep(clock.nextStep, stepTime(clock.nextStep));
+      clock.nextStep++;
+    }
   }
-  applyWorldColors();
 
-  var musicOverlay = document.getElementById('musicOverlay');
-  var worldRow = document.getElementById('worldRow');
-  function renderWorlds() {
-    worldRow.innerHTML = WORLDS.map(function (w, i) {
-      return '<button class="world-btn' + (i === worldIndex ? ' on' : '') + '" data-i="' + i + '"><span class="world-ico">' + w.icon + '</span>' + w.name + '</button>';
-    }).join('');
-    worldRow.querySelectorAll('.world-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var wasPlaying = isPlaying;
-        if (wasPlaying) { stop(); }
-        worldIndex = +b.dataset.i;
-        applyWorldColors();
-        renderWorlds();
-        musicOverlay.hidden = true;
-        if (wasPlaying) { play(); }
-      });
+  function scheduleStep(n, t) {
+    var w = world(), cs = n % CYCLE, bar = Math.floor(cs / STEPS), st = cs % STEPS;
+    if (st === 0) { vq.push({ t: t, type: 'bar', bar: bar }); }
+    music(w, bar, st, t, mBus, clock.sd);
+    ANIMALS.forEach(function (a) {
+      var k = a.pattern[st];
+      if (!k || !onStage(a.id) || !isOn(a.id, bar + 1)) { return; }
+      hitSound(a, k, t, aBus, bar);
+      vq.push({ t: t, type: 'hit', id: a.id, first: st === a.first });
     });
   }
-  document.getElementById('btnMusic').addEventListener('click', function () { renderWorlds(); musicOverlay.hidden = false; });
-  document.getElementById('musicClose').addEventListener('click', function () { musicOverlay.hidden = true; });
-  musicOverlay.addEventListener('click', function (e) { if (e.target === musicOverlay) { musicOverlay.hidden = true; } });
 
-  // ══════════════════════════════════════════════════════════════════════
-  // 🐾 Animal legend (icon, instrument, character, one-tap preview)
-  // ══════════════════════════════════════════════════════════════════════
-  var CHARACTER = { elephant: 'stiprus, žemas', monkey: 'linksmas, judrus', bird: 'lengvas, skambus', octopus: 'ritmiškas', crab: 'trumpas, aiškus' };
-  var animalsOverlay = document.getElementById('animalsOverlay');
-  var legendBody = document.getElementById('legendBody');
-  legendBody.innerHTML = ANIMALS.map(function (a) {
-    return '<div class="legend-row"><span class="legend-ico">' + a.icon + '</span>' +
-      '<div class="legend-text"><b>' + a.name + ' ' + a.inst + ' ' + a.instName + '</b><span>' + CHARACTER[a.id] + '</span></div>' +
-      '<button class="legend-play" data-id="' + a.id + '">▶</button></div>';
-  }).join('');
-  legendBody.querySelectorAll('.legend-play').forEach(function (b) {
-    b.addEventListener('click', function () { previewAnimal(ANIMALS.filter(function (a) { return a.id === b.dataset.id; })[0]); });
+  function pause() {
+    if (!clock.running) { return; }
+    clock.running = false;
+    clearInterval(clock.timer);
+    clock.pos = Math.max(clock.from, (C.currentTime - clock.startTime) / clock.sd) % CYCLE;
+    fadeOut(bus, C.currentTime, 0.06);
+    vq = []; pvUntil = {};
+    calm();
+    placeHead(clock.pos);
+    ui();
+  }
+
+  // STOP lets the music land on the next beat, then the ending chord rings
+  // and the animals cheer; only then the line goes back to bar 1. The
+  // child's dots stay where they are.
+  function stop() {
+    if (clock.ending || clock.stopAt !== null) { return; }
+    if (clock.running) { clock.stopAt = Math.ceil(clock.nextStep / 2) * 2; return; }
+    resetToStart(); ui();
+  }
+  function beginEnding(t) {
+    clock.running = false; clock.ending = true; clock.endStep = clock.nextStep;
+    clearInterval(clock.timer);
+    clock.oldBus = bus;
+    fadeOut(bus, t, 0.6);
+    var eb = C.createGain();
+    eb.connect(comp);
+    clock.endBus = eb;
+    finale(t, eb);
+    vq.push({ t: t, type: 'end' });
+    clock.endTimer = setTimeout(finishEnding, Math.max(0, (t - C.currentTime) * 1000) + 1500);
+    ui();
+  }
+  function finishEnding() {
+    clearTimeout(clock.endTimer);
+    if (!clock.ending) { return; }
+    clock.ending = false; clock.stopAt = null;
+    var eb = clock.endBus;
+    setTimeout(function () { try { eb.disconnect(); } catch (e) {} }, 2500);
+    resetToStart(); ui();
+  }
+  function resetToStart() {
+    clock.pos = 0; clock.from = 0; clock.stopAt = null;
+    vq = vq.filter(function (e) { return e.type === 'pv' || e.type === 'hit'; });
+    head.classList.add('glide');
+    placeHead(0);
+    setTimeout(function () { head.classList.remove('glide'); }, 480);
+    setNow(null);
+    calm();
+  }
+  // A new world or a hidden tab: stop at once, without the ending.
+  function halt() {
+    if (clock.ending) { finishEnding(); }
+    if (clock.running) { pause(); }
+    resetToStart(); ui();
+  }
+
+  // ───────────────────────────── Visuals ─────────────────────────────
+  var $ = function (id) { return document.getElementById(id); };
+  var head = $('head');
+  var cast = {}, curBar = null, geo = null, raf = 0;
+
+  function loop() { if (!raf) { raf = requestAnimationFrame(frame); } }
+  function frame() {
+    raf = 0;
+    var now = C ? C.currentTime : 0;
+    while (vq.length && vq[0].t <= now) { apply(vq.shift()); }
+    if (clock.running || clock.ending) {
+      var p = Math.max(clock.from, (now - clock.startTime) / clock.sd);
+      if (clock.ending) { p = Math.min(p, clock.endStep); }
+      placeHead(p % CYCLE);
+    }
+    if (clock.running || clock.ending || vq.length) { raf = requestAnimationFrame(frame); }
+  }
+  function apply(ev) {
+    if (ev.type === 'bar') { onBar(ev.bar, true); }
+    else if (ev.type === 'hit') { hitFx(ev.id, ev.first); }
+    else if (ev.type === 'pv') {
+      var el = cast[ev.id];
+      if (el) { el.classList.toggle('playing', ev.on || (clock.running && curBar !== null && isOn(ev.id, curBar + 1))); }
+    }
+    else if (ev.type === 'end') { joy(); }
+  }
+  function restart(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+  function onBar(bar, fire) {
+    setNow(bar);
+    var now = C ? C.currentTime : 0;
+    ANIMALS.forEach(function (a) {
+      var el = cast[a.id];
+      if (!el) { return; }
+      var on = isOn(a.id, bar + 1);
+      el.classList.toggle('playing', on || now < (pvUntil[a.id] || 0));
+      if (on && fire) {
+        var c = cellEl(a.id, bar + 1);
+        if (c) { restart(c, 'fire'); }
+      }
+    });
+  }
+  function calm() { Object.keys(cast).forEach(function (id) { cast[id].classList.remove('playing'); }); }
+  function cellEl(id, bar) { return $('grid').querySelector('.cell[data-id="' + id + '"][data-bar="' + bar + '"]'); }
+  function setNow(bar) {
+    curBar = bar;
+    $('grid').querySelectorAll('.now').forEach(function (el) { el.classList.remove('now'); });
+    if (bar === null) { return; }
+    $('grid').querySelectorAll('[data-bar="' + (bar + 1) + '"]').forEach(function (el) { el.classList.add('now'); });
+  }
+  function hitFx(id, first) {
+    var el = cast[id];
+    if (!el) { return; }
+    restart(el.querySelector('.ani'), 'h');
+    restart(el.querySelector('.inst'), 'h');
+    if (first) { floatUp(el, byId(id).color, ['♪', '♫']); }
+  }
+  function floatUp(el, color, signs) {
+    signs.forEach(function (sign, i) {
+      var n = document.createElement('span');
+      n.className = 'fnote';
+      n.textContent = sign;
+      n.style.color = color;
+      n.style.animationDelay = (i * 0.15) + 's';
+      n.style.setProperty('--dx', ((i % 2 ? 1 : -1) * (14 + Math.random() * 30)) + 'px');
+      n.style.setProperty('--rot', (Math.random() * 40 - 20) + 'deg');
+      el.appendChild(n);
+      setTimeout(function () { n.remove(); }, 1700);
+    });
+  }
+  function joy() {
+    calm();
+    Object.keys(cast).forEach(function (id, i) {
+      var el = cast[id];
+      setTimeout(function () {
+        restart(el, 'joy');
+        floatUp(el, byId(id).color, ['✨', '🎉', '✨']);
+        setTimeout(function () { el.classList.remove('joy'); }, 950);
+      }, i * 80);
+    });
+  }
+
+  // The line: inside the column of the bar it is in, so it crosses each
+  // bar's own square exactly while that bar sounds.
+  function measure() {
+    var board = $('board').getBoundingClientRect();
+    var nums = $('grid').querySelectorAll('.num');
+    if (!nums.length) { return; }
+    geo = { lefts: [], widths: [] };
+    nums.forEach(function (n) { var r = n.getBoundingClientRect(); geo.lefts.push(r.left - board.left); geo.widths.push(r.width); });
+    var rows = $('grid').querySelectorAll('.av');
+    if (rows.length) {
+      var r0 = rows[0].getBoundingClientRect(), r1 = rows[rows.length - 1].getBoundingClientRect();
+      head.style.top = (r0.top - board.top) + 'px';
+      head.style.height = (r1.bottom - r0.top) + 'px';
+    }
+    placeHead(clock.pos % CYCLE);
+    placeHint();
+  }
+  function placeHead(p) {
+    if (!geo) { return; }
+    var b = Math.min(BARS - 1, Math.max(0, Math.floor(p / STEPS))), f = (p - b * STEPS) / STEPS;
+    head.style.transform = 'translateX(' + (geo.lefts[b] + f * geo.widths[b]).toFixed(1) + 'px)';
+  }
+  function sizeScene() {
+    var sc = $('scene'), r = sc.getBoundingClientRect();
+    sc.style.setProperty('--sh', r.height + 'px');
+    sc.style.setProperty('--sw', r.width + 'px');
+  }
+
+  // ───────────────────────────── Rendering ─────────────────────────────
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  function bunting() {
+    var colors = ['#e5392f', '#f5b400', '#2fa83a', '#1e88e5', '#a24fc9', '#f28a1a'], s = '';
+    for (var i = 0; i < 20; i++) {
+      var x = 25 + i * 50, u = x / 1000, y = (1 - u) * (1 - u) * 6 + 2 * (1 - u) * u * 60 + u * u * 6;
+      s += '<path d="M' + (x - 19) + ' ' + y.toFixed(1) + 'L' + (x + 19) + ' ' + y.toFixed(1) + 'L' + x + ' ' + (y + 36).toFixed(1) + 'z" fill="' + colors[i % colors.length] + '"/>';
+    }
+    return '<svg viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="M0 6Q500 114 1000 6" fill="none" stroke="#7a4a1e" stroke-width="3"/>' + s + '</svg>';
+  }
+
+  function renderScene() {
+    var w = world(), sc = $('scene');
+    WORLDS.forEach(function (x) { sc.classList.toggle('w-' + x.id, x === w); });
+    function html(d) {
+      if (d[0] === 'bunting') { return '<span class="dc bunting" style="' + d[1] + '">' + bunting() + '</span>'; }
+      return '<span class="dc' + (d[0] === '♪' || d[0] === '♫' ? ' mn' : '') + (d[2] ? ' ' + d[2] : '') + '" style="' + d[1] + '">' + d[0] + '</span>';
+    }
+    var all = w.decor.concat(AIR_NOTES);
+    $('decor').innerHTML = all.filter(function (d) { return !d[3]; }).map(html).join('');
+    $('decorFront').innerHTML = all.filter(function (d) { return d[3]; }).map(html).join('');
+  }
+
+  function renderCast() {
+    var box = $('cast');
+    box.innerHTML = '';
+    cast = {};
+    ANIMALS.forEach(function (a, i) {
+      if (!onStage(a.id)) { return; }
+      var el = document.createElement('button');
+      el.className = 'mus idle-' + a.idle;
+      el.style.setProperty('--dl', (-i * 0.7) + 's');
+      el.style.setProperty('--hue', a.rot);
+      el.title = a.name + ' – ' + a.instName;
+      el.setAttribute('aria-label', a.name + ' – ' + a.instName);
+      el.innerHTML = '<span class="spot"></span><span class="body"><span class="ani">' + a.ico + '</span><span class="inst">' + a.inst + '</span></span><span class="shadow"></span>';
+      el.addEventListener('click', function () { tapAnimal(a); });
+      box.appendChild(el);
+      cast[a.id] = el;
+    });
+  }
+
+  var NUM_COLORS = ['#e53935', '#f57c00', '#f2a900', '#43a047', '#00a6b8', '#1e74d8', '#6a3fc8', '#e2556b'];
+  function renderGrid() {
+    var h = '<div class="hc corner" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></div>';
+    for (var b = 1; b <= BARS; b++) {
+      h += '<div class="hc num" data-bar="' + b + '" style="--n:' + NUM_COLORS[b - 1] + '"><span>' + b + '</span></div>';
+    }
+    ANIMALS.forEach(function (a) {
+      if (!onStage(a.id)) { return; }
+      var vars = '--t:' + a.tint + ';--c:' + a.color + ';--hue:' + a.rot;
+      h += '<button class="av" data-id="' + a.id + '" style="' + vars + '" title="' + esc(a.name) + '" aria-label="' + esc(a.name) + '">' +
+        '<span class="av-ani">' + a.face + '</span><span class="av-inst">' + a.inst + '</span></button>';
+      for (var bar = 1; bar <= BARS; bar++) {
+        var on = isOn(a.id, bar);
+        h += '<button class="cell' + (on ? ' on' : '') + '" data-id="' + a.id + '" data-bar="' + bar + '" style="' + vars + '"' +
+          ' aria-label="' + esc(a.name) + ', ' + bar + ' taktas" aria-pressed="' + on + '"><span class="dot"></span></button>';
+      }
+    });
+    $('grid').innerHTML = h;
+    if (curBar !== null) { setNow(curBar); }
+    requestAnimationFrame(measure);
+  }
+
+  function renderPill() {
+    $('btnAnimals').innerHTML = state.visible.map(function (id) { var a = byId(id); return '<span style="--hue:' + a.rot + '">' + a.face + '</span>'; }).join('');
+  }
+
+  function renderAll() { renderScene(); renderCast(); renderGrid(); renderPill(); hints(); }
+
+  // ───────────────────────────── Child's actions ─────────────────────────────
+  // Tapping an animal: it plays its whole rhythm once (on the next beat when
+  // the music is on, so it stays in time).
+  function tapAnimal(a) {
+    if (!ac()) { return; }
+    var sd, t0, out, bar;
+    if (clock.running) {
+      sd = clock.sd;
+      var k = Math.ceil(((C.currentTime - clock.startTime) / sd + 0.6) / 2) * 2;
+      t0 = stepTime(k); out = aBus; bar = Math.floor((k % CYCLE) / STEPS);
+    } else {
+      sd = 60 / world().bpm / 2; t0 = C.currentTime + 0.04; out = pvBus;
+      bar = Math.floor((clock.pos % CYCLE) / STEPS);
+    }
+    a.pattern.forEach(function (k, st) {
+      if (!k) { return; }
+      hitSound(a, k, t0 + st * sd, out, bar);
+      vq.push({ t: t0 + st * sd, type: 'hit', id: a.id, first: st === a.first });
+    });
+    pvUntil[a.id] = t0 + STEPS * sd;
+    vq.push({ t: t0, type: 'pv', id: a.id, on: true });
+    vq.push({ t: t0 + STEPS * sd, type: 'pv', id: a.id, on: false });
+    vq.sort(function (x, y) { return x.t - y.t; });
+    loop();
+  }
+
+  // ○ → ● (the animal starts its rhythm in that bar) and ● → ○.
+  function toggleCell(c) {
+    var id = c.dataset.id, bar = +c.dataset.bar, list = state.active[id], i = list.indexOf(bar), a = byId(id);
+    dropUndo();
+    if (i >= 0) {
+      list.splice(i, 1);
+      c.classList.remove('on', 'pop', 'fire');
+    } else {
+      list.push(bar);
+      list.sort(function (x, y) { return x - y; });
+      c.classList.add('on');
+      restart(c, 'pop');
+      var s = document.createElement('span');
+      s.className = 'spark'; s.textContent = '✨';
+      c.appendChild(s);
+      setTimeout(function () { s.remove(); }, 480);
+      // Stopped: a single stroke links the dot to the animal's sound.
+      if (!clock.running && ac()) {
+        hitSound(a, a.pattern[a.first], C.currentTime + 0.01, pvBus, bar - 1);
+        if (cast[id]) { hitFx(id, false); }
+      }
+    }
+    c.setAttribute('aria-pressed', i < 0);
+    save(); hints();
+  }
+
+  // 🔄 empties the map; pressed again within a few seconds it brings it back.
+  var undoSnap = null, undoTimer = 0;
+  function dropUndo() {
+    if (!undoSnap) { return; }
+    undoSnap = null; clearTimeout(undoTimer);
+    $('btnClear').classList.remove('undo');
+  }
+  function clearOrUndo() {
+    var btn = $('btnClear');
+    if (undoSnap) {
+      state.active = undoSnap;
+      dropUndo();
+      save(); renderGrid(); hints();
+      return;
+    }
+    if (!ANIMALS.some(function (a) { return state.active[a.id].length; })) { restart(btn, 'shake'); return; }
+    undoSnap = JSON.parse(JSON.stringify(state.active));
+    ANIMALS.forEach(function (a) { state.active[a.id] = []; });
+    $('grid').querySelectorAll('.cell.on').forEach(function (c) { c.classList.add('bye'); });
+    setTimeout(function () { renderGrid(); hints(); }, 260);
+    save();
+    btn.classList.add('undo');
+    undoTimer = setTimeout(dropUndo, 6000);
+  }
+
+  // Gentle, wordless hints: a tapping finger while the map is empty, and a
+  // bouncing ▶ once there is something to hear.
+  function hints() {
+    var any = state.visible.some(function (id) { return state.active[id].length; });
+    var still = !clock.running && !clock.ending;
+    $('hint').hidden = any || !still || dialogOpen();
+    $('btnPlay').classList.toggle('nudge', any && still);
+    placeHint();
+  }
+  function placeHint() {
+    var hint = $('hint'), c = $('grid').querySelector('.cell');
+    if (hint.hidden || !c) { return; }
+    var br = $('board').getBoundingClientRect(), r = c.getBoundingClientRect();
+    hint.style.left = (r.left - br.left + r.width * 0.5) + 'px';
+    hint.style.top = (r.top - br.top + r.height * 0.35) + 'px';
+  }
+  function ui() {
+    $('btnPlay').classList.toggle('on', clock.running);
+    $('btnPause').classList.toggle('on', !clock.running && !clock.ending && clock.pos > 0);
+    head.classList.toggle('idle', !clock.running && !clock.ending && clock.pos === 0);
+    hints();
+  }
+
+  // ───────────────────────────── Dialogs ─────────────────────────────
+  function dialogOpen() { return !!document.querySelector('.ov:not([hidden])'); }
+  function openDlg(id) { closeDlgs(); $(id).hidden = false; hints(); }
+  function closeDlgs() { document.querySelectorAll('.ov').forEach(function (o) { o.hidden = true; }); hints(); }
+  document.querySelectorAll('.ov').forEach(function (o) {
+    o.addEventListener('click', function (e) { if (e.target === o || e.target.closest('[data-close]')) { closeDlgs(); } });
   });
-  document.getElementById('btnAnimals').addEventListener('click', function () { animalsOverlay.hidden = false; });
-  document.getElementById('animalsClose').addEventListener('click', function () { animalsOverlay.hidden = true; });
-  animalsOverlay.addEventListener('click', function (e) { if (e.target === animalsOverlay) { animalsOverlay.hidden = true; } });
 
-  var infoOverlay = document.getElementById('infoOverlay');
-  document.getElementById('btnInfo').addEventListener('click', function () { infoOverlay.hidden = false; });
-  document.getElementById('infoClose').addEventListener('click', function () { infoOverlay.hidden = true; });
-  infoOverlay.addEventListener('click', function (e) { if (e.target === infoOverlay) { infoOverlay.hidden = true; } });
+  function renderWorlds() {
+    $('worldList').innerHTML = WORLDS.map(function (w) {
+      return '<button class="world w-' + w.id + (w.id === state.world ? ' sel' : '') + '" data-id="' + w.id + '" aria-label="' + esc(w.name) + '">' +
+        '<span class="wsky"></span><span class="wico">' + w.ico + '</span><span class="wname">' + esc(w.name) + '</span></button>';
+    }).join('');
+  }
+  $('worldList').addEventListener('click', function (e) {
+    var b = e.target.closest('.world');
+    if (!b) { return; }
+    ac();
+    var was = clock.running;
+    if (b.dataset.id !== state.world) {
+      halt();
+      state.world = b.dataset.id;
+      save(); renderScene();
+    }
+    closeDlgs();
+    if (was) { play(); }
+  });
 
-  // ── Top-level navigation ─────────────────────────────────────────────────
-  document.getElementById('btnHome').addEventListener('click', function () { location.href = 'rasymas.html'; });
-  document.getElementById('btnGames').addEventListener('click', function () { location.href = 'zaidimai.html'; });
+  function renderPicks() {
+    $('pickList').innerHTML = ANIMALS.map(function (a) {
+      var on = onStage(a.id);
+      return '<button class="pick' + (on ? ' sel' : '') + '" data-id="' + a.id + '" style="--c:' + a.color + ';--t:' + a.tint + ';--hue:' + a.rot + '"' +
+        ' aria-pressed="' + on + '" aria-label="' + esc(a.name) + '"><span class="pk-ani">' + a.ico + '</span>' +
+        '<span class="pk-inst">' + a.inst + '</span><span class="pk-check">✓</span><span class="pk-name">' + esc(a.name) + '</span></button>';
+    }).join('');
+  }
+  // One, several or all five animals; never none.
+  $('pickList').addEventListener('click', function (e) {
+    var b = e.target.closest('.pick');
+    if (!b) { return; }
+    var id = b.dataset.id, i = state.visible.indexOf(id);
+    if (i >= 0) {
+      if (state.visible.length === 1) { restart(b, 'shake'); return; }
+      state.visible.splice(i, 1);
+    } else {
+      state.visible.push(id);
+      state.visible = ANIMALS.map(function (a) { return a.id; }).filter(onStage);
+    }
+    save(); renderPicks(); renderCast(); renderGrid(); renderPill(); hints();
+    if (curBar !== null && clock.running) { onBar(curBar, false); }
+    if (i < 0) {
+      restart($('pickList').querySelector('[data-id="' + id + '"]'), 'bounce');
+      tapAnimal(byId(id));
+    }
+  });
 
+  // ───────────────────────────── Wiring ─────────────────────────────
+  $('grid').addEventListener('click', function (e) {
+    var c = e.target.closest('.cell'), av = e.target.closest('.av');
+    if (c) { toggleCell(c); }
+    else if (av) { tapAnimal(byId(av.dataset.id)); }
+  });
+  $('btnPlay').addEventListener('click', play);
+  $('btnPause').addEventListener('click', pause);
+  $('btnStop').addEventListener('click', stop);
+  $('btnClear').addEventListener('click', clearOrUndo);
+  $('btnMusic').addEventListener('click', function () { renderWorlds(); openDlg('musicDlg'); });
+  $('btnAnimals').addEventListener('click', function () { renderPicks(); openDlg('animalsDlg'); });
+  $('btnHelp').addEventListener('click', function () { openDlg('helpDlg'); });
+  $('btnHome').addEventListener('click', function () { location.href = 'zaidimai.html'; });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeDlgs(); return; }
+    if (e.key === ' ' && !dialogOpen()) {
+      e.preventDefault();
+      if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
+      if (clock.running) { pause(); } else { play(); }
+    }
+  });
+  // A hidden tab would starve the scheduler and stutter: pause instead.
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { return; }
+    if (clock.ending) { finishEnding(); } else if (clock.running) { pause(); }
+  });
+
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () { sizeScene(); measure(); });
+    ro.observe($('scene')); ro.observe($('board'));
+  }
+  window.addEventListener('resize', function () { sizeScene(); measure(); });
+
+  sizeScene();
+  renderAll();
+  ui();
+  // The game starts the way the child plays it: first choose the music.
+  if (firstOpen) { renderWorlds(); openDlg('musicDlg'); save(); }
 })();
 </script>
 </body>

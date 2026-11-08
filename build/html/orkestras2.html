@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>MUSICATION — Gyvūnų orkestras 2 🎼</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lt-font.css">
+<script src="auth.js"></script>
+<script>
+  // Reached from Žaidimai (zaidimai.html); like every page, only after logging in.
+  var SESSION = MusicationAuth.requireLogin();
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #86c454; }
+  body {
+    font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; padding: 0; }
+
+  /* The meadow fills the whole screen; the game itself is laid out on a
+     1920 × 1080 stage that is scaled to fit (16:9, as in the layout). */
+  .bg { position: fixed; inset: 0; }
+  .bg svg { width: 100%; height: 100%; display: block; }
+  .drift { animation: drift 60s ease-in-out infinite alternate; }
+  @keyframes drift { to { transform: translateX(90px); } }
+  .stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform: translate(-50%, -50%); touch-action: none; }
+
+  /* ───────── Top bar: settings · title · sound ───────── */
+  .corner {
+    position: absolute; top: 24px; width: 108px; height: 108px; border-radius: 50%; border: 6px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 7px 0 rgba(0, 0, 0, 0.2), 0 12px 22px rgba(0, 0, 0, 0.2); transition: transform 0.12s;
+  }
+  .corner svg { width: 58%; height: 58%; fill: #fff; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.18)); }
+  .corner:active { transform: translateY(3px) scale(0.95); }
+  .corner.set { left: 34px; background: radial-gradient(circle at 35% 30%, #ffc56b, #f59c1a 62%, #d77d0a); }
+  .corner.snd { right: 34px; background: radial-gradient(circle at 35% 30%, #8fe08a, #3daa3d 62%, #278a2a); }
+  .corner.snd.muted { background: radial-gradient(circle at 35% 30%, #d4d4d4, #949494 62%, #737373); }
+  .corner .i-off, .corner.muted .i-on { display: none; }
+  .corner.muted .i-off { display: block; }
+  .sign {
+    position: absolute; left: 50%; top: 20px; transform: translateX(-50%); height: 122px; padding: 0 58px 0 44px;
+    display: flex; align-items: center; gap: 18px; white-space: nowrap;
+    border-radius: 26px; border: 6px solid #5a3214;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 4px, transparent 4px 34px), linear-gradient(#a8692f, #7d4620);
+    box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.22), 0 8px 0 rgba(50, 25, 5, 0.45), 0 14px 24px rgba(0, 0, 0, 0.25);
+  }
+  .sign::before, .sign::after { content: ''; position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #4a2810; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25); }
+  .sign::before { left: 14px; } .sign::after { right: 14px; }
+  .sign .paw { width: 78px; height: 78px; display: block; }
+  .tt {
+    font-size: 78px; font-weight: 800; line-height: 1; letter-spacing: 2px; color: #fff6dc; padding-top: 8px;
+    text-shadow: 0 5px 0 #4a2810, 3px 3px 0 #4a2810, -3px 3px 0 #4a2810, 3px -3px 0 #4a2810, -3px -3px 0 #4a2810, 4px 0 0 #4a2810, -4px 0 0 #4a2810, 0 -4px 0 #4a2810;
+  }
+
+  /* ───────── 16 bars: ○ to come · ◉ now · ● played ───────── */
+  .progress {
+    position: absolute; left: 140px; right: 140px; top: 166px; height: 120px; padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-radius: 42px; border: 5px solid #e6d2a6; background: linear-gradient(#fffaf0, #f4e8cf);
+    box-shadow: 0 8px 0 rgba(120, 80, 30, 0.25), 0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+  .pg { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 64px; }
+  .pd {
+    width: 52px; height: 52px; border-radius: 50%; background: #fffdf8; border: 4px solid #d9cdb5;
+    box-shadow: inset 0 3px 4px rgba(0, 0, 0, 0.08); transition: background 0.3s, transform 0.35s;
+  }
+  .pn { font-size: 30px; font-weight: 800; line-height: 1; color: #a89c87; }
+  .pg.done .pd { background: radial-gradient(circle at 35% 30%, #8fe07a, #3fa93a 62%, #2b8a2b); border-color: #2a7d2a; }
+  .pg.done .pn { color: #3a8f35; }
+  .pg.cur .pd { background: radial-gradient(circle at 35% 30%, #ffe48a, #f7b21a 62%, #e08e00); border-color: #c77d00; animation: curPulse 1.6s ease-in-out infinite; }
+  .pg.cur .pn { color: #e08a00; }
+
+  /* ───────── The seven musicians ───────── */
+  .zone { position: absolute; width: 280px; height: 310px; border-radius: 40px; touch-action: none; --c: #5cb85c; }
+  .zone:focus-visible { outline: 5px solid #fff; outline-offset: -8px; }
+  .plat { position: absolute; left: 0; top: 214px; overflow: visible; }
+  .plat .top { filter: saturate(0.3) brightness(1.1); transition: filter 0.3s; }
+  .zone.on .plat .top, .zone.pend-off .plat .top { filter: none; }
+  .plat .ring { opacity: 0; transition: opacity 0.25s; filter: drop-shadow(0 0 10px var(--c)); }
+  .zone.on .ring { opacity: 1; }
+  .zone.pend-on .ring { opacity: 0.95; stroke-dasharray: 26 16; animation: dash 1s linear infinite; }
+  .zone.pend-off .ring { opacity: 0.5; stroke-dasharray: 26 16; animation: dash 1s linear infinite reverse; }
+  .hov { position: absolute; left: 25px; top: 36px; width: 230px; height: 230px; transform-origin: 50% 90%; transition: transform 0.13s ease-out, filter 0.13s; }
+  .jump, .idle { display: block; width: 100%; height: 100%; transform-origin: 50% 94%; }
+  .jump { transition: transform 0.4s ease; }
+  .idle { animation: breathe var(--br, 3.4s) ease-in-out infinite; }
+  .ch { display: block; width: 230px; height: 230px; overflow: visible; }
+  .ch g { transform-box: view-box; }
+  @media (hover: hover) { .zone:hover .hov { transform: scale(1.08); filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.95)); } }
+  .zone.touch .hov { transform: scale(1.08); filter: drop-shadow(0 0 16px rgba(255, 255, 255, 0.95)); }
+  .zone.ready .jump { transform: translateY(5px) scale(1.04, 0.93); }
+  .zone.fin .jump { animation: fin 0.9s ease-out; }
+  .badge {
+    position: absolute; left: 206px; top: 30px; width: 64px; height: 64px; border-radius: 50%; border: 5px solid #fff;
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c) 55%, #fff), var(--c) 65%);
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
+    filter: grayscale(1) opacity(0.45); transition: filter 0.25s;
+  }
+  .badge svg { width: 56%; height: 56%; fill: #fff; }
+  .zone.on .badge, .zone.pend-on .badge { filter: none; }
+  .badge.pop { animation: badgePop 0.24s ease-out; }
+  .spk {
+    position: absolute; width: 28px; height: 28px; opacity: 0; pointer-events: none;
+    background: #fff; clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+  }
+  .spk.s1 { left: 4px; top: 226px; } .spk.s2 { left: 250px; top: 212px; } .spk.s3 { left: 214px; top: 288px; }
+  .zone.on .spk { animation: twinkle 1.8s ease-in-out infinite; }
+  .zone.on .spk.s2 { animation-delay: 0.6s; } .zone.on .spk.s3 { animation-delay: 1.2s; }
+  .burst { position: absolute; font-size: 40px; pointer-events: none; z-index: 5; animation: burst 0.9s ease-out forwards; }
+
+  /* Waiting: breathing, blinking, a tail or an ear now and then. */
+  .p-eyes { animation: blink var(--bl, 5s) ease-in-out infinite; animation-delay: var(--bd, 0s); }
+  .ch-elephant .p-earL { animation: earL 4s ease-in-out infinite alternate; }
+  .ch-elephant .p-earR { animation: earR 4s ease-in-out infinite alternate; }
+  .ch-lion .p-tail, .ch-monkey .p-tail { animation: tail 3s ease-in-out infinite alternate; }
+  .ch-rabbit .p-earL { animation: twitch 5.5s ease-in-out infinite; }
+
+  /* Playing: one short move exactly on each stroke (h = stroke, H = accent). */
+  .ch-elephant.h .p-trunk, .ch-elephant.H .p-trunk { animation: elTrunk 0.34s ease-out; }
+  .ch-elephant.h .p-skin, .ch-elephant.H .p-skin, .ch-lion.h .p-skin, .ch-lion.H .p-skin { animation: skinHit 0.34s ease-out; }
+  .ch-elephant.h .p-all { animation: elBody 0.34s ease-out; }
+  .ch-elephant.H .p-all { animation: elBodyBig 0.42s ease-out; }
+  .ch-lion.h .p-paw, .ch-lion.H .p-paw { animation: lnPaw 0.36s ease-out; }
+  .ch-lion.H .p-head { animation: lnHead 0.5s ease-out; }
+  .ch-frog.H .p-all { animation: frJump 0.42s ease-out; }
+  .ch-frog.H .p-inst { animation: instJig 0.3s ease-out 0.1s; }
+  .ch-frog.h .p-hand { animation: frPat 0.2s ease-out; }
+  .ch-frog.h .p-inst { animation: instJig 0.2s ease-out; }
+  .ch-monkey.h .p-armL, .ch-monkey.H .p-armL { animation: mkL 0.16s ease-out; }
+  .ch-monkey.h .p-armR, .ch-monkey.H .p-armR { animation: mkR 0.16s ease-out; }
+  .ch-monkey.H .p-all { animation: mkSway 0.5s ease-in-out; }
+  .ch-bird.h .p-wingR, .ch-bird.H .p-wingR { animation: bdWingR 0.32s ease-out; }
+  .ch-bird.h .p-inst, .ch-bird.H .p-inst { animation: bdInst 0.5s ease-out; }
+  .ch-bird.H .p-wingL { animation: bdWingL 0.36s ease-out; }
+  .ch-bird.H .p-head { animation: bdHead 0.45s ease-out; }
+  .ch-turtle.h .p-arm, .ch-turtle.H .p-arm { animation: ttArm 0.5s ease-out; }
+  .ch-turtle.H .p-head { animation: ttHead 0.7s ease-in-out; }
+  .ch-turtle.h .p-foot, .ch-turtle.H .p-foot { animation: ttFoot 0.5s ease-out; }
+  .ch-rabbit.H .p-all { animation: rbHop 0.4s ease-out; }
+  .ch-rabbit.H .p-earL { animation: rbEarL 0.42s ease-out; }
+  .ch-rabbit.H .p-earR { animation: rbEarR 0.42s ease-out; }
+  .ch-rabbit.h .p-inst, .ch-rabbit.H .p-inst { animation: rbTamb 0.3s ease-out; }
+
+  /* ───────── ↻ ▶ ⏸ on a wooden board ───────── */
+  .controls { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); width: 780px; height: 158px; display: flex; align-items: center; justify-content: center; gap: 72px; }
+  .plank {
+    position: absolute; left: 0; right: 0; top: 34px; bottom: 10px; border-radius: 30px; border: 6px solid #5a3214;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 4px, transparent 4px 40px), linear-gradient(#a8692f, #7d4620);
+    box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.2), 0 8px 0 rgba(50, 25, 5, 0.45), 0 14px 24px rgba(0, 0, 0, 0.25);
+  }
+  .cb {
+    position: relative; z-index: 1; width: 120px; height: 120px; border-radius: 50%; border: 7px solid #fff6e0;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 7px 0 rgba(0, 0, 0, 0.25), 0 12px 20px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s, filter 0.2s, opacity 0.2s;
+  }
+  .cb svg { width: 56%; height: 56%; fill: #fff; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.2)); }
+  .cb:active { transform: translateY(4px) scale(0.95); }
+  .cb.reset { background: radial-gradient(circle at 35% 30%, #c19bf2, #8250d4 62%, #6337b0); }
+  .cb.play { width: 152px; height: 152px; background: radial-gradient(circle at 35% 30%, #8fe07a, #33a83a 62%, #23862a); }
+  .cb.pause { background: radial-gradient(circle at 35% 30%, #ffc56b, #f5901a 62%, #d6720a); }
+  .cb.dim { filter: saturate(0.35); opacity: 0.6; transform: scale(0.9); }
+  .cb.play.nudge { animation: nudge 1.4s ease-in-out infinite; }
+
+  /* ───────── After bar 16: ⭐ ⭐ ⭐ ───────── */
+  .celebrate { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .star { position: absolute; top: 330px; width: 190px; height: 190px; animation: starIn 0.6s cubic-bezier(.34, 1.56, .64, 1) both; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.25)); }
+  .celebrate.out .star { animation: starOut 0.5s ease-in forwards; }
+  .confetti { position: absolute; top: -40px; width: 18px; height: 28px; border-radius: 4px; animation: fall linear forwards; }
+
+  /* ───────── Settings (for the teacher; text is fine here) ───────── */
+  .ov { position: fixed; inset: 0; z-index: 50; background: rgba(30, 18, 6, 0.5); display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .dlg {
+    position: relative; width: 100%; max-width: 560px; background: #fff8ea; border: 6px solid #f3d18a; border-radius: 30px;
+    padding: 26px 28px 34px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35); color: #4a2e14;
+    animation: dlgIn 0.3s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .dlg h2 { font-size: 30px; font-weight: 800; margin-bottom: 14px; }
+  .dlg h3 { font-size: 18px; font-weight: 800; color: #8a6a40; margin: 14px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { padding: 8px 18px; border-radius: 999px; background: #fff; border: 3px solid #ead9b4; font-weight: 800; font-size: 18px; }
+  .chip.sel { background: #33a83a; border-color: #23862a; color: #fff; }
+  .home { margin-top: 22px; display: inline-flex; align-items: center; gap: 10px; padding: 12px 22px; border-radius: 999px; background: #7e4fd0; color: #fff; font-weight: 800; font-size: 19px; box-shadow: 0 5px 0 #5a32a3; }
+  .dlg-ok {
+    position: absolute; right: -20px; bottom: -20px; width: 66px; height: 66px; border-radius: 50%; border: 5px solid #fff;
+    background: radial-gradient(circle at 35% 30%, #8fe08a, #2fa83a 65%); color: #fff; font-size: 34px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  /* ───────── Motion ───────── */
+  @keyframes curPulse {
+    0%, 100% { transform: scale(1.12); box-shadow: 0 0 0 4px rgba(255, 200, 40, 0.35), 0 0 18px rgba(255, 190, 30, 0.6); }
+    50% { transform: scale(1.2); box-shadow: 0 0 0 8px rgba(255, 200, 40, 0.2), 0 0 26px rgba(255, 190, 30, 0.8); }
+  }
+  @keyframes dash { to { stroke-dashoffset: -84; } }
+  @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.022); } }
+  @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+  @keyframes earL { from { transform: rotate(0); } to { transform: rotate(-6deg); } }
+  @keyframes earR { from { transform: rotate(0); } to { transform: rotate(6deg); } }
+  @keyframes tail { from { transform: rotate(-6deg); } to { transform: rotate(8deg); } }
+  @keyframes twitch { 0%, 84%, 100% { transform: rotate(0); } 88% { transform: rotate(-9deg); } 92% { transform: rotate(0); } 95% { transform: rotate(-5deg); } }
+  @keyframes elTrunk { 0% { transform: rotate(0); } 30% { transform: rotate(-44deg); } 36% { transform: rotate(5deg); } 60% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
+  @keyframes skinHit { 0%, 34% { transform: scaleY(1); } 40% { transform: scaleY(0.55); } 60% { transform: scaleY(1.1); } 100% { transform: scaleY(1); } }
+  @keyframes elBody { 0%, 34% { transform: none; } 42% { transform: translateY(2px) scale(1.01, 0.98); } 70%, 100% { transform: none; } }
+  @keyframes elBodyBig { 0%, 30% { transform: none; } 40% { transform: translateY(5px) scale(1.04, 0.95); } 62% { transform: translateY(-3px) scale(0.99, 1.02); } 100% { transform: none; } }
+  @keyframes lnPaw { 0% { transform: rotate(0); } 30% { transform: rotate(36deg); } 36% { transform: rotate(-20deg); } 60% { transform: rotate(-8deg); } 100% { transform: rotate(0); } }
+  @keyframes lnHead { 0%, 32% { transform: rotate(0); } 46% { transform: rotate(5deg) translateY(2px); } 100% { transform: rotate(0); } }
+  @keyframes frJump {
+    0% { transform: none; } 22% { transform: scale(1.08, 0.86); } 30% { transform: translateY(-14px) scale(0.95, 1.08); }
+    55% { transform: translateY(-22px); } 82% { transform: translateY(0) scale(1.05, 0.95); } 100% { transform: none; }
+  }
+  @keyframes frPat { 0% { transform: rotate(-4deg); } 50% { transform: rotate(18deg); } 100% { transform: rotate(0); } }
+  @keyframes instJig { 0% { transform: scale(0.93); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  @keyframes mkL { 0% { transform: rotate(-12deg); } 50% { transform: rotate(8deg); } 100% { transform: rotate(0); } }
+  @keyframes mkR { 0% { transform: rotate(12deg); } 50% { transform: rotate(-8deg); } 100% { transform: rotate(0); } }
+  @keyframes mkSway { 0% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 100% { transform: none; } }
+  @keyframes bdWingR { 0% { transform: rotate(-10deg); } 16% { transform: rotate(14deg); } 100% { transform: rotate(0); } }
+  @keyframes bdWingL { 0% { transform: rotate(0); } 30% { transform: rotate(-30deg); } 65% { transform: rotate(4deg); } 100% { transform: rotate(0); } }
+  @keyframes bdInst { 0%, 12% { transform: rotate(0); } 26% { transform: rotate(7deg); } 46% { transform: rotate(-5deg); } 66% { transform: rotate(3deg); } 100% { transform: rotate(0); } }
+  @keyframes bdHead { 0% { transform: rotate(0); } 35% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
+  @keyframes ttArm { 0% { transform: rotate(0); } 28% { transform: rotate(28deg); } 32% { transform: rotate(-3deg); } 55% { transform: rotate(4deg); } 100% { transform: rotate(0); } }
+  @keyframes ttHead { 0% { transform: none; } 45% { transform: translateY(-4px) rotate(-5deg); } 100% { transform: none; } }
+  @keyframes ttFoot { 0%, 25% { transform: rotate(0); } 42% { transform: rotate(-14deg); } 72%, 100% { transform: rotate(0); } }
+  @keyframes rbHop { 0% { transform: none; } 22% { transform: translateY(-14px); } 45% { transform: translateY(-19px); } 75% { transform: translateY(0) scale(1.04, 0.95); } 100% { transform: none; } }
+  @keyframes rbEarL { 0% { transform: rotate(0); } 30% { transform: rotate(-14deg); } 62% { transform: rotate(8deg); } 100% { transform: rotate(0); } }
+  @keyframes rbEarR { 0% { transform: rotate(0); } 30% { transform: rotate(14deg); } 62% { transform: rotate(-8deg); } 100% { transform: rotate(0); } }
+  @keyframes rbTamb { 0% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 55% { transform: rotate(10deg); } 100% { transform: rotate(0); } }
+  @keyframes fin {
+    0% { transform: none; } 30% { transform: translateY(-48px) rotate(-6deg) scale(1.08); }
+    55% { transform: translateY(0) scale(1.1, 0.9); } 75% { transform: translateY(-14px) rotate(4deg); } 100% { transform: none; }
+  }
+  @keyframes badgePop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+  @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.4) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+  @keyframes burst { from { transform: translate(-50%, -50%) scale(0.4); opacity: 1; } to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.3); opacity: 0; } }
+  @keyframes nudge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+  @keyframes starIn { from { transform: scale(0) rotate(-40deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+  @keyframes starOut { to { transform: scale(0.6) translateY(-60px); opacity: 0; } }
+  @keyframes fall { to { transform: translateY(1180px) rotate(720deg); } }
+  @keyframes dlgIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+<div class="bg" id="bg" aria-hidden="true"></div>
+
+<div class="stage" id="stage">
+  <button class="corner set" id="btnSet" title="Nustatymai" aria-label="Nustatymai">
+    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6a3.6 3.6 0 1 1 0-7.2 3.6 3.6 0 0 1 0 7.2z"/></svg>
+  </button>
+  <div class="sign"><span id="paw"></span><span class="tt" id="title"></span></div>
+  <button class="corner snd" id="btnSnd" title="Garsas" aria-label="Garsas">
+    <svg class="i-on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06a7 7 0 0 1 0 13.42v2.06A9 9 0 0 0 14 3.23z"/></svg>
+    <svg class="i-off" viewBox="0 0 24 24"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a9 9 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>
+  </button>
+
+  <div class="progress" id="progress"></div>
+  <div id="orchestra"></div>
+
+  <div class="controls">
+    <div class="plank"></div>
+    <button class="cb reset" id="btnReset" title="Naujas orkestras" aria-label="Naujas orkestras">
+      <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+    </button>
+    <button class="cb play" id="btnPlay" title="Groti" aria-label="Groti">
+      <svg viewBox="0 0 24 24"><path d="M8 4.8v14.4a1.2 1.2 0 0 0 1.8 1.04l11.5-7.2a1.2 1.2 0 0 0 0-2.08L9.8 3.76A1.2 1.2 0 0 0 8 4.8z"/></svg>
+    </button>
+    <button class="cb pause dim" id="btnPause" title="Pauzė" aria-label="Pauzė">
+      <svg viewBox="0 0 24 24"><rect x="5.5" y="4" width="5" height="16" rx="1.6"/><rect x="13.5" y="4" width="5" height="16" rx="1.6"/></svg>
+    </button>
+  </div>
+
+  <div class="celebrate" id="celebrate" aria-hidden="true"></div>
+</div>
+
+<div class="ov" id="setDlg" hidden>
+  <div class="dlg" role="dialog" aria-label="Nustatymai">
+    <h2>⚙️ Nustatymai</h2>
+    <h3>Pavadinimo kalba</h3>
+    <div class="chips" id="langChips"></div>
+    <h3>Tempas</h3>
+    <div class="chips" id="tempoChips"></div>
+    <button class="home" id="btnHome">🏠 Į žaidimų sąrašą</button>
+    <button class="dlg-ok" data-close aria-label="Gerai">✓</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var BARS = 16, STEPS = 16, TOTAL = BARS * STEPS;    // 16 bars of 4/4, counted in sixteenth notes
+  var STORE = 'musication.orkestras2';
+
+  // ───────────────────────────── The orchestra ─────────────────────────────
+  // Every animal is described the same way, so animals, sounds and rhythms
+  // can be changed without touching the game logic. rhythmPattern: one bar
+  // in sixteenths (1 = stroke, 2 = accent); lead: how many seconds before
+  // the sound its move starts, so the strike lands exactly on the sound.
+  var ANIMALS = [
+    { id: 'elephant', name: 'Dramblys', position: { x: 540, y: 568 }, active: false, sound: 'elephant_drum', volume: 1,
+      rhythmPattern: [2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], lead: { 1: 0.12, 2: 0.12 },
+      idleAnimation: 'elephant_idle', playAnimation: 'elephant_hit', activeIndicator: '#4cb84a' },          // the pulse
+    { id: 'lion', name: 'Liūtas', position: { x: 960, y: 568 }, active: false, sound: 'lion_timpani', volume: 0.9,
+      rhythmPattern: [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], lead: { 1: 0.12, 2: 0.12 },
+      idleAnimation: 'lion_idle', playAnimation: 'lion_hit', activeIndicator: '#f5b400' },                  // strong accents
+    { id: 'frog', name: 'Varlė', position: { x: 1380, y: 568 }, active: false, sound: 'frog_handdrum', volume: 0.85,
+      rhythmPattern: [0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 0, 0, 0, 0], lead: { 1: 0, 2: 0.1 },
+      idleAnimation: 'frog_idle', playAnimation: 'frog_hit', activeIndicator: '#1fb39a' },                  // a short pattern
+    { id: 'monkey', name: 'Beždžionėlė', position: { x: 330, y: 852 }, active: false, sound: 'monkey_shaker', volume: 0.6,
+      rhythmPattern: [0, 0, 0, 0, 2, 1, 1, 1, 0, 0, 0, 0, 2, 1, 1, 1], lead: { 1: 0, 2: 0 },
+      idleAnimation: 'monkey_idle', playAnimation: 'monkey_hit', activeIndicator: '#9c4dcc' },               // a faster rhythm
+    { id: 'bird', name: 'Paukštelis', position: { x: 750, y: 852 }, active: false, sound: 'bird_bell', volume: 0.6,
+      rhythmPattern: [0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0], lead: { 1: 0.05, 2: 0.05 },
+      idleAnimation: 'bird_idle', playAnimation: 'bird_hit', activeIndicator: '#2196f3' },                  // high accents
+    { id: 'turtle', name: 'Vėžliukas', position: { x: 1170, y: 852 }, active: false, sound: 'turtle_xylo', volume: 0.75,
+      rhythmPattern: [2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], lead: { 1: 0.15, 2: 0.15 },
+      idleAnimation: 'turtle_idle', playAnimation: 'turtle_hit', activeIndicator: '#6a5acd' },              // a slow layer
+    { id: 'rabbit', name: 'Triušis', position: { x: 1590, y: 852 }, active: false, sound: 'rabbit_tamb', volume: 0.65,
+      rhythmPattern: [0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0], lead: { 1: 0, 2: 0.08 },
+      idleAnimation: 'rabbit_idle', playAnimation: 'rabbit_hit', activeIndicator: '#ec5f8c' }               // fills the gaps
+  ];
+  ANIMALS.forEach(function (a, i) { a.want = false; a.shown = false; a.blink = 4.4 + (i * 0.7) % 2.3; });
+  function byId(id) { return ANIMALS.filter(function (a) { return a.id === id; })[0]; }
+
+  // The music the animals join: 16 bars, one chord per bar, a simple tune.
+  var CHORD_NAMES = ['C', 'F', 'G', 'C', 'C', 'F', 'G', 'C', 'Am', 'F', 'C', 'G', 'Am', 'F', 'D7', 'G'];
+  var MELODY = [   // [note, length in eighths]
+    [['E5', 2], ['G5', 2], ['C6', 2], ['G5', 2]], [['A5', 2], ['F5', 2], ['C5', 4]],
+    [['D5', 2], ['G5', 2], ['B5', 2], ['G5', 2]], [['C6', 6], ['r', 2]],
+    [['E5', 1], ['E5', 1], ['G5', 2], ['E5', 2], ['C5', 2]], [['F5', 1], ['F5', 1], ['A5', 2], ['F5', 2], ['C5', 2]],
+    [['G5', 2], ['B5', 2], ['D6', 2], ['B5', 2]], [['C6', 4], ['G5', 4]],
+    [['A5', 2], ['C6', 2], ['E6', 4]], [['F5', 2], ['A5', 2], ['C6', 4]],
+    [['E5', 2], ['G5', 2], ['C6', 2], ['E5', 2]], [['D5', 4], ['G5', 4]],
+    [['C6', 2], ['B5', 2], ['A5', 2], ['E5', 2]], [['F5', 2], ['G5', 2], ['A5', 4]],
+    [['F#5', 2], ['A5', 2], ['C6', 2], ['A5', 2]], [['G5', 2], ['A5', 1], ['B5', 1], ['D6', 4]]
+  ];
+
+  // ───────────────────────────── Settings ─────────────────────────────
+  var TITLES = {
+    lt: [['GYVŪNŲ', 1], [' ORKESTRAS', 0]],
+    en: [['ANIMAL', 1], [' ORCHESTRA', 0]],
+    de: [['TIER', 1], ['ORCHESTER', 0]],
+    es: [['ORQUESTA DE ', 0], ['ANIMALES', 1]]
+  };
+  var TEMPI = [{ bpm: 90, label: '🐢 Lėtai' }, { bpm: 100, label: '🎵 Vidutiniškai' }, { bpm: 110, label: '🐇 Greitai' }];
+  var prefs = { lang: (SESSION && TITLES[SESSION.lang]) ? SESSION.lang : 'lt', bpm: 100, muted: false };
+  try { var sp = JSON.parse(localStorage.getItem(STORE) || 'null'); if (sp) { for (var k in sp) { prefs[k] = sp[k]; } } } catch (e) {}
+  if (!TITLES[prefs.lang]) { prefs.lang = 'lt'; }
+  function savePrefs() { try { localStorage.setItem(STORE, JSON.stringify(prefs)); } catch (e) {} }
+
+  // ───────────────────────────── Drawings ─────────────────────────────
+  var RJ = 'stroke-linejoin="round" stroke-linecap="round"';
+  function S(ol) { return 'stroke="' + ol + '" stroke-width="3.5" ' + RJ; }
+  function grad(id, c0, c1, c2) {
+    return '<radialGradient id="' + id + '" cx=".36" cy=".3" r=".85"><stop offset="0" stop-color="' + c0 + '"/>' +
+      '<stop offset=".65" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></radialGradient>';
+  }
+  function eye(x, y, r) {
+    return '<ellipse cx="' + x + '" cy="' + y + '" rx="' + r + '" ry="' + r * 1.2 + '" fill="#fff" stroke="#3b2a1f" stroke-width="2.2"/>' +
+      '<ellipse cx="' + (x + r * 0.1) + '" cy="' + (y + r * 0.25) + '" rx="' + r * 0.74 + '" ry="' + r * 0.88 + '" fill="#2a1a10"/>' +
+      '<circle cx="' + (x - r * 0.2) + '" cy="' + (y - r * 0.18) + '" r="' + r * 0.32 + '" fill="#fff"/>' +
+      '<circle cx="' + (x + r * 0.38) + '" cy="' + (y + r * 0.55) + '" r="' + r * 0.15 + '" fill="#fff"/>';
+  }
+  function eyes(x1, x2, y, r) { return '<g class="p-eyes" style="transform-origin:110px ' + y + 'px">' + eye(x1, y, r) + eye(x2, y, r) + '</g>'; }
+  function cheeks(x1, x2, y, r) {
+    return '<g fill="#ff7b95" opacity=".45"><ellipse cx="' + x1 + '" cy="' + y + '" rx="' + r + '" ry="' + r * 0.6 + '"/>' +
+      '<ellipse cx="' + x2 + '" cy="' + y + '" rx="' + r + '" ry="' + r * 0.6 + '"/></g>';
+  }
+  function mouthOpen(x, y, w) {
+    return '<path d="M' + (x - w) + ' ' + y + ' Q' + x + ' ' + (y + w * 1.2) + ' ' + (x + w) + ' ' + y + ' Z" fill="#8c2f39" stroke="#3b2a1f" stroke-width="2.2" ' + RJ + '/>' +
+      '<ellipse cx="' + x + '" cy="' + (y + w * 0.42) + '" rx="' + w * 0.45 + '" ry="' + w * 0.16 + '" fill="#f48aa0"/>';
+  }
+
+  // Each animal: viewBox 0 0 220 220, feet on y ≈ 208. Parts that move are
+  // groups named p-… with their own pivot (transform-origin).
+  var ART = {
+    elephant: function () {
+      var ol = '#5c6a7e', f = 'url(#elG)', st = S(ol);
+      var ear = '<path d="M84 64 C46 40 12 70 20 108 C26 138 62 144 86 124 Z" fill="' + f + '" ' + st + '/>' +
+        '<path d="M79 74 C51 60 31 84 35 107 C39 126 63 130 79 118 Z" fill="#f4a2b6"/>';
+      return '<defs>' + grad('elG', '#e2e8f0', '#aab5c5', '#8592a6') +
+        '<linearGradient id="elD" x1="0" x2="1"><stop offset="0" stop-color="#c4372a"/><stop offset=".45" stop-color="#f26b4f"/><stop offset="1" stop-color="#b02f20"/></linearGradient></defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<g class="p-earL" style="transform-origin:84px 92px">' + ear + '</g>' +
+          '<g class="p-earR" style="transform-origin:136px 92px"><g transform="matrix(-1 0 0 1 220 0)">' + ear + '</g></g>' +
+          '<ellipse cx="110" cy="166" rx="56" ry="42" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="66" cy="197" rx="22" ry="12" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="154" cy="197" rx="22" ry="12" fill="' + f + '" ' + st + '/>' +
+          '<g fill="#f6f1e7"><ellipse cx="56" cy="204" rx="4.5" ry="3.2"/><ellipse cx="66" cy="206" rx="4.5" ry="3.2"/><ellipse cx="76" cy="204" rx="4.5" ry="3.2"/>' +
+            '<ellipse cx="144" cy="204" rx="4.5" ry="3.2"/><ellipse cx="154" cy="206" rx="4.5" ry="3.2"/><ellipse cx="164" cy="204" rx="4.5" ry="3.2"/></g>' +
+          '<g class="p-drum">' +
+            '<path d="M70 160 V190 A40 11 0 0 0 150 190 V160 Z" fill="url(#elD)" stroke="#7a2416" stroke-width="3" ' + RJ + '/>' +
+            '<path d="M71 167 L84 184 L97 167 L110 184 L123 167 L136 184 L149 167" fill="none" stroke="#ffd65e" stroke-width="4" ' + RJ + '/>' +
+            '<path d="M70 190 A40 11 0 0 0 150 190" fill="none" stroke="#e4a53f" stroke-width="5" ' + RJ + '/>' +
+            '<g class="p-skin" style="transform-origin:110px 160px"><ellipse cx="110" cy="160" rx="40" ry="11" fill="#fdf2da" stroke="#e4a53f" stroke-width="5"/></g>' +
+          '</g>' +
+          '<ellipse cx="62" cy="151" rx="14" ry="20" transform="rotate(28 62 151)" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="158" cy="151" rx="14" ry="20" transform="rotate(-28 158 151)" fill="' + f + '" ' + st + '/>' +
+          '<g class="p-head" style="transform-origin:110px 140px">' +
+            '<ellipse cx="110" cy="96" rx="50" ry="46" fill="' + f + '" ' + st + '/>' +
+            '<path d="M98 56 Q103 46 110 52 Q115 44 122 53" fill="none" stroke="' + ol + '" stroke-width="3" ' + RJ + '/>' +
+            eyes(91, 129, 88, 10.5) + cheeks(75, 145, 112, 9) +
+            '<path d="M128 120 Q134 127 141 118" fill="none" stroke="#3b2a1f" stroke-width="2.6" ' + RJ + '/>' +
+            '<g class="p-trunk" style="transform-origin:110px 110px">' +
+              '<path d="M98 106 C95 128 99 146 112 154 C118 158 126 156 127 149 C119 144 114 130 122 106 Z" fill="' + f + '" ' + st + '/>' +
+              '<path d="M100 123 Q110 128 118 123 M103 135 Q110 140 116 135" fill="none" stroke="' + ol + '" stroke-width="2" opacity=".55" ' + RJ + '/>' +
+            '</g>' +
+          '</g>' +
+        '</g>';
+    },
+
+    lion: function () {
+      var ol = '#99591d', f = 'url(#lnG)', m = 'url(#lnM)', st = S(ol), mane = '';
+      for (var i = 0; i < 16; i++) {
+        var an = i / 16 * Math.PI * 2;
+        mane += '<circle cx="' + (110 + Math.cos(an) * 52).toFixed(1) + '" cy="' + (92 + Math.sin(an) * 50).toFixed(1) + '" r="17" fill="' + m + '" stroke="' + ol + '" stroke-width="3"/>';
+      }
+      var arm = 'M150 138 C162 148 160 162 146 167';
+      return '<defs>' + grad('lnG', '#ffe7a3', '#f7c155', '#e29a2d') + grad('lnM', '#e8954a', '#c86c2a', '#a5531d') +
+        '<linearGradient id="lnD" x1="0" x2="1"><stop offset="0" stop-color="#2557b3"/><stop offset=".45" stop-color="#4d8bf0"/><stop offset="1" stop-color="#204c9e"/></linearGradient></defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<g class="p-tail" style="transform-origin:150px 190px">' +
+            '<path d="M146 190 C182 194 200 168 188 148" fill="none" stroke="' + ol + '" stroke-width="10" ' + RJ + '/>' +
+            '<path d="M146 190 C182 194 200 168 188 148" fill="none" stroke="#f0b143" stroke-width="5" ' + RJ + '/>' +
+            '<circle cx="188" cy="143" r="10" fill="' + m + '" stroke="' + ol + '" stroke-width="2.5"/></g>' +
+          '<ellipse cx="110" cy="168" rx="50" ry="40" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="110" cy="176" rx="28" ry="24" fill="#fff2d3"/>' +
+          '<ellipse cx="74" cy="199" rx="20" ry="11" fill="' + f + '" ' + st + '/><ellipse cx="146" cy="199" rx="20" ry="11" fill="' + f + '" ' + st + '/>' +
+          '<g class="p-drum">' +
+            '<path d="M76 168 V194 A34 9 0 0 0 144 194 V168 Z" fill="url(#lnD)" stroke="#16377a" stroke-width="3" ' + RJ + '/>' +
+            '<path d="M77 174 L88 189 L99 174 L110 189 L121 174 L132 189 L143 174" fill="none" stroke="#ffd04f" stroke-width="4" ' + RJ + '/>' +
+            '<path d="M76 194 A34 9 0 0 0 144 194" fill="none" stroke="#e5483a" stroke-width="5" ' + RJ + '/>' +
+            '<g class="p-skin" style="transform-origin:110px 168px"><ellipse cx="110" cy="168" rx="34" ry="9" fill="#fdf3df" stroke="#e5483a" stroke-width="5"/></g>' +
+          '</g>' +
+          '<ellipse cx="80" cy="162" rx="14" ry="11" fill="' + f + '" ' + st + '/>' +
+          '<g class="p-head" style="transform-origin:110px 136px">' +
+            mane + '<circle cx="110" cy="92" r="50" fill="' + m + '"/>' +
+            '<circle cx="80" cy="58" r="13" fill="' + f + '" ' + st + '/><circle cx="80" cy="58" r="7" fill="#f2a466"/>' +
+            '<circle cx="140" cy="58" r="13" fill="' + f + '" ' + st + '/><circle cx="140" cy="58" r="7" fill="#f2a466"/>' +
+            '<circle cx="110" cy="96" r="40" fill="' + f + '" ' + st + '/>' +
+            eyes(95, 125, 87, 9.5) + cheeks(84, 136, 104, 8) +
+            '<ellipse cx="101" cy="109" rx="13" ry="10" fill="#fff4de"/><ellipse cx="119" cy="109" rx="13" ry="10" fill="#fff4de"/>' +
+            '<g fill="#c98b3c"><circle cx="96" cy="108" r="1.6"/><circle cx="100" cy="112" r="1.6"/><circle cx="120" cy="112" r="1.6"/><circle cx="124" cy="108" r="1.6"/></g>' +
+            '<path d="M102 99 Q110 95 118 99 Q115 106 110 107 Q105 106 102 99 Z" fill="#6b3a26"/>' +
+            '<path d="M103 115 Q110 122 117 115" fill="none" stroke="#3b2a1f" stroke-width="2.6" ' + RJ + '/>' +
+          '</g>' +
+          '<g class="p-paw" style="transform-origin:150px 140px">' +
+            '<path d="' + arm + '" fill="none" stroke="' + ol + '" stroke-width="20" ' + RJ + '/>' +
+            '<path d="' + arm + '" fill="none" stroke="#f3bb4c" stroke-width="13" ' + RJ + '/>' +
+            '<line x1="143" y1="165" x2="120" y2="151" stroke="#7a4a1c" stroke-width="5" ' + RJ + '/>' +
+            '<circle cx="116" cy="149" r="8" fill="#e5533d" stroke="#8a2a1c" stroke-width="2.5"/>' +
+            '<circle cx="145" cy="166" r="9" fill="' + f + '" ' + st + '/>' +
+          '</g>' +
+        '</g>';
+    },
+
+    frog: function () {
+      var ol = '#2f6b22', f = 'url(#frG)', st = S(ol);
+      return '<defs>' + grad('frG', '#b8ee86', '#74c84d', '#4f9d34') + grad('frB', '#f6fcdc', '#ddf2a8', '#c6e489') + '</defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<ellipse cx="66" cy="190" rx="30" ry="18" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="154" cy="190" rx="30" ry="18" fill="' + f + '" ' + st + '/>' +
+          '<g fill="' + f + '" ' + st + '><circle cx="40" cy="203" r="7"/><circle cx="51" cy="206" r="7"/><circle cx="62" cy="206" r="7"/>' +
+            '<circle cx="158" cy="206" r="7"/><circle cx="169" cy="206" r="7"/><circle cx="180" cy="203" r="7"/></g>' +
+          '<ellipse cx="110" cy="168" rx="46" ry="36" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="110" cy="174" rx="30" ry="24" fill="url(#frB)"/>' +
+          '<g class="p-head" style="transform-origin:110px 150px">' +
+            '<ellipse cx="110" cy="118" rx="60" ry="40" fill="' + f + '" ' + st + '/>' +
+            '<circle cx="80" cy="84" r="22" fill="' + f + '" ' + st + '/><circle cx="140" cy="84" r="22" fill="' + f + '" ' + st + '/>' +
+            eyes(80, 140, 84, 12) + cheeks(70, 150, 124, 9) +
+            '<circle cx="104" cy="108" r="1.8" fill="' + ol + '"/><circle cx="116" cy="108" r="1.8" fill="' + ol + '"/>' +
+            '<path d="M84 122 Q110 150 136 122 Q110 132 84 122 Z" fill="#8c2f39" stroke="' + ol + '" stroke-width="2.5" ' + RJ + '/>' +
+            '<ellipse cx="110" cy="134" rx="9" ry="4" fill="#f48aa0"/>' +
+          '</g>' +
+          '<g class="p-inst" style="transform-origin:110px 178px">' +
+            '<circle cx="110" cy="178" r="25" fill="#fdf0d6" stroke="#c4843a" stroke-width="7"/>' +
+            '<circle cx="110" cy="178" r="17" fill="none" stroke="#ecd3a2" stroke-width="2"/>' +
+            '<g fill="#f2c14e" stroke="#9a5f1f" stroke-width="1.5"><circle cx="85" cy="178" r="3"/><circle cx="135" cy="178" r="3"/><circle cx="110" cy="153" r="3"/><circle cx="110" cy="203" r="3"/></g>' +
+          '</g>' +
+          '<ellipse cx="84" cy="176" rx="10" ry="12" fill="' + f + '" ' + st + '/>' +
+          '<g class="p-hand" style="transform-origin:150px 150px"><ellipse cx="128" cy="166" rx="11" ry="9" transform="rotate(-20 128 166)" fill="' + f + '" ' + st + '/></g>' +
+        '</g>';
+    },
+
+    monkey: function () {
+      var ol = '#4a2c1a', f = 'url(#mkG)', fc = 'url(#mkF)', st = S(ol);
+      function arm(side) {
+        var sx = 110 + side * 28, hx = 110 + side * 66, mx = 110 + side * 80, d = 'M' + sx + ' 150 Q' + (110 + side * 56) + ' 150 ' + hx + ' 132';
+        return '<path d="' + d + '" fill="none" stroke="' + ol + '" stroke-width="17" ' + RJ + '/>' +
+          '<path d="' + d + '" fill="none" stroke="#8b5a3c" stroke-width="11" ' + RJ + '/>' +
+          '<line x1="' + hx + '" y1="132" x2="' + mx + '" y2="108" stroke="#7a4a1c" stroke-width="5" ' + RJ + '/>' +
+          '<g transform="rotate(' + side * 20 + ' ' + mx + ' 96)">' +
+            '<ellipse cx="' + mx + '" cy="96" rx="13" ry="16" fill="#e8453c" stroke="#7a1f18" stroke-width="2.5"/>' +
+            '<path d="M' + (mx - 12) + ' 92 Q' + mx + ' 86 ' + (mx + 12) + ' 92" fill="none" stroke="#ffd34d" stroke-width="3.5"/>' +
+            '<path d="M' + (mx - 12) + ' 101 Q' + mx + ' 95 ' + (mx + 12) + ' 101" fill="none" stroke="#4cc06a" stroke-width="3.5"/>' +
+            '<ellipse cx="' + (mx - 4) + '" cy="88" rx="3.5" ry="2.5" fill="#fff" opacity=".7"/>' +
+          '</g>' +
+          '<circle cx="' + hx + '" cy="132" r="8.5" fill="' + fc + '" ' + st + '/>';
+      }
+      var tail = 'M138 192 C178 200 196 160 176 150 C164 144 158 158 168 162';
+      return '<defs>' + grad('mkG', '#b98059', '#8b5a3c', '#683f27') + grad('mkF', '#ffe7c6', '#f6cfa0', '#e6b583') + '</defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<g class="p-tail" style="transform-origin:140px 190px"><path d="' + tail + '" fill="none" stroke="' + ol + '" stroke-width="10" ' + RJ + '/>' +
+            '<path d="' + tail + '" fill="none" stroke="#8b5a3c" stroke-width="5" ' + RJ + '/></g>' +
+          '<ellipse cx="110" cy="168" rx="40" ry="36" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="110" cy="174" rx="25" ry="23" fill="' + fc + '"/>' +
+          '<ellipse cx="88" cy="201" rx="16" ry="9" fill="' + fc + '" ' + st + '/><ellipse cx="132" cy="201" rx="16" ry="9" fill="' + fc + '" ' + st + '/>' +
+          '<g class="p-armL" style="transform-origin:82px 150px">' + arm(-1) + '</g>' +
+          '<g class="p-armR" style="transform-origin:138px 150px">' + arm(1) + '</g>' +
+          '<g class="p-head" style="transform-origin:110px 136px">' +
+            '<circle cx="67" cy="98" r="17" fill="' + f + '" ' + st + '/><circle cx="67" cy="98" r="10" fill="' + fc + '"/>' +
+            '<circle cx="153" cy="98" r="17" fill="' + f + '" ' + st + '/><circle cx="153" cy="98" r="10" fill="' + fc + '"/>' +
+            '<circle cx="110" cy="94" r="42" fill="' + f + '" ' + st + '/>' +
+            '<path d="M102 55 Q108 42 118 50 Q110 50 112 58" fill="' + f + '" ' + st + '/>' +
+            '<path d="M110 84 C100 70 78 72 78 93 C78 114 94 126 110 126 C126 126 142 114 142 93 C142 72 120 70 110 84 Z" fill="' + fc + '"/>' +
+            eyes(97, 123, 92, 9) + cheeks(87, 133, 110, 7) +
+            '<ellipse cx="106" cy="105" rx="2.2" ry="1.6" fill="' + ol + '"/><ellipse cx="114" cy="105" rx="2.2" ry="1.6" fill="' + ol + '"/>' +
+            mouthOpen(110, 111, 10) +
+          '</g>' +
+        '</g>';
+    },
+
+    bird: function () {
+      var ol = '#1b4c8c', f = 'url(#bdG)', st = S(ol);
+      return '<defs>' + grad('bdG', '#8cc6ff', '#3f8fe6', '#2565b8') + grad('bdB', '#f2f8ff', '#cfe6ff', '#b3d6fb') +
+        '<linearGradient id="bdT" x1="0" x2="1"><stop offset="0" stop-color="#eef2f7"/><stop offset=".5" stop-color="#b9c2cf"/><stop offset="1" stop-color="#8e99a9"/></linearGradient></defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<path d="M66 174 L30 166 L42 181 L28 194 L64 190 Z" fill="#2f78d3" ' + st + '/>' +
+          '<g fill="none" stroke="#f08c1c" stroke-width="4.5" ' + RJ + '><path d="M96 194 L90 206 M96 194 L96 207 M96 194 L102 206"/><path d="M124 194 L118 206 M124 194 L124 207 M124 194 L130 206"/></g>' +
+          '<circle cx="110" cy="138" r="58" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="110" cy="161" rx="36" ry="31" fill="url(#bdB)"/>' +
+          '<g class="p-wingL" style="transform-origin:64px 130px"><path d="M66 122 C36 126 30 158 48 172 C58 160 68 148 72 134 Z" fill="#2f7ad6" ' + st + '/></g>' +
+          '<g class="p-head" style="transform-origin:110px 130px">' +
+            '<path d="M100 84 C94 62 110 56 112 74 C116 56 134 62 122 86 Z" fill="' + f + '" ' + st + '/>' +
+            eyes(92, 128, 114, 10.5) + cheeks(80, 140, 134, 8) +
+            '<path d="M99 128 L121 128 L110 144 Z" fill="#f9a826" stroke="#b5650d" stroke-width="2.5" ' + RJ + '/>' +
+            '<path d="M102 133 L118 133" stroke="#d98419" stroke-width="2" ' + RJ + '/>' +
+          '</g>' +
+          '<g class="p-inst" style="transform-origin:170px 112px">' +
+            '<line x1="170" y1="104" x2="170" y2="118" stroke="#8e99a9" stroke-width="2"/>' +
+            '<path d="M163 130 L170 118 L196 164 L146 164 L157 145" fill="none" stroke="url(#bdT)" stroke-width="5.5" ' + RJ + '/>' +
+          '</g>' +
+          '<g class="p-wingR" style="transform-origin:154px 128px">' +
+            '<path d="M152 120 C180 110 198 126 190 140 C178 136 166 138 150 140 Z" fill="#2f7ad6" ' + st + '/>' +
+            '<line x1="186" y1="138" x2="178" y2="162" stroke="#9aa5b4" stroke-width="4" ' + RJ + '/>' +
+          '</g>' +
+        '</g>';
+    },
+
+    turtle: function () {
+      var ol = '#3e6b1e', f = 'url(#ttG)', st = S(ol), so = '#6a3c14', bars = '';
+      function hex(cx, cy, r) {
+        var p = [];
+        for (var i = 0; i < 6; i++) { var a = Math.PI / 3 * i + Math.PI / 6; p.push((cx + r * Math.cos(a)).toFixed(1) + ' ' + (cy + r * Math.sin(a)).toFixed(1)); }
+        return '<path d="M' + p.join(' L') + ' Z" fill="#c98d4f" stroke="' + so + '" stroke-width="2.5" stroke-linejoin="round"/>';
+      }
+      for (var i = 0; i < 5; i++) {
+        bars += '<rect x="' + (64 + i * 19) + '" y="' + (176 + i * 1.5) + '" width="15" height="' + (30 - i * 3) + '" rx="3" fill="' + (i % 2 ? '#e39b3d' : '#f2b65c') + '" stroke="#8a5424" stroke-width="2"/>' +
+          '<circle cx="' + (71.5 + i * 19) + '" cy="' + (181 + i * 1.5) + '" r="1.6" fill="#6a3c14"/>';
+      }
+      return '<defs>' + grad('ttG', '#c8ef94', '#8fc456', '#679f37') + grad('ttS', '#cf9152', '#a8682f', '#86501f') + grad('ttP', '#fff0b8', '#f4da8e', '#e2c072') + '</defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<ellipse cx="110" cy="148" rx="68" ry="58" fill="url(#ttS)" stroke="' + so + '" stroke-width="3.5"/>' +
+          hex(60, 128, 16) + hex(160, 128, 16) + hex(56, 166, 15) + hex(164, 166, 15) + hex(84, 102, 14) + hex(136, 102, 14) +
+          '<g class="p-foot" style="transform-origin:90px 198px"><ellipse cx="80" cy="199" rx="19" ry="10" fill="' + f + '" ' + st + '/></g>' +
+          '<ellipse cx="140" cy="199" rx="19" ry="10" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="110" cy="164" rx="40" ry="40" fill="url(#ttP)" stroke="#b08a3a" stroke-width="3"/>' +
+          '<path d="M76 150 Q110 158 144 150 M72 172 Q110 180 148 172 M110 126 V202" fill="none" stroke="#c9a454" stroke-width="2.5"/>' +
+          '<g class="p-inst">' +
+            '<path d="M58 184 L162 178 M58 202 L162 196" stroke="#7a4a1c" stroke-width="6" ' + RJ + '/>' + bars +
+          '</g>' +
+          '<ellipse cx="70" cy="164" rx="11" ry="16" transform="rotate(30 70 164)" fill="' + f + '" ' + st + '/>' +
+          '<g class="p-arm" style="transform-origin:148px 146px">' +
+            '<ellipse cx="152" cy="160" rx="11" ry="17" transform="rotate(-28 152 160)" fill="' + f + '" ' + st + '/>' +
+            '<line x1="146" y1="172" x2="122" y2="182" stroke="#7a4a1c" stroke-width="4.5" ' + RJ + '/>' +
+            '<circle cx="118" cy="183" r="6.5" fill="#e5533d" stroke="#8a2a1c" stroke-width="2"/>' +
+          '</g>' +
+          '<g class="p-head" style="transform-origin:110px 124px">' +
+            '<ellipse cx="110" cy="122" rx="20" ry="13" fill="' + f + '" ' + st + '/>' +
+            '<ellipse cx="110" cy="92" rx="38" ry="34" fill="' + f + '" ' + st + '/>' +
+            eyes(96, 124, 88, 9.5) + cheeks(85, 135, 103, 7.5) +
+            '<circle cx="106" cy="98" r="1.4" fill="' + ol + '"/><circle cx="114" cy="98" r="1.4" fill="' + ol + '"/>' +
+            '<path d="M101 106 Q110 114 119 106" fill="none" stroke="#3b2a1f" stroke-width="2.6" ' + RJ + '/>' +
+          '</g>' +
+        '</g>';
+    },
+
+    rabbit: function () {
+      var ol = '#a0988c', f = 'url(#rbG)', st = S(ol), jingles = '';
+      function ear(x, rot) {
+        return '<ellipse cx="' + x + '" cy="44" rx="14" ry="40" transform="rotate(' + rot + ' ' + x + ' 80)" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="' + x + '" cy="48" rx="7" ry="29" transform="rotate(' + rot + ' ' + x + ' 80)" fill="url(#rbE)"/>';
+      }
+      for (var i = 0; i < 6; i++) {
+        var a = i / 6 * Math.PI * 2 + 0.3;
+        jingles += '<ellipse cx="' + (78 + Math.cos(a) * 24).toFixed(1) + '" cy="' + (166 + Math.sin(a) * 24).toFixed(1) + '" rx="5" ry="3.4" fill="#e1e5ec" stroke="#8e99a9" stroke-width="1.5"/>';
+      }
+      return '<defs>' + grad('rbG', '#ffffff', '#f3f1ec', '#d9d4ca') + grad('rbE', '#ffd3df', '#f9adc1', '#ef93ab') + '</defs>' +
+        '<g class="p-all" style="transform-origin:110px 206px">' +
+          '<g class="p-earL" style="transform-origin:94px 80px">' + ear(94, -9) + '</g>' +
+          '<g class="p-earR" style="transform-origin:126px 80px">' + ear(126, 9) + '</g>' +
+          '<ellipse cx="110" cy="166" rx="40" ry="38" fill="' + f + '" ' + st + '/>' +
+          '<ellipse cx="110" cy="172" rx="25" ry="25" fill="#ffffff"/>' +
+          '<ellipse cx="84" cy="201" rx="21" ry="10" fill="' + f + '" ' + st + '/><ellipse cx="136" cy="201" rx="21" ry="10" fill="' + f + '" ' + st + '/>' +
+          '<g class="p-head" style="transform-origin:110px 140px">' +
+            '<circle cx="110" cy="104" r="40" fill="' + f + '" ' + st + '/>' +
+            eyes(95, 125, 98, 9.5) + cheeks(83, 137, 115, 8) +
+            '<path d="M105 110 Q110 107 115 110 Q112 115 110 115 Q108 115 105 110 Z" fill="#f28aa5"/>' +
+            '<path d="M110 115 V119 M104 120 Q107 124 110 119 Q113 124 116 120" fill="none" stroke="#3b2a1f" stroke-width="2.2" ' + RJ + '/>' +
+            '<path d="M92 113 L73 109 M92 117 L73 120 M128 113 L147 109 M128 117 L147 120" fill="none" stroke="#b8b0a4" stroke-width="1.6" ' + RJ + '/>' +
+          '</g>' +
+          '<g class="p-inst" style="transform-origin:96px 168px">' +
+            '<circle cx="78" cy="166" r="24" fill="#fff4dc" stroke="#d09a50" stroke-width="7"/>' + jingles +
+            '<ellipse cx="98" cy="170" rx="10" ry="8" fill="' + f + '" ' + st + '/>' +
+          '</g>' +
+        '</g>';
+    }
+  };
+
+  var NOTE_ICON = '<svg viewBox="0 0 24 24"><path d="M9 3v10.55A4 4 0 1 0 11 17V7h6v6.55A4 4 0 1 0 19 17V3H9z"/></svg>';
+  var PAW = '<svg class="paw" viewBox="0 0 64 64"><g fill="#f4b63f" stroke="#8a5418" stroke-width="3">' +
+    '<ellipse cx="32" cy="42" rx="15" ry="13"/><ellipse cx="14" cy="27" rx="6.5" ry="8.5"/><ellipse cx="25" cy="16" rx="6.5" ry="8.5"/>' +
+    '<ellipse cx="39" cy="16" rx="6.5" ry="8.5"/><ellipse cx="50" cy="27" rx="6.5" ry="8.5"/></g></svg>';
+  var STAR = '<svg viewBox="0 0 100 100"><path d="M50 5 L62 36 L95 38 L69 59 L78 92 L50 74 L22 92 L31 59 L5 38 L38 36 Z" fill="#ffd23f" stroke="#e08a00" stroke-width="5" stroke-linejoin="round"/>' +
+    '<path d="M50 18 L58 39 L80 41" fill="none" stroke="#fff6c2" stroke-width="5" stroke-linecap="round" opacity=".8"/></svg>';
+
+  // The meadow: sky, clouds, far trees, a lake, grass, framing trees, flowers.
+  function background() {
+    function cloud(x, y, k) {
+      // The drift is on the inner group: a CSS animation would replace the
+      // outer group's own transform (its place and size).
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')"><g class="drift" fill="#fff">' +
+        '<ellipse cx="0" cy="18" rx="120" ry="34" fill="#e3f3fb"/><circle cx="-60" cy="4" r="44"/><circle cx="-6" cy="-22" r="58"/><circle cx="56" cy="0" r="46"/><ellipse cx="0" cy="12" rx="112" ry="30"/></g></g>';
+    }
+    function bush(x, y, k) {
+      return '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')" fill="url(#gLeaf)">' +
+        '<circle cx="-70" cy="10" r="58"/><circle cx="0" cy="-20" r="74"/><circle cx="72" cy="6" r="60"/><ellipse cx="0" cy="30" rx="130" ry="40"/></g>';
+    }
+    function flower(x, y, r, c) {
+      var p = '';
+      for (var i = 0; i < 5; i++) { var a = i / 5 * Math.PI * 2 - Math.PI / 2; p += '<circle cx="' + (x + Math.cos(a) * r).toFixed(1) + '" cy="' + (y + Math.sin(a) * r).toFixed(1) + '" r="' + r * 0.82 + '" fill="' + c + '"/>'; }
+      return '<path d="M' + x + ' ' + (y + r) + ' Q' + (x - 4) + ' ' + (y + r * 4) + ' ' + (x + 2) + ' ' + (y + r * 6) + '" stroke="#3f8a2c" stroke-width="4" fill="none"/>' + p +
+        '<circle cx="' + x + '" cy="' + y + '" r="' + r * 0.62 + '" fill="#ffcd3c" stroke="#e39b16" stroke-width="2"/>';
+    }
+    function tree(side) {
+      var m = side < 0 ? '' : ' transform="matrix(-1 0 0 1 1920 0)"';
+      return '<g' + m + '><path d="M-40 760 C40 600 90 420 120 -20 L210 -20 C190 300 150 520 60 760 Z" fill="url(#gTrunk)"/>' +
+        '<g fill="url(#gLeaf)"><circle cx="40" cy="40" r="170"/><circle cx="250" cy="-20" r="140"/><circle cx="-60" cy="230" r="130"/><circle cx="190" cy="120" r="110"/></g>' +
+        '<g fill="#93d466" opacity=".55"><circle cx="0" cy="0" r="80"/><circle cx="220" cy="-40" r="60"/><circle cx="-60" cy="190" r="50"/></g></g>';
+    }
+    var s = '<svg viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>' +
+      '<linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5bb9ee"/><stop offset=".5" stop-color="#9fd9f7"/><stop offset="1" stop-color="#d9f2fc"/></linearGradient>' +
+      '<linearGradient id="gGrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b3df72"/><stop offset=".4" stop-color="#8fcb57"/><stop offset="1" stop-color="#5c9f37"/></linearGradient>' +
+      '<radialGradient id="gLeaf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#86cf55"/><stop offset=".7" stop-color="#4f9a34"/><stop offset="1" stop-color="#3b7d27"/></radialGradient>' +
+      '<radialGradient id="gFar" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#b2deA0"/><stop offset="1" stop-color="#78b47a"/></radialGradient>' +
+      '<linearGradient id="gTrunk" x1="0" x2="1"><stop offset="0" stop-color="#6e4120"/><stop offset=".5" stop-color="#9a6234"/><stop offset="1" stop-color="#5e3418"/></linearGradient>' +
+      '</defs><rect width="1920" height="1080" fill="url(#gSky)"/>' +
+      cloud(760, 352, 0.42) + cloud(1175, 344, 0.36) + cloud(330, 330, 0.4);
+    for (var x = -60, i = 0; x < 1990; x += 92, i++) {
+      var r = 62 + (i * 23) % 38;
+      s += '<circle cx="' + x + '" cy="' + (515 - r * 0.45) + '" r="' + r + '" fill="url(#gFar)"/>';
+    }
+    s += '<path d="M0 505 C500 495 1400 495 1920 505 L1920 560 L0 560 Z" fill="#a6def0"/>' +
+      '<path d="M0 545 C420 520 760 540 960 535 C1260 528 1600 520 1920 540 L1920 1080 L0 1080 Z" fill="url(#gGrass)"/>' +
+      '<ellipse cx="960" cy="760" rx="700" ry="150" fill="#c4e88a" opacity=".35"/>' +
+      '<ellipse cx="560" cy="980" rx="520" ry="90" fill="#6aa83f" opacity=".25"/>' +
+      bush(210, 600, 0.9) + bush(1720, 596, 1) + bush(560, 545, 0.45) + bush(1380, 545, 0.45) +
+      tree(-1) + tree(1) +
+      '<g transform="translate(1858 742) scale(.9)"><rect x="-52" y="-50" width="104" height="70" rx="10" fill="#9a6234" stroke="#5e3418" stroke-width="5"/>' +
+        '<ellipse cx="0" cy="-50" rx="52" ry="16" fill="#e2b77c" stroke="#5e3418" stroke-width="5"/><ellipse cx="0" cy="-50" rx="30" ry="8" fill="none" stroke="#b98a52" stroke-width="3"/>' +
+        '<path d="M-96 18 Q-100 -14 -84 -20 L-74 -20 Q-62 -14 -66 18 Z" fill="#fff4e0" stroke="#b9a07a" stroke-width="3"/>' +
+        '<path d="M-118 -12 Q-80 -66 -40 -12 Z" fill="#e5483a" stroke="#9c2b20" stroke-width="4"/>' +
+        '<g fill="#fff"><circle cx="-92" cy="-30" r="6"/><circle cx="-72" cy="-40" r="5"/><circle cx="-60" cy="-22" r="5"/></g></g>' +
+      '<g transform="translate(90 720)"><ellipse cx="0" cy="0" rx="70" ry="42" fill="#a9adb3" stroke="#6d7177" stroke-width="5"/><ellipse cx="-14" cy="-14" rx="30" ry="12" fill="#c7cbd0"/></g>';
+    [[70, 640, 12, '#ffd23f'], [150, 700, 10, '#ff8fb1'], [36, 820, 13, '#b48cf2'], [200, 880, 11, '#ffffff'], [120, 960, 14, '#ff8fb1'],
+     [1840, 820, 12, '#b48cf2'], [1700, 900, 11, '#ffd23f'], [1860, 960, 14, '#ff8fb1'], [1620, 980, 10, '#ffffff'], [1880, 650, 10, '#ffd23f']].forEach(function (fl) {
+      s += flower(fl[0], fl[1], fl[2], fl[3]);
+    });
+    s += '<g fill="#3f8a2c"><path d="M-20 1080 C40 960 160 940 240 1000 C170 1010 90 1040 60 1080 Z"/><path d="M1940 1080 C1880 960 1760 940 1680 1000 C1750 1010 1830 1040 1860 1080 Z"/></g>' +
+      '<g fill="#5aa83a"><path d="M-30 1000 C60 900 170 900 210 950 C140 960 60 990 0 1060 Z"/><path d="M1950 1000 C1860 900 1750 900 1710 950 C1780 960 1860 990 1920 1060 Z"/></g>';
+    return s + '</svg>';
+  }
+
+  // ───────────────────────────── Sound ─────────────────────────────
+  var C = null, comp = null, master = null, pvBus = null, NOISE = null;
+  function ac() {
+    if (!C) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { return null; }
+      C = new AC();
+      comp = C.createDynamicsCompressor();
+      comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 3.5; comp.attack.value = 0.004; comp.release.value = 0.25;
+      master = C.createGain();
+      master.gain.value = prefs.muted ? 0 : 0.9;
+      comp.connect(master); master.connect(C.destination);
+      pvBus = C.createGain(); pvBus.connect(comp);
+      NOISE = C.createBuffer(1, C.sampleRate * 2, C.sampleRate);
+      var d = NOISE.getChannelData(0);
+      for (var i = 0; i < d.length; i++) { d[i] = Math.random() * 2 - 1; }
+    }
+    if (C.state === 'suspended') { C.resume(); }
+    return C;
+  }
+  function env(t, out, peak, a, hold, rel) {
+    var g = C.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + a);
+    if (hold > 0) { g.gain.setValueAtTime(peak, t + a + hold); }
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + hold + rel);
+    g.connect(out);
+    return g;
+  }
+  function osc(t, to, type, freq, end) {
+    var o = C.createOscillator();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    o.connect(to); o.start(t); o.stop(end);
+    return o;
+  }
+  function noise(t, to, dur) {
+    var s = C.createBufferSource();
+    s.buffer = NOISE; s.connect(to); s.start(t, Math.random() * 1.5, dur + 0.02);
+  }
+  function filt(type, f, q, to) {
+    var b = C.createBiquadFilter();
+    b.type = type; b.frequency.value = f; if (q) { b.Q.value = q; }
+    b.connect(to);
+    return b;
+  }
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+  var PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  function chord(name) {
+    var m = /^([A-G])([#b]?)(m?)(7?)$/.exec(name);
+    var root = (PC[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0) + 12) % 12;
+    var tones = [root, root + (m[3] ? 3 : 4), root + 7];
+    if (m[4]) { tones.push(root + 10); }
+    return { root: root, tones: tones };
+  }
+  function inRange(pc, lo) { return lo + ((pc - lo) % 12 + 12) % 12; }      // pitch class into lo .. lo+11
+  function noteMidi(n) { var m = /^([A-G])(#?)(\d)$/.exec(n); return 12 * (+m[3] + 1) + PC[m[1]] + (m[2] ? 1 : 0); }
+  var CHORDS = CHORD_NAMES.map(chord);
+  var MEL = MELODY.map(function (bar) {
+    var row = [], s = 0;
+    for (var i = 0; i < STEPS; i++) { row.push(null); }
+    bar.forEach(function (n) { if (n[0] !== 'r') { row[s] = { m: noteMidi(n[0]), len: n[1] * 2 }; } s += n[1] * 2; });
+    return row;
+  });
+
+  // Each animal's own, easy-to-recognise sound.
+  var SOUNDS = {
+    elephant_drum: function (t, out, k, bar, v) {
+      var o = osc(t, env(t, out, 0.95 * v, 0.004, 0, 0.42), 'sine', k === 2 ? 165 : 150, t + 0.46);
+      o.frequency.exponentialRampToValueAtTime(50, t + 0.3);
+      osc(t, env(t, out, 0.22 * v, 0.003, 0, 0.14), 'triangle', 110, t + 0.18);
+      noise(t, filt('lowpass', 1000, 0, env(t, out, 0.28 * v, 0.002, 0, 0.04)), 0.05);
+    },
+    lion_timpani: function (t, out, k, bar, v) {
+      var g = (k === 2 ? 1 : 0.7) * v;
+      var o = osc(t, env(t, out, 0.8 * g, 0.005, 0, 0.75), 'sine', 98, t + 0.8);
+      o.frequency.exponentialRampToValueAtTime(70, t + 0.5);
+      osc(t, env(t, out, 0.25 * g, 0.004, 0, 0.35), 'triangle', 196, t + 0.4);
+      noise(t, filt('lowpass', 700, 0, env(t, out, 0.35 * g, 0.002, 0, 0.06)), 0.08);
+      if (k === 2) { noise(t, filt('highpass', 6500, 0, env(t, out, 0.12 * v, 0.004, 0, 0.9)), 1); }
+    },
+    frog_handdrum: function (t, out, k, bar, v) {
+      var o = osc(t, env(t, out, 0.55 * v, 0.003, 0, 0.16), 'sine', k === 2 ? 330 : 300, t + 0.2);
+      o.frequency.exponentialRampToValueAtTime(190, t + 0.12);
+      noise(t, filt('bandpass', 1900, 1, env(t, out, 0.3 * v, 0.002, 0, 0.05)), 0.06);
+    },
+    monkey_shaker: function (t, out, k, bar, v) {
+      noise(t, filt('highpass', 5600, 0, env(t, out, (k === 2 ? 0.34 : 0.22) * v, 0.01, 0.01, 0.055)), 0.09);
+    },
+    bird_bell: function (t, out, k, bar, v) {
+      var ch = CHORDS[bar], f = hz(inRange(k === 2 ? ch.tones[2] : ch.tones[1], 84));
+      osc(t, env(t, out, 0.22 * v, 0.003, 0, 1.3), 'sine', f, t + 1.35);
+      osc(t, env(t, out, 0.07 * v, 0.002, 0, 0.5), 'sine', f * 2.76, t + 0.55);
+      osc(t, env(t, out, 0.035 * v, 0.002, 0, 0.2), 'sine', f * 5.4, t + 0.25);
+    },
+    turtle_xylo: function (t, out, k, bar, v) {
+      var ch = CHORDS[bar], f = hz(inRange(k === 2 ? ch.root : ch.tones[2], 60));
+      osc(t, env(t, out, 0.42 * v, 0.003, 0, 0.7), 'sine', f, t + 0.75);
+      osc(t, env(t, out, 0.1 * v, 0.002, 0, 0.07), 'sine', f * 4, t + 0.1);
+    },
+    rabbit_tamb: function (t, out, k, bar, v) {
+      function jingle(at, peak, rel) { noise(at, filt('bandpass', 8200, 0.8, env(at, out, peak * v, 0.003, 0.01, rel)), rel + 0.05); }
+      if (k === 2) {
+        var o = osc(t, env(t, out, 0.4 * v, 0.003, 0, 0.14), 'sine', 240, t + 0.16);
+        o.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+        jingle(t, 0.22, 0.13);
+      } else {
+        jingle(t, 0.18, 0.08);
+        jingle(t + 0.03, 0.2, 0.12);
+      }
+    }
+  };
+
+  // The music under the animals (soft, so their sounds stay in front).
+  function pluck(t, out, f, dur, g) { osc(t, env(t, out, g, 0.004, 0, Math.max(0.12, dur)), 'triangle', f, t + dur + 0.05); }
+  function mallet(t, out, f, dur, g) {
+    var d = Math.min(1, dur + 0.25);
+    osc(t, env(t, out, g, 0.004, 0, d), 'sine', f, t + d + 0.02);
+    osc(t, env(t, out, g * 0.22, 0.002, 0, 0.06), 'sine', f * 4, t + 0.08);
+  }
+  function chime(t, out, f, dur, g) {
+    var d = Math.min(1.8, dur + 0.6);
+    osc(t, env(t, out, g, 0.004, 0, d), 'sine', f, t + d);
+    osc(t, env(t, out, g * 0.25, 0.003, 0, d * 0.4), 'sine', f * 2.01, t + d * 0.4 + 0.02);
+  }
+  function backing(bar, st, t, out, sd) {
+    var ch = CHORDS[bar], n = MEL[bar][st];
+    if (st === 0) { pluck(t, out, hz(inRange(ch.root, 43)), sd * 7, 0.3); }
+    if (st === 8) { pluck(t, out, hz(inRange(ch.tones[2], 43)), sd * 7, 0.24); }
+    if (st === 4 || st === 12) { ch.tones.slice(0, 3).forEach(function (p) { pluck(t, out, hz(inRange(p, 55)), sd * 3, 0.05); }); }
+    if (n) { mallet(t, out, hz(n.m), n.len * sd, 0.15); }
+    // Bar 16 gets everyone ready: a growing drum roll.
+    if (bar === BARS - 1 && st >= 8) { noise(t, filt('bandpass', 2400, 0.8, env(t, out, 0.05 + (st - 8) * 0.03, 0.003, 0, 0.07)), 0.09); }
+  }
+
+  // ───────────────────────────── Music clock ─────────────────────────────
+  // ONE clock (the audio clock) drives the music, the animals' strokes,
+  // their moves and the 16 circles. Animals switched on or off join or
+  // leave only on the next bar line, so the music stays tidy.
+  var clock = { running: false, ended: false, pos: 0, from: 0, sd: 0.15, startTime: 0, nextStep: 0, timer: 0 };
+  var bus = null, mBus = null, aBus = null, vq = [], raf = 0, LOOKAHEAD = 0.25;
+
+  function stepTime(n) { return clock.startTime + n * clock.sd; }
+  function newBus() {
+    bus = C.createGain(); bus.connect(comp);
+    mBus = C.createGain(); mBus.gain.value = 0.42; mBus.connect(bus);
+    aBus = C.createGain(); aBus.connect(bus);
+  }
+  function fadeOut(b, at, len) {
+    b.gain.cancelScheduledValues(at);
+    b.gain.setValueAtTime(1, at);
+    b.gain.linearRampToValueAtTime(0.0001, at + len);
+    setTimeout(function () { try { b.disconnect(); } catch (e) {} }, (at - C.currentTime + len) * 1000 + 100);
+  }
+  function pushEv(ev) {
+    var i = vq.length;
+    while (i > 0 && vq[i - 1].t > ev.t) { i--; }
+    vq.splice(i, 0, ev);
+  }
+
+  function play() {
+    if (!ac() || clock.running) { return; }
+    if (clock.ended) { clock.ended = false; clock.pos = 0; setProgress(-1); hideStars(); }
+    clock.sd = 60 / prefs.bpm / 4;
+    newBus();
+    clock.from = clock.pos;
+    clock.startTime = C.currentTime + 0.08 - clock.pos * clock.sd;
+    clock.nextStep = Math.max(0, Math.ceil(clock.pos - 1e-6));
+    clock.running = true;
+    if (clock.pos % STEPS > 1e-6) { setProgress(Math.floor(clock.pos / STEPS)); }
+    schedule();
+    clock.timer = setInterval(schedule, 25);
+    loop(); ui();
+  }
+
+  function schedule() {
+    if (!clock.running) { return; }
+    var horizon = C.currentTime + LOOKAHEAD;
+    while (clock.nextStep <= TOTAL && stepTime(clock.nextStep) < horizon) {
+      if (clock.nextStep === TOTAL) { finale(stepTime(TOTAL)); clock.nextStep++; clearInterval(clock.timer); return; }
+      scheduleStep(clock.nextStep, stepTime(clock.nextStep));
+      clock.nextStep++;
+    }
+  }
+
+  function scheduleStep(n, t) {
+    var bar = Math.floor(n / STEPS), st = n % STEPS;
+    if (st === 0) {
+      var states = {};
+      ANIMALS.forEach(function (a) { a.active = a.want; states[a.id] = a.active; });
+      pushEv({ t: t, type: 'bar', bar: bar, states: states });
+    }
+    if (bar === BARS - 1 && st === 8) { pushEv({ t: t, type: 'ready' }); }
+    backing(bar, st, t, mBus, clock.sd);
+    ANIMALS.forEach(function (a) {
+      var k = a.rhythmPattern[st];
+      if (!k || !a.active) { return; }
+      SOUNDS[a.sound](t, aBus, k, bar, a.volume);
+      pushEv({ t: t - (a.lead[k] || 0), type: 'hit', id: a.id, kind: k });
+    });
+  }
+
+  // After bar 16: the home chord, every musician's last stroke together,
+  // a jump of joy and ⭐ ⭐ ⭐.
+  function finale(t) {
+    var eb = C.createGain();
+    eb.connect(comp);
+    pluck(t, eb, hz(48), 2, 0.34);
+    [60, 64, 67, 72].forEach(function (m, i) { chime(t + i * 0.05, eb, hz(m), 1.8, 0.09); });
+    chime(t + 0.25, eb, hz(84), 1.6, 0.08);
+    noise(t, filt('highpass', 6000, 0, env(t, eb, 0.07, 0.01, 0, 1.4)), 1.5);
+    ANIMALS.forEach(function (a) { if (a.active) { SOUNDS[a.sound](t, eb, 2, 0, a.volume); } });
+    pushEv({ t: t - 0.06, type: 'final' });
+    pushEv({ t: t + 0.45, type: 'stars' });
+    pushEv({ t: t + 2.4, type: 'done' });
+    setTimeout(function () { try { eb.disconnect(); } catch (e) {} }, (t - C.currentTime + 3) * 1000);
+  }
+
+  function pause() {
+    if (!clock.running || clock.nextStep > TOTAL) { return; }
+    clock.running = false;
+    clearInterval(clock.timer);
+    clock.pos = Math.max(clock.from, (C.currentTime - clock.startTime) / clock.sd);
+    fadeOut(bus, C.currentTime, 0.06);
+    vq = [];
+    // Waiting choices take effect now: there is no bar line to wait for.
+    ANIMALS.forEach(function (a) { a.active = a.shown = a.want; zoneUpdate(a); });
+    allZones(function (z) { z.classList.remove('ready'); });
+    ui();
+  }
+
+  // ↻ A new orchestra: the sound fades out (no cut), the music stops and
+  // every animal goes back to OFF, ready for a fresh 16 bars.
+  function newOrchestra() {
+    ac();
+    var was = clock.running;
+    if (was) {
+      clock.running = false;
+      clearInterval(clock.timer);
+      fadeOut(bus, C.currentTime, 0.6);
+      vq = [];
+    }
+    clock.pos = 0; clock.ended = false;
+    hideStars();
+    allZones(function (z) { z.classList.remove('ready', 'fin'); });
+    setTimeout(function () {
+      ANIMALS.forEach(function (a) {
+        var had = a.shown || a.want;
+        a.want = a.active = a.shown = false;
+        zoneUpdate(a);
+        if (had) { burst(zoneEl(a), ['✨', '✨']); }
+      });
+      setProgress(-1);
+      ui();
+    }, was ? 500 : 0);
+    ui();
+  }
+
+  // ───────────────────────────── Visuals ─────────────────────────────
+  var $ = function (id) { return document.getElementById(id); };
+  function zoneEl(a) { return $('z-' + a.id); }
+  function allZones(fn) { ANIMALS.forEach(function (a) { fn(zoneEl(a), a); }); }
+  function restart(el, cls) { el.classList.remove(cls); void el.getBoundingClientRect(); el.classList.add(cls); }
+
+  function loop() { if (!raf) { raf = requestAnimationFrame(frame); } }
+  function frame() {
+    raf = 0;
+    var now = C ? C.currentTime : 0;
+    while (vq.length && vq[0].t <= now) { apply(vq.shift()); }
+    if (clock.running || vq.length) { raf = requestAnimationFrame(frame); }
+  }
+  function apply(ev) {
+    if (ev.type === 'bar') {
+      setProgress(ev.bar);
+      ANIMALS.forEach(function (a) { a.shown = ev.states[a.id]; zoneUpdate(a); });
+    } else if (ev.type === 'hit') {
+      hitFx(byId(ev.id), ev.kind);
+    } else if (ev.type === 'ready') {
+      allZones(function (z) { z.classList.add('ready'); });
+    } else if (ev.type === 'final') {
+      setProgress(BARS);
+      allZones(function (z) {
+        z.classList.remove('ready');
+        restart(z, 'fin');
+        burst(z, ['✨', '⭐', '✨']);
+      });
+    } else if (ev.type === 'stars') {
+      showStars();
+    } else if (ev.type === 'done') {
+      clock.running = false; clock.ended = true; clock.pos = TOTAL;
+      try { bus.disconnect(); } catch (e) {}
+      allZones(function (z) { z.classList.remove('fin'); });
+      ui();
+    }
+  }
+
+  var hitTimers = {};
+  function hitFx(a, kind) {
+    var z = zoneEl(a), ch = z.querySelector('.ch'), cls = kind === 2 ? 'H' : 'h';
+    ch.classList.remove(kind === 2 ? 'h' : 'H');
+    restart(ch, cls);
+    clearTimeout(hitTimers[a.id]);
+    hitTimers[a.id] = setTimeout(function () { ch.classList.remove('h', 'H'); }, 750);
+    restart(z.querySelector('.badge'), 'pop');
+  }
+  function burst(z, signs) {
+    signs.forEach(function (sign, i) {
+      var b = document.createElement('span');
+      b.className = 'burst';
+      b.textContent = sign;
+      b.style.left = '140px'; b.style.top = '150px';
+      b.style.animationDelay = (i * 0.08) + 's';
+      b.style.setProperty('--dx', (Math.random() * 220 - 110).toFixed(0) + 'px');
+      b.style.setProperty('--dy', (-60 - Math.random() * 120).toFixed(0) + 'px');
+      z.appendChild(b);
+      setTimeout(function () { b.remove(); }, 1100);
+    });
+  }
+
+  // A zone shows: ON (ring), waiting to join (dashed ring) or waiting to
+  // leave (fading dashed ring).
+  function zoneUpdate(a) {
+    var z = zoneEl(a);
+    z.classList.toggle('on', a.shown);
+    z.classList.toggle('pend-on', a.want && !a.shown);
+    z.classList.toggle('pend-off', !a.want && a.shown);
+    z.setAttribute('aria-pressed', a.want);
+  }
+
+  function setProgress(cur) {       // -1: nothing yet · 0..15: that bar now · 16: all played
+    $('progress').querySelectorAll('.pg').forEach(function (el, i) {
+      el.classList.toggle('done', i < cur);
+      el.classList.toggle('cur', i === cur);
+    });
+  }
+
+  function showStars() {
+    var box = $('celebrate'), h = '';
+    [-1, 0, 1].forEach(function (k, i) {
+      h += '<div class="star" style="left:' + (865 + k * 230) + 'px;' + (k ? 'top:350px;' : 'top:300px;width:210px;height:210px;') + 'animation-delay:' + (i * 0.18) + 's">' + STAR + '</div>';
+    });
+    var colors = ['#e5483a', '#f5b400', '#4cb84a', '#2196f3', '#9c4dcc', '#ec5f8c'];
+    for (var c = 0; c < 46; c++) {
+      h += '<span class="confetti" style="left:' + (Math.random() * 1920).toFixed(0) + 'px;background:' + colors[c % colors.length] +
+        ';animation-duration:' + (2.2 + Math.random() * 1.6).toFixed(2) + 's;animation-delay:' + (Math.random() * 0.6).toFixed(2) + 's"></span>';
+    }
+    box.className = 'celebrate';
+    box.innerHTML = h;
+    clearTimeout(showStars.t);
+    showStars.t = setTimeout(hideStars, 3600);
+  }
+  function hideStars() {
+    var box = $('celebrate');
+    if (!box.innerHTML) { return; }
+    box.classList.add('out');
+    clearTimeout(showStars.t);
+    setTimeout(function () { box.innerHTML = ''; box.className = 'celebrate'; }, 500);
+  }
+
+  function ui() {
+    var playing = clock.running;
+    $('btnPlay').classList.toggle('dim', playing);
+    $('btnPause').classList.toggle('dim', !playing);
+    $('btnPlay').classList.toggle('nudge', !playing && ANIMALS.some(function (a) { return a.want; }));
+  }
+
+  // ───────────────────────────── Child's actions ─────────────────────────────
+  // Not playing: the animal plays its rhythm once, so the child hears it.
+  function preview(a) {
+    if (!ac()) { return; }
+    var sd = 60 / prefs.bpm / 4, t0 = C.currentTime + 0.12, bar = Math.min(BARS - 1, Math.floor(clock.pos / STEPS));
+    a.rhythmPattern.forEach(function (k, st) {
+      if (!k) { return; }
+      SOUNDS[a.sound](t0 + st * sd, pvBus, k, bar, a.volume);
+      pushEv({ t: t0 + st * sd - (a.lead[k] || 0), type: 'hit', id: a.id, kind: k });
+    });
+    loop();
+  }
+
+  function toggle(a) {
+    ac();
+    if (clock.running) {
+      a.want = !a.want;                        // joins / leaves on the next bar line
+    } else {
+      a.want = a.active = a.shown = !a.shown;
+      if (a.shown) { preview(a); }
+    }
+    zoneUpdate(a);
+    restart(zoneEl(a).querySelector('.badge'), 'pop');
+    ui();
+  }
+
+  function touchFx(z) {
+    z.classList.add('touch');
+    clearTimeout(z.touchT);
+    z.touchT = setTimeout(function () { z.classList.remove('touch'); }, 150);
+  }
+
+  // ───────────────────────────── Building the screen ─────────────────────────────
+  function platform(a) {
+    return '<svg class="plat" viewBox="0 0 280 96" width="280" height="96"><defs><radialGradient id="pl-' + a.id + '" cx=".4" cy=".35" r=".75">' +
+      '<stop offset="0" style="stop-color:color-mix(in srgb, var(--c) 40%, #fff)"/><stop offset="1" style="stop-color:var(--c)"/></radialGradient></defs>' +
+      '<ellipse cx="140" cy="54" rx="118" ry="30" style="fill:color-mix(in srgb, var(--c) 70%, #000)"/>' +
+      '<ellipse class="top" cx="140" cy="44" rx="118" ry="30" fill="url(#pl-' + a.id + ')"/>' +
+      '<ellipse cx="140" cy="44" rx="104" ry="24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3"/>' +
+      '<ellipse class="ring" cx="140" cy="47" rx="132" ry="38" fill="none" stroke="var(--c)" stroke-width="7"/></svg>';
+  }
+
+  function build() {
+    $('bg').innerHTML = background();
+    $('paw').innerHTML = PAW;
+    var p = '';
+    for (var i = 0; i < BARS; i++) { p += '<div class="pg"><span class="pd"></span><span class="pn">' + (i + 1) + '</span></div>'; }
+    $('progress').innerHTML = p;
+    $('orchestra').innerHTML = ANIMALS.map(function (a, i) {
+      return '<button class="zone" id="z-' + a.id + '" style="left:' + (a.position.x - 140) + 'px;top:' + (a.position.y - 258) + 'px;--c:' + a.activeIndicator +
+        ';--bl:' + a.blink.toFixed(2) + 's;--bd:-' + (i * 0.9).toFixed(1) + 's;--br:' + (3.2 + (i % 3) * 0.3).toFixed(1) + 's" aria-label="' + a.name + '" aria-pressed="false">' +
+        platform(a) +
+        '<span class="hov"><span class="jump"><span class="idle"><svg class="ch ch-' + a.id + '" viewBox="0 0 220 220">' + ART[a.id]() + '</svg></span></span></span>' +
+        '<span class="badge">' + NOTE_ICON + '</span>' +
+        '<span class="spk s1"></span><span class="spk s2"></span><span class="spk s3"></span></button>';
+    }).join('');
+
+    ANIMALS.forEach(function (a) {
+      var z = zoneEl(a);
+      // pointerdown: every finger counts, so two animals can be tapped at once.
+      z.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        touchFx(z);
+        toggle(a);
+      });
+      z.addEventListener('click', function (e) { if (e.detail === 0) { toggle(a); } });   // keyboard
+    });
+    renderTitle();
+    renderSound();
+  }
+
+  function renderTitle() {
+    var RAINBOW = ['#ff5a4e', '#ff9b2f', '#ffd23f', '#5fd35a', '#3fb0ff', '#b57cff', '#ff6fae'], k = 0;
+    $('title').innerHTML = TITLES[prefs.lang].map(function (part) {
+      return part[0].split('').map(function (ch) {
+        if (!part[1] || ch === ' ') { return ch === ' ' ? '&nbsp;' : ch; }
+        return '<span style="color:' + RAINBOW[k++ % RAINBOW.length] + '">' + ch + '</span>';
+      }).join('');
+    }).join('');
+    document.title = 'MUSICATION — ' + TITLES[prefs.lang].map(function (p) { return p[0]; }).join('').replace(/\s+/g, ' ').trim() + ' 🎼';
+  }
+
+  // 🔊 / 🔇: only the sound changes; the animals keep moving.
+  function renderSound() { $('btnSnd').classList.toggle('muted', prefs.muted); }
+  $('btnSnd').addEventListener('click', function () {
+    prefs.muted = !prefs.muted;
+    savePrefs(); renderSound();
+    if (ac()) { master.gain.setTargetAtTime(prefs.muted ? 0 : 0.9, C.currentTime, 0.03); }
+  });
+
+  function renderSettings() {
+    $('langChips').innerHTML = Object.keys(TITLES).map(function (l) {
+      return '<button class="chip' + (l === prefs.lang ? ' sel' : '') + '" data-lang="' + l + '">' + l.toUpperCase() + '</button>';
+    }).join('');
+    $('tempoChips').innerHTML = TEMPI.map(function (t) {
+      return '<button class="chip' + (t.bpm === prefs.bpm ? ' sel' : '') + '" data-bpm="' + t.bpm + '">' + t.label + '</button>';
+    }).join('');
+  }
+  $('btnSet').addEventListener('click', function () { renderSettings(); $('setDlg').hidden = false; });
+  $('setDlg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (e.target === $('setDlg') || (b && b.hasAttribute('data-close'))) { $('setDlg').hidden = true; return; }
+    if (!b) { return; }
+    if (b.dataset.lang) { prefs.lang = b.dataset.lang; renderTitle(); }
+    if (b.dataset.bpm) {
+      prefs.bpm = +b.dataset.bpm;
+      if (clock.running && clock.nextStep <= TOTAL) { pause(); play(); }        // carry on from the same place
+    }
+    savePrefs(); renderSettings();
+  });
+  $('btnHome').addEventListener('click', function () { location.href = 'zaidimai.html'; });
+
+  $('btnPlay').addEventListener('click', play);
+  $('btnPause').addEventListener('click', pause);
+  $('btnReset').addEventListener('click', newOrchestra);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { $('setDlg').hidden = true; return; }
+    if (e.key === ' ' && $('setDlg').hidden) {
+      e.preventDefault();
+      if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
+      if (clock.running) { pause(); } else { play(); }
+    }
+  });
+  // A hidden tab would starve the scheduler and stutter: pause instead.
+  document.addEventListener('visibilitychange', function () { if (document.hidden) { pause(); } });
+
+  function fit() {
+    var k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    $('stage').style.transform = 'translate(-50%, -50%) scale(' + k + ')';
+  }
+  window.addEventListener('resize', fit);
+
+  build();
+  fit();
+  setProgress(-1);
+  ui();
+})();
+</script>
+</body>
+</html>

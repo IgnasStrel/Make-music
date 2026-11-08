@@ -87,6 +87,7 @@
         <input class="input" id="search" type="search" placeholder="🔍 Ieškoti pagal pavadinimą…">
         <button class="chip sel" data-kind="">Visi</button>
         <button class="chip" data-kind="pamokele">📚 Pamokėlės</button>
+        <button class="chip" data-kind="solfedzis">🎹 Solfedžio</button>
         <button class="chip" data-kind="natos">🎼 Natų lapai</button>
       </div>
       <div class="files" id="files"></div>
@@ -120,6 +121,7 @@
   var COLORS = ['#009D9D', '#A6B908', '#FBAD04', '#EA5223', '#D11264', '#56317D', '#012A5F', '#1e88e5'];
   var KIND = {
     pamokele: { ico: '📚', name: 'Pamokėlė', color: '#D11264' },
+    solfedzis: { ico: '🎹', name: 'Solfedžio pamokėlė', color: '#1e88e5' },
     natos:    { ico: '🎼', name: 'Natų lapas', color: '#009D9D' }
   };
   // view: 'all' | 'lib' (biblioteka) | 'none' (not in a folder) | <folder id>
@@ -207,6 +209,7 @@
 
   function openFile(r) {
     if (r.kind === 'pamokele') { location.href = 'pamokeles.html#view=' + r.id; }
+    else if (r.kind === 'solfedzis') { location.href = 'solfedzis.html#pamoka=' + r.id; }
     else { location.href = 'rasymas.html?lesson=' + encodeURIComponent(r.id); }
   }
 
@@ -236,7 +239,7 @@
         '<div class="file-date">' + (f && view === 'all' ? '📁 ' + esc(f.name) + ' · ' : '') + fmt(r.updatedAt) + '</div></div>' +
         '<div class="file-acts">' +
           '<button class="btn btn-small btn-teal" data-a="open">Atidaryti</button>' +
-          (r.kind === 'pamokele' && !r.archived ? '<button class="btn btn-small btn-icon" data-a="edit" title="Keisti pamokėlę">✏️</button>' : '') +
+          ((r.kind === 'pamokele' || r.kind === 'solfedzis') && !r.archived ? '<button class="btn btn-small btn-icon" data-a="edit" title="Keisti pamokėlę">✏️</button>' : '') +
           '<button class="btn btn-small btn-icon" data-a="rename" title="Pervadinti">🏷️</button>' +
           (!r.archived ? '<button class="btn btn-small btn-icon" data-a="move" title="Perkelti į aplanką">📁</button>' : '') +
           '<button class="btn btn-small btn-icon" data-a="copy" title="Padaryti kopiją">📋</button>' +
@@ -252,7 +255,7 @@
         b.addEventListener('click', function () {
           var a = b.dataset.a;
           if (a === 'open') { openFile(r); }
-          else if (a === 'edit') { location.href = 'pamokeles.html#edit=' + r.id; }
+          else if (a === 'edit') { location.href = r.kind === 'solfedzis' ? 'solfedzis.html#keisti=' + r.id : 'pamokeles.html#edit=' + r.id; }
           else if (a === 'rename') {
             textDialog('🏷️ Pervadinti', r.title, function (t) { L.update(r.id, { title: t }); render(); });
           }
