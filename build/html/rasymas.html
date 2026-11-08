@@ -453,20 +453,23 @@
     }
     .piano-inner { position: relative; display: flex; flex-shrink: 0; height: 225px; }
 
+    /* Each white key in its note's colour (--k, the same colours as the
+       notes on the staff). */
     .wk {
+      --k: #f6f6f2;
       flex-shrink: 0; height: 215px;
-      background: linear-gradient(175deg, #f6f6f2 75%, #e0e0da 100%);
-      border: 1px solid #bbb; border-radius: 0 0 8px 8px;
+      background: linear-gradient(175deg, color-mix(in srgb, var(--k) 70%, #fff) 0%, var(--k) 55%, color-mix(in srgb, var(--k) 82%, #000) 100%);
+      border: 1px solid color-mix(in srgb, var(--k) 65%, #000); border-radius: 0 0 8px 8px;
       cursor: pointer;
       display: flex; align-items: flex-end; justify-content: center;
       padding-bottom: 5px;
       font-size: 10px; font-weight: 700; color: #bbb; font-family: var(--font);
-      user-select: none; transition: background 0.06s, transform 0.07s;
+      user-select: none; transition: filter 0.06s, transform 0.07s, box-shadow 0.06s;
       transform-origin: top center;
-      box-shadow: inset 0 -3px 5px rgba(0,0,0,0.09), 2px 4px 8px rgba(0,0,0,0.28);
+      box-shadow: inset 0 -3px 5px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.35), 2px 4px 8px rgba(0,0,0,0.28);
       -webkit-tap-highlight-color: transparent;
     }
-    .wk:active, .wk.lit { background: linear-gradient(175deg, #c8e4ff 75%, #a8c8ee 100%); transform: scaleY(0.97) translateY(2px); }
+    .wk:active, .wk.lit { filter: brightness(1.18) saturate(1.1); box-shadow: inset 0 -1px 3px rgba(0,0,0,0.15), 0 0 18px var(--k); transform: scaleY(0.97) translateY(2px); }
 
     .bk {
       position: absolute; top: 0; height: 160px;
@@ -2669,15 +2672,17 @@
     if (isBlack) {
       div.style.left = (gIdx * kw + kw - bkw / 2) + 'px';
     } else {
-      var letter = noteName.charAt(0);
+      var color = NOTE_COLOR[noteName.charAt(0)] || '#888888';
+      div.style.setProperty('--k', color);
       var span = document.createElement('span');
       span.textContent = keyLabel(noteName);
-      span.style.color = NOTE_COLOR[letter] || '#888';
+      // The key carries the colour; the name is white, or dark on the light
+      // keys (yellow, orange) so it stays readable.
+      span.style.color = isLight(color) ? '#3a2600' : '#fff';
+      span.style.textShadow = isLight(color) ? '0 1px 0 rgba(255,255,255,0.45)' : '0 1px 2px rgba(0,0,0,0.35)';
       span.style.fontWeight = '800';
       span.style.fontFamily = 'var(--heading-font)';
       span.style.fontSize = Math.max(11, Math.min(20, Math.floor(kw * 0.3))) + 'px';
-      // Yellow on white is hard to read - give the letters a soft outline.
-      span.style.textShadow = '0 0 2px rgba(0,0,0,0.25)';
       div.appendChild(span);
     }
     div.addEventListener('pointerdown', function (e) {
