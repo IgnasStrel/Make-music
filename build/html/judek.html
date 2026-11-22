@@ -70,29 +70,83 @@
   @keyframes wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg) scale(1.15); } 60% { transform: rotate(8deg) scale(1.1); } }
   @keyframes tileIn { from { opacity: 0; transform: translateY(18px) scale(0.94); } to { opacity: 1; transform: none; } }
 
-  /* ── One variant: the scene on the left, the four choices on the right ── */
-  .stage { position: relative; z-index: 5; padding: 0 18px 24px; }
-  .v-layout {
-    max-width: 1320px; margin: 0 auto;
-    display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 26px; align-items: center;
-    min-height: calc(100vh - 92px);
+  /* ── Teacher's toolbar (teachers only): the method card and how a tapped
+     animal plays. The child's screen keeps just the animals and ▶. ── */
+  .tbar {
+    position: relative; z-index: 21; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: #012A5F; color: #fff; padding: 6px 16px; font-weight: 700; font-size: 15px;
   }
-  .scene-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-  .scene-hint { font-weight: 800; color: #fff; font-size: 17px; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .tbar .tlabel { opacity: 0.8; margin-left: 6px; }
+  .tbar button {
+    border: none; border-radius: 999px; padding: 5px 14px; cursor: pointer;
+    background: rgba(255,255,255,0.14); color: #fff; font-family: inherit; font-weight: 700; font-size: 15px;
+  }
+  .tbar button:hover { background: rgba(255,255,255,0.26); }
+  .tbar button.on { background: #fff; color: #012A5F; }
+  .tbar .grow { flex: 1; }
 
-  /* The real illustrated artwork/video IS the scene. Tapping either half of
-     the picture opens that animal's own video; a caption shows who sounds. */
+  /* ── One pair: the two animals big in the middle, one ▶ under them ── */
+  .stage { position: relative; z-index: 5; padding: 0 18px 24px; }
+  .v-center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; min-height: calc(100vh - 120px); }
+
+  /* The real illustrated picture (or the pair's short video) IS the screen:
+     tapping an animal's half plays its music and opens its video. */
   .scene-card {
-    position: relative; width: min(100%, calc((100vh - 150px) * 620 / 438)); aspect-ratio: 620 / 438;
-    border-radius: 26px; overflow: hidden; background: #eaf3e2;
+    position: relative; width: min(94vw, calc((100vh - 250px) * 620 / 438)); aspect-ratio: 620 / 438;
+    border-radius: 30px; overflow: hidden; background: #eaf3e2;
     box-shadow: 0 14px 0 rgba(0,0,0,0.12), 0 20px 34px rgba(0,0,0,0.2);
   }
-  .scene-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scene-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s ease, filter 2.4s ease; }
   .scene-media.zooming { animation: gentleZoom 7s ease-in-out infinite; }
   @keyframes gentleZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
   .tap-zone { position: absolute; top: 0; bottom: 0; width: 50%; cursor: pointer; }
   .tap-zone.left { left: 0; }
   .tap-zone.right { right: 0; }
+  /* A soft glow takes turns over the two animals: "tap me", without words. */
+  .tap-zone::after {
+    content: ''; position: absolute; left: 18%; right: 18%; top: 20%; bottom: 20%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, rgba(255,255,255,0.55), rgba(255,255,255,0) 68%);
+    opacity: 0; animation: invite 4s ease-in-out infinite;
+  }
+  .tap-zone.right::after { animation-delay: 2s; }
+  .tap-zone:hover::after { animation: none; opacity: 0.8; }
+  body.music-on .tap-zone::after, body.game-on .tap-zone::after { animation: none; opacity: 0; }
+  @keyframes invite { 0%, 60%, 100% { opacity: 0; transform: scale(0.8); } 25% { opacity: 1; transform: scale(1.05); } }
+  /* Music only: the picture leans towards the animal that sounds. */
+  .scene-card.focus-a .scene-media, .scene-card.focus-b .scene-media { animation: none; transform: scale(1.22); }
+  .scene-card.focus-a .scene-media { transform-origin: 22% 50%; }
+  .scene-card.focus-b .scene-media { transform-origin: 78% 50%; }
+  .tap-zone { transition: background 0.5s ease; }
+  .scene-card.focus-a .tap-zone.right { background: linear-gradient(to left, rgba(0,0,0,0.45), rgba(0,0,0,0.15)); }
+  .scene-card.focus-b .tap-zone.left { background: linear-gradient(to right, rgba(0,0,0,0.45), rgba(0,0,0,0.15)); }
+  .scene-stop {
+    position: absolute; right: 16px; top: 16px; z-index: 3; width: 66px; height: 66px; border-radius: 50%;
+    border: 5px solid #fff; background: #ff7a59; color: #fff; font-size: 26px; cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.25);
+  }
+  /* Hello / goodbye: both animals wave. */
+  .hand {
+    position: absolute; top: 24%; z-index: 2; font-size: clamp(56px, 10vh, 120px); line-height: 1; pointer-events: none;
+    opacity: 0; transform-origin: 70% 90%; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3)); transition: opacity 0.3s;
+  }
+  .hand.l { left: 16%; }
+  .hand.r { right: 16%; }
+  .scene-card.waving .hand { opacity: 1; animation: wave 0.6s ease-in-out infinite alternate; }
+  .scene-card.waving .hand.r { animation-delay: 0.2s; }
+  @keyframes wave { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
+  /* Goodbye: the scene goes calm and dim, then the game ends quietly. */
+  .scene-card.calm .scene-media { filter: brightness(0.5) saturate(0.7); }
+
+  .big-play {
+    border: 6px solid #fff; border-radius: 999px; padding: 8px 40px 8px 30px; cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    background: radial-gradient(circle at 35% 30%, #a6ef9f, #4cbf4a 60%, #2f9a32);
+    color: #fff; font-family: inherit; font-size: 32px; font-weight: 800; text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+    box-shadow: 0 8px 0 #1f7a22, 0 14px 26px rgba(0,0,0,0.25); transition: transform 0.12s;
+  }
+  .big-play .bp-ico { font-size: 40px; }
+  .big-play:hover { transform: translateY(-3px) scale(1.03); }
+  .big-play:active { transform: translateY(3px); box-shadow: 0 3px 0 #1f7a22; }
   .scene-caption {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(6px);
     background: rgba(255,255,255,0.94); padding: 7px 20px; border-radius: 999px;
@@ -101,49 +155,11 @@
   }
   .scene-caption.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .opts { display: flex; flex-direction: column; gap: 14px; }
-  .opt {
-    background: rgba(255,255,255,0.95); border-radius: 24px; padding: 14px 16px;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.1), 0 12px 24px rgba(0,0,0,0.12);
-    border-left: 10px solid var(--c);
-    animation: tileIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
-  }
-  .opt-head { display: flex; align-items: center; gap: 10px; font-size: 21px; font-weight: 800; margin-bottom: 10px; }
-  .opt-head .opt-ico { font-size: 30px; }
-  .opt-head small { display: block; font-size: 14px; font-weight: 700; color: #678; }
-  button.opt { border-top: none; border-right: none; border-bottom: none; cursor: pointer; font-family: inherit; color: inherit; text-align: left; display: flex; align-items: center; gap: 12px; transition: transform 0.12s; }
-  button.opt:hover { transform: translateY(-3px); }
-  button.opt .opt-head { margin: 0; }
-  .opt-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-  .a-btn {
-    flex: 1; min-width: 130px;
-    border: 3px solid transparent; border-radius: 18px; cursor: pointer;
-    background: color-mix(in srgb, var(--c) 14%, #fff); padding: 10px 12px;
-    font-family: inherit; font-size: 19px; font-weight: 800; color: #234;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: transform 0.12s, border-color 0.12s;
-  }
-  .a-btn:hover { transform: translateY(-2px); }
-  .a-btn .a-ico { font-size: 28px; }
-  .a-btn small { font-size: 12px; color: #678; font-weight: 700; }
-  .a-btn.on { border-color: var(--c); background: #fff; }
-  .a-btn.on .a-ico { animation: wiggle 0.9s ease infinite; }
-
-  /* Music-only player under the animal buttons. */
-  .mini-player { display: flex; align-items: center; gap: 8px; margin-top: 10px; background: #f3f7f2; border-radius: 16px; padding: 8px 10px; }
-  .mini-player .tb-btn { box-shadow: 0 2px 0 rgba(0,0,0,0.12); min-width: 40px; height: 40px; font-size: 17px; }
-  .mini-player input { flex: 1; accent-color: var(--c); }
-  .mini-player .mp-time { font-size: 13px; font-weight: 800; color: #567; min-width: 74px; text-align: right; }
-
-  .opt-game { --c: #3d9a3b; justify-content: center; background: linear-gradient(180deg, #8ee38a, #5cc85a) !important; color: #16401a !important; }
-  .opt-game .opt-head { font-size: 30px; }
-  .opt-game .opt-head small { color: #1f5a1f; }
-
   /* ── "▶ Žaidimas": the scene grows to nearly the whole screen over a dark
      backdrop, everything else steps aside, and the controls sit below. ── */
   .game-backdrop, .game-controls { display: none; }
   body.game-on .stage { z-index: 50; }
-  body.game-on .topbar, body.game-on .opts, body.game-on .scene-hint { visibility: hidden; }
+  body.game-on .topbar, body.game-on .tbar, body.game-on .big-play { visibility: hidden; }
   body.game-on .game-backdrop { display: block; position: fixed; inset: 0; z-index: 0; background: rgba(0,0,0,0.9); }
   body.game-on .scene-card {
     /* centred in the space above the ~104px control bar, 12px from the top */
@@ -161,18 +177,22 @@
     display: flex; position: fixed; z-index: 2; left: 0; right: 0; bottom: 0;
     justify-content: center; gap: 14px; flex-wrap: wrap; padding: 16px 14px calc(18px + env(safe-area-inset-bottom, 0px));
   }
-  .fs-btn {
-    border: none; border-radius: 999px; padding: 13px 26px; cursor: pointer;
-    font-family: inherit; font-size: 17px; font-weight: 800;
-    box-shadow: 0 6px 0 rgba(0,0,0,0.28); transition: transform 0.15s;
+  /* Big round picture buttons for the game and the video player. */
+  .gc-btn {
+    width: 78px; height: 78px; border-radius: 50%; border: 5px solid #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 2px;
+    font-family: inherit; font-size: 30px; color: #fff; line-height: 1;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.3); transition: transform 0.12s;
   }
-  .fs-btn:active { transform: translateY(2px); }
-  .fs-btn.stop { background: linear-gradient(180deg, #ffb199, #ff7a59); color: #4a1408; }
-  .fs-btn.restart { background: linear-gradient(180deg, #8ee3ff, #4fb8e0); color: #06303f; }
-  .fs-btn.play { background: linear-gradient(180deg, #8ee38a, #5cc85a); color: #16401a; }
-  .fs-btn.next { background: linear-gradient(180deg, #ffe58a, #ffc83d); color: #4a3200; }
-  .fs-btn.exit { background: linear-gradient(180deg, #ffffff, #dfe4ea); color: #233; }
-  .game-controls .fs-btn { font-size: 20px; padding: 14px 30px; }
+  .gc-btn small { font-size: 20px; }
+  .gc-btn:hover { transform: translateY(-2px); }
+  .gc-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+  .gc-btn.stop { background: #ff7a59; }
+  .gc-btn.play { background: #4cbf4a; }
+  .gc-btn.restart { background: #4fb8e0; }
+  .gc-btn.next { background: #ffc83d; }
+  .gc-btn.exit { background: #e8edf2; color: #233; }
+  body.game-ending .scene-card { opacity: 0; transition: opacity 0.7s ease; }
 
   /* Full-screen solo player for one animal's own video + song. */
   .fs-player { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.94); display: flex; flex-direction: column; }
@@ -210,12 +230,20 @@
   .animal-card { border: 2px solid #eee; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; }
   .animal-card h3 { font-size: 17px; margin-bottom: 8px; }
 
-  @media (max-width: 900px) {
-    .v-layout { grid-template-columns: 1fr; min-height: 0; }
-  }
 </style>
 </head>
 <body>
+
+  <!-- Teacher's toolbar (shown to teachers on a pair's page) -->
+  <div class="tbar" id="tbar" hidden>
+    <span>👩‍🏫 Mokytojui:</span>
+    <button id="tbCard">🃏 Metodinė kortelė</button>
+    <span class="tlabel">Paspaudus gyvūną:</span>
+    <button id="tbModeVideo">🎬 Video</button>
+    <button id="tbModeMusic">🎵 Tik muzika</button>
+    <span class="grow"></span>
+    <button id="tbInfo">ℹ️ Apie žaidimą</button>
+  </div>
 
   <div class="topbar">
     <button class="tb-btn wide" id="btnBack">← <span id="backLabel">Žaidimai</span></button>
@@ -231,49 +259,29 @@
     <div class="v-grid" id="vGrid"></div>
   </section>
 
-  <!-- One variant: card / animal videos / music only / the whole game -->
+  <!-- One pair: the two animals (tap one: its music and its video) and ▶ -->
   <div class="stage" id="variantView" hidden>
-    <div class="v-layout">
-      <div class="scene-col">
-        <div class="scene-card" id="sceneCard">
-          <video class="scene-media" id="sceneVideo" muted loop playsinline hidden></video>
-          <img class="scene-media" id="sceneImg" alt="" hidden />
-          <div class="tap-zone left" id="zoneA"></div>
-          <div class="tap-zone right" id="zoneB"></div>
-          <div class="scene-caption" id="sceneCaption"></div>
-        </div>
-        <p class="scene-hint">👆 Paspausk ant gyvūnėlio – pamatysi jo video</p>
+    <div class="v-center">
+      <div class="scene-card" id="sceneCard">
+        <video class="scene-media" id="sceneVideo" muted loop playsinline hidden></video>
+        <img class="scene-media" id="sceneImg" alt="" hidden />
+        <div class="tap-zone left" id="zoneA"></div>
+        <div class="tap-zone right" id="zoneB"></div>
+        <span class="hand l" aria-hidden="true">👋</span>
+        <span class="hand r" aria-hidden="true">👋</span>
+        <button class="scene-stop" id="sceneStop" title="Sustabdyti muziką" hidden>■</button>
+        <div class="scene-caption" id="sceneCaption"></div>
       </div>
-
-      <div class="opts">
-        <button class="opt" id="optCard" style="--c:#FBAD04">
-          <div class="opt-head"><span class="opt-ico">🃏</span><span>Žaidimo kortelė<small>kaip žaisti, judesiai, ritmas</small></span></div>
-        </button>
-        <div class="opt" style="--c:#D11264">
-          <div class="opt-head"><span class="opt-ico">🎬</span><span>Gyvūnėlių video<small>kiekvienas gyvūnėlis atskirai</small></span></div>
-          <div class="opt-btns" id="videoBtns"></div>
-        </div>
-        <div class="opt" style="--c:#009D9D">
-          <div class="opt-head"><span class="opt-ico">🎵</span><span>Tik muzika<small>klausyk be video</small></span></div>
-          <div class="opt-btns" id="musicBtns"></div>
-          <div class="mini-player" id="miniPlayer" hidden>
-            <button class="tb-btn" id="mpToggle" title="Sustabdyti / groti">⏸</button>
-            <button class="tb-btn" id="mpRestart" title="Iš pradžių">🔁</button>
-            <input type="range" id="mpSeek" min="0" max="1000" value="0" aria-label="Kur groja">
-            <span class="mp-time" id="mpTime">0:00</span>
-          </div>
-        </div>
-        <button class="opt opt-game" id="playBtn">
-          <div class="opt-head"><span class="opt-ico">▶</span><span>Žaidimas<small>nuo pradžios iki galo</small></span></div>
-        </button>
-      </div>
+      <button class="big-play" id="playBtn" title="Žaidimas: pasisveikina, juda pagal muziką, atsisveikina">
+        <span class="bp-ico">▶</span><span>Žaidimas</span>
+      </button>
     </div>
     <div class="game-backdrop"></div>
     <div class="game-controls">
-      <button class="fs-btn stop" id="gamePauseBtn">⏸ Sustabdyti</button>
-      <button class="fs-btn restart" id="gameRestartBtn">🔁 Iš pradžių</button>
-      <button class="fs-btn next" id="gameNextBtn">🔄 Kitas gyvūnas</button>
-      <button class="fs-btn exit" id="gameExitBtn">✕ Išjungti</button>
+      <button class="gc-btn stop" id="gamePauseBtn" title="Sustabdyti">⏸</button>
+      <button class="gc-btn restart" id="gameRestartBtn" title="Iš pradžių">🔁</button>
+      <button class="gc-btn next" id="gameNextBtn" title="Kitas gyvūnas">⏭</button>
+      <button class="gc-btn exit" id="gameExitBtn" title="Išjungti">✕</button>
     </div>
   </div>
 
@@ -284,8 +292,8 @@
     <div class="fs-topbar"><span class="fs-name" id="fsName"></span><button class="tb-btn" id="fsCloseBtn" title="Išjungti">✕</button></div>
     <div class="fs-video-wrap"><video class="fs-video" id="fsVideo" muted loop playsinline></video></div>
     <div class="fs-controls">
-      <button class="fs-btn stop" id="fsStopBtn">⏸ Sustabdyti</button>
-      <button class="fs-btn restart" id="fsRestartBtn">🔁 Iš naujo</button>
+      <button class="gc-btn stop" id="fsStopBtn" title="Sustabdyti">⏸</button>
+      <button class="gc-btn restart" id="fsRestartBtn" title="Iš naujo">🔁</button>
     </div>
   </div>
   <audio id="fsAudio" preload="none"></audio>
@@ -315,7 +323,7 @@
       </div>
       <div class="card-sec">
         <h4>KAIP ŽAISTI</h4>
-        <p>Pasirink gyvūnėlių porą. Pažiūrėkite kiekvieno gyvūnėlio video, paklausykite jo muzikos, o kai būsite pasiruošę, paspauskite „▶ Žaidimas" ir visi kartu judėkite pagal gyvūnų muziką.</p>
+        <p>Pasirink gyvūnėlių porą. Paspaudus ant gyvūnėlio skamba jo muzika ir atsiveria jo judėjimo video (mokytojo juostoje galima pasirinkti „Tik muzika“). Mokytojas susipažįsta su metodine kortele, supažindina vaikus su gyvūnėliais ir paspaudžia „▶ Žaidimas“: gyvūnai pasisveikina, pakaitomis juda pagal muziką ir atsisveikina.</p>
       </div>
       <div class="card-sec">
         <h4>ŽAIDIMO FORMULĖ</h4>
@@ -458,16 +466,21 @@
   }
 
   // ══════════════════════════════════════════════════════════════════════
-  // One variant: a) game card, b) each animal's video, c) music only,
-  // d) the whole game from start to end.
+  // One pair. The child sees the two animals and ▶: tapping an animal plays
+  // its music and opens its video (or, the teacher's choice, music only).
+  // The teacher's toolbar holds the method card. ▶ is the whole game:
+  // hello → animal A → animal B → goodbye.
   // ══════════════════════════════════════════════════════════════════════
   function showVariant() {
     var pair = PAIRS[pairIndex];
     var A = ANIMALS[pair.a], B = ANIMALS[pair.b];
+    var teacher = !!(SESSION && SESSION.role === 'teacher');
     document.getElementById('variantView').hidden = false;
-    document.getElementById('gameTitle').textContent = '💃 Judėk kartu · ' + pair.name;
+    document.getElementById('gameTitle').textContent = '💃 ' + pair.name;
+    document.getElementById('btnInfo').hidden = true;   // in the teacher's toolbar instead
     document.title = 'MUSICATION — ' + pair.name;
 
+    var sceneCard = document.getElementById('sceneCard');
     var sceneVideo = document.getElementById('sceneVideo');
     var sceneImg = document.getElementById('sceneImg');
     var sceneCaption = document.getElementById('sceneCaption');
@@ -486,7 +499,7 @@
       pairVideo.muted = true; pairVideo.loop = true; pairVideo.preload = 'auto'; pairVideo.hidden = true;
       pairVideo.setAttribute('muted', ''); pairVideo.setAttribute('playsinline', '');
       pairVideo.src = pair.video;
-      document.getElementById('sceneCard').insertBefore(pairVideo, sceneImg);
+      sceneCard.insertBefore(pairVideo, sceneImg);
     }
 
     function hideAllMedia() {
@@ -524,19 +537,43 @@
       motifAudioEl.src = src;
       motifAudioEl.currentTime = 0;
       motifAudioEl.onended = onDone || null;
-      motifAudioEl.play();
+      safePlay(motifAudioEl);
     }
 
-    // ── b) Each animal's own video, full screen ──────────────────────────
+    // A short friendly tune for hello (up) and goodbye (down, slow).
+    var actx = null;
+    function chime(kind) {
+      try {
+        actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+        if (actx.state !== 'running') { actx.resume(); }
+        var hello = kind === 'hello';
+        (hello ? [784, 1047, 1319] : [1319, 1047, 784, 523]).forEach(function (f, i) {
+          var t = actx.currentTime + i * (hello ? 0.14 : 0.3), len = hello ? 0.6 : 1.1;
+          var o = actx.createOscillator(), g = actx.createGain();
+          o.type = 'sine'; o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+          o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + len + 0.05);
+        });
+      } catch (e) {}
+    }
+
+    // ── Each animal's own video, full screen ─────────────────────────────
     // Its video loops silently while a separate audio track carries the
-    // song (or the video plays with its own song). Stop toggles pause /
-    // resume; Restart jumps back to the start; ✕ closes it.
+    // song (or the video plays with its own song). ⏸/▶ pauses and resumes,
+    // 🔁 starts again, ✕ closes it.
     var fsPlayer = document.getElementById('fsPlayer');
     var fsVideo = document.getElementById('fsVideo');
     var fsAudio = document.getElementById('fsAudio');
     var fsStopBtn = document.getElementById('fsStopBtn');
     var fsMusic = fsAudio;
 
+    function setFsButton(paused) {
+      fsStopBtn.textContent = paused ? '▶' : '⏸';
+      fsStopBtn.className = 'gc-btn ' + (paused ? 'play' : 'stop');
+      fsStopBtn.title = paused ? 'Tęsti' : 'Sustabdyti';
+    }
     function openSoloPlayer(animal) {
       if (sequenceRunning) { cancelSequence(); exitGameMode(); }
       stopAllMusic();
@@ -552,7 +589,7 @@
         fsAudio.currentTime = 0;
         fsMusic = fsAudio;
       }
-      fsStopBtn.textContent = '⏸ Sustabdyti';
+      setFsButton(false);
       fsPlayer.hidden = false;
       fsVideo.currentTime = 0;
       safePlay(fsVideo);
@@ -568,93 +605,86 @@
       if (fsMusic !== fsVideo) { safePlay(fsAudio); }
     }
     fsStopBtn.addEventListener('click', function () {
-      if (fsMusic.paused) { playFs(); fsStopBtn.textContent = '⏸ Sustabdyti'; }
-      else { fsAudio.pause(); fsVideo.pause(); fsStopBtn.textContent = '▶ Tęsti'; }
+      if (fsMusic.paused) { playFs(); setFsButton(false); }
+      else { fsAudio.pause(); fsVideo.pause(); setFsButton(true); }
     });
     document.getElementById('fsRestartBtn').addEventListener('click', function () {
       fsVideo.currentTime = 0;
       if (fsMusic !== fsVideo) { fsAudio.currentTime = 0; }
-      fsStopBtn.textContent = '⏸ Sustabdyti';
+      setFsButton(false);
       playFs();
     });
     document.getElementById('fsCloseBtn').addEventListener('click', closeSoloPlayer);
     // A silent video loops on its own (it's usually shorter than the song);
     // once the song ends, freeze on that frame instead of looping on.
-    fsAudio.addEventListener('ended', function () { fsVideo.pause(); fsStopBtn.textContent = '▶ Tęsti'; });
-    fsVideo.addEventListener('ended', function () { fsStopBtn.textContent = '▶ Tęsti'; });
+    fsAudio.addEventListener('ended', function () { fsVideo.pause(); setFsButton(true); });
+    fsVideo.addEventListener('ended', function () { setFsButton(true); });
 
-    // Tapping either half of the scene opens that animal's video too.
+    // ── Music only: the picture leans towards the animal that sounds, ■
+    // stops it (so does tapping the same animal again). ──
+    var musicEl = document.getElementById('musicOnly');
+    var sceneStop = document.getElementById('sceneStop');
+    var musicWhich = null;
+    function stopMusicOnly() {
+      musicEl.pause();
+      musicWhich = null;
+      sceneCard.classList.remove('focus-a', 'focus-b');
+      sceneStop.hidden = true;
+      document.body.classList.remove('music-on');
+      if (!sequenceRunning) { hideCaption(); }
+    }
+    function toggleMusicOnly(which) {
+      if (musicWhich === which && !musicEl.paused) { stopMusicOnly(); return; }
+      stopAllMusic();
+      var animal = ANIMALS[pair[which]];
+      musicWhich = which;
+      musicEl.src = musicOf(animal);
+      musicEl.currentTime = 0;
+      safePlay(musicEl);
+      sceneCard.classList.add('focus-' + which);
+      sceneStop.hidden = false;
+      document.body.classList.add('music-on');
+      showCaption('🎵 ' + animal.icon);
+    }
+    musicEl.addEventListener('ended', stopMusicOnly);
+    sceneStop.addEventListener('click', function (e) { e.stopPropagation(); stopMusicOnly(); });
+
+    // ── Tapping an animal ──
+    var MODE_KEY = 'musication.judek.tapMode';
+    var tapMode = 'video';
+    try { if (localStorage.getItem(MODE_KEY) === 'music') { tapMode = 'music'; } } catch (e) {}
     function onZoneTap(which) {
       if (sequenceRunning) { return; }
       var animal = ANIMALS[pair[which]];
-      if (hasSolo(animal)) { openSoloPlayer(animal); return; }
-      showCaption('🎵 ' + animal.icon + ' ' + animal.name);
-      playAudioFile(animal.audio, hideCaption);
+      if (tapMode === 'music' || !hasSolo(animal)) { toggleMusicOnly(which); return; }
+      openSoloPlayer(animal);
     }
     document.getElementById('zoneA').addEventListener('click', function () { onZoneTap('a'); });
     document.getElementById('zoneB').addEventListener('click', function () { onZoneTap('b'); });
 
-    // ── c) Music only ─────────────────────────────────────────────────────
-    var musicEl = document.getElementById('musicOnly');
-    var miniPlayer = document.getElementById('miniPlayer');
-    var mpToggle = document.getElementById('mpToggle');
-    var mpSeek = document.getElementById('mpSeek');
-    var mpTime = document.getElementById('mpTime');
-    var musicAnimal = null;
-
-    function fmt(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
-    function markMusicButtons() {
-      document.querySelectorAll('#musicBtns .a-btn').forEach(function (b) {
-        b.classList.toggle('on', !!musicAnimal && b.dataset.animal === musicAnimal && !musicEl.paused);
+    // ── Teacher's toolbar ──
+    var tbar = document.getElementById('tbar');
+    tbar.hidden = !teacher;
+    function renderMode() {
+      document.getElementById('tbModeVideo').classList.toggle('on', tapMode === 'video');
+      document.getElementById('tbModeMusic').classList.toggle('on', tapMode === 'music');
+    }
+    [['tbModeVideo', 'video'], ['tbModeMusic', 'music']].forEach(function (m) {
+      document.getElementById(m[0]).addEventListener('click', function () {
+        tapMode = m[1];
+        try { localStorage.setItem(MODE_KEY, tapMode); } catch (e) {}
+        stopMusicOnly();
+        renderMode();
       });
-    }
-    function stopMusicOnly() {
-      musicEl.pause();
-      mpToggle.textContent = '▶';
-      markMusicButtons();
-    }
-    function playMusicOnly(key) {
-      if (sequenceRunning) { cancelSequence(); exitGameMode(); showPairMedia(); }
-      motifAudioEl.pause();
-      if (musicAnimal !== key) {
-        musicAnimal = key;
-        musicEl.src = musicOf(ANIMALS[key]);
-      }
-      musicEl.currentTime = 0;
-      safePlay(musicEl);
-      miniPlayer.hidden = false;
-    }
-    musicEl.addEventListener('play', function () { mpToggle.textContent = '⏸'; markMusicButtons(); });
-    musicEl.addEventListener('pause', function () { mpToggle.textContent = '▶'; markMusicButtons(); });
-    musicEl.addEventListener('timeupdate', function () {
-      if (musicEl.duration) { mpSeek.value = Math.round(musicEl.currentTime / musicEl.duration * 1000); }
-      mpTime.textContent = fmt(musicEl.currentTime) + ' / ' + fmt(musicEl.duration);
     });
-    mpToggle.addEventListener('click', function () { if (musicEl.paused) { safePlay(musicEl); } else { musicEl.pause(); } });
-    document.getElementById('mpRestart').addEventListener('click', function () { musicEl.currentTime = 0; safePlay(musicEl); });
-    mpSeek.addEventListener('input', function () {
-      if (musicEl.duration) { musicEl.currentTime = mpSeek.value / 1000 * musicEl.duration; }
+    renderMode();
+    document.getElementById('tbInfo').addEventListener('click', function () {
+      stopEverything();
+      document.getElementById('infoOverlay').hidden = false;
     });
 
-    // Animal buttons for b) and c).
-    [['a', A], ['b', B]].forEach(function (x, i) {
-      var key = pair[x[0]], animal = x[1];
-      var vb = document.createElement('button');
-      vb.className = 'a-btn'; vb.style.setProperty('--c', '#D11264');
-      vb.innerHTML = '<span class="a-ico">' + animal.icon + '</span> ' + animal.name + ' <small>video</small>';
-      vb.addEventListener('click', function () { openSoloPlayer(animal); });
-      document.getElementById('videoBtns').appendChild(vb);
-
-      var mb = document.createElement('button');
-      mb.className = 'a-btn'; mb.style.setProperty('--c', '#009D9D'); mb.dataset.animal = key;
-      mb.innerHTML = '<span class="a-ico">' + animal.icon + '</span> ' + animal.name + ' <small>mp3</small>';
-      mb.addEventListener('click', function () {
-        if (musicAnimal === key && !musicEl.paused) { musicEl.pause(); } else { playMusicOnly(key); }
-      });
-      document.getElementById('musicBtns').appendChild(mb);
-    });
-
-    // ── a) Game card ──────────────────────────────────────────────────────
+    // The method card: the pair's card picture full screen; without one,
+    // the written card built from the animal data.
     function animalCardHtml(animal) {
       return '<div class="animal-card">' +
         '<h3>' + animal.icon + ' ' + animal.name + '</h3>' +
@@ -667,9 +697,7 @@
     }
     var teacherOverlay = document.getElementById('teacherOverlay');
     var cardViewer = document.getElementById('cardViewer');
-    // The pair's own card picture full screen; without one, the written
-    // card built from the animal data.
-    document.getElementById('optCard').addEventListener('click', function () {
+    document.getElementById('tbCard').addEventListener('click', function () {
       stopEverything();
       if (pair.card) {
         document.getElementById('cardViewerImg').src = pair.card;
@@ -685,8 +713,8 @@
     document.getElementById('teacherClose').addEventListener('click', function () { teacherOverlay.hidden = true; });
     teacherOverlay.addEventListener('click', function (e) { if (e.target === teacherOverlay) { teacherOverlay.hidden = true; } });
 
-    // ── d) The whole game: greet → animal A → animal B → goodbye, on the
-    // nearly full-screen scene with ⏸/▶, 🔁 from the start, 🔄 and ✕. ──
+    // ── ▶ The whole game: hello → animal A → animal B → goodbye, on the
+    // nearly full-screen scene with ⏸/▶, 🔁 from the start, ⏭ and ✕. ──
     var sequenceRunning = false;
     var sequenceToken = 0;
     var gamePaused = false;
@@ -695,8 +723,8 @@
     var gamePauseBtn = document.getElementById('gamePauseBtn');
     var gameNextBtn = document.getElementById('gameNextBtn');
 
-    // The greeting / goodbye pauses are timers, so they must be able to
-    // pause too: seqTimer remembers how much of its wait is left.
+    // The hello / goodbye pauses are timers, so they must be able to pause
+    // too: seqTimer remembers how much of its wait is left.
     var seqTimer = null;
     function startSeqTimer() {
       seqTimer.startedAt = Date.now();
@@ -704,14 +732,17 @@
     }
     function seqDelay(ms, cb) { seqTimer = { cb: cb, remaining: ms }; if (!gamePaused) { startSeqTimer(); } }
 
+    function clearWaves() { sceneCard.classList.remove('waving', 'calm'); }
     function cancelSequence() {
       sequenceRunning = false; sequenceToken++; gameStage = null;
       if (seqTimer) { clearTimeout(seqTimer.id); seqTimer = null; }
+      clearWaves();
       hideCaption();
     }
     function setPauseButton() {
-      gamePauseBtn.textContent = gamePaused ? '▶ Paleisti' : '⏸ Sustabdyti';
-      gamePauseBtn.className = 'fs-btn ' + (gamePaused ? 'play' : 'stop');
+      gamePauseBtn.textContent = gamePaused ? '▶' : '⏸';
+      gamePauseBtn.className = 'gc-btn ' + (gamePaused ? 'play' : 'stop');
+      gamePauseBtn.title = gamePaused ? 'Tęsti' : 'Sustabdyti';
       document.body.classList.toggle('game-paused', gamePaused);
     }
     function setGamePaused(paused) {
@@ -724,7 +755,7 @@
         if (activeVideo()) { activeVideo().pause(); }
         if (seqTimer) { clearTimeout(seqTimer.id); seqTimer.remaining -= Date.now() - seqTimer.startedAt; }
       } else {
-        if (resumeAudio) { motifAudioEl.play(); }
+        if (resumeAudio) { safePlay(motifAudioEl); }
         if (activeVideo()) { safePlay(activeVideo()); }
         if (seqTimer) { startSeqTimer(); }
       }
@@ -735,7 +766,7 @@
       document.body.classList.add('game-on');
     }
     function exitGameMode() {
-      document.body.classList.remove('game-on', 'game-paused');
+      document.body.classList.remove('game-on', 'game-paused', 'game-ending');
       gamePaused = false;
     }
     function quitGame() {
@@ -778,6 +809,7 @@
       }
     }
 
+    // Hello: both animals wave to the children with a short tune.
     function runSequence() {
       if (sequenceRunning) { return; }
       stopMusicOnly();
@@ -786,42 +818,62 @@
       enterGameMode();
       gameStage = 'greet';
       updateNextAnimalBtn();
-      showCaption('👋 Labas! ' + A.icon + ' ' + B.icon);
-      seqDelay(1400, function () { playGameAnimal('a', myToken); });
+      clearWaves();
+      sceneCard.classList.add('waving');
+      chime('hello');
+      seqDelay(2400, function () {
+        sceneCard.classList.remove('waving');
+        playGameAnimal('a', myToken);
+      });
     }
     function playGameAnimal(which, myToken) {
       if (sequenceToken !== myToken) { return; }
       gameStage = which;
       updateNextAnimalBtn();
+      clearWaves();
       var animal = ANIMALS[pair[which]];
-      showCaption('🎵 ' + animal.icon + ' ' + animal.name);
+      showCaption('🎵 ' + animal.icon);
       playAnimalPart(animal, function () {
         if (sequenceToken !== myToken) { return; }
         if (which === 'a') { playGameAnimal('b', myToken); } else { sayGoodbye(myToken); }
       });
     }
+    // Goodbye: both animals wave again, the scene grows calm and dim, and
+    // the game closes quietly.
     function sayGoodbye(myToken) {
       gameStage = 'bye';
       updateNextAnimalBtn();
-      showCaption('👋 Iki! 🌙');
-      seqDelay(1600, function () {
+      hideCaption();
+      showPairMedia();
+      sceneCard.classList.add('waving');
+      chime('bye');
+      // Let the picture appear first, then dim it slowly.
+      setTimeout(function () { if (sequenceToken === myToken) { sceneCard.classList.add('calm'); showCaption('🌙'); } }, 60);
+      seqDelay(3400, function () {
         if (sequenceToken !== myToken) { return; }
-        hideCaption();
-        exitGameMode();
-        showPairMedia();
-        sequenceRunning = false;
-        gameStage = null;
+        sceneCard.classList.remove('waving');
+        document.body.classList.add('game-ending');
+        seqDelay(750, function () {
+          if (sequenceToken !== myToken) { return; }
+          clearWaves();
+          hideCaption();
+          exitGameMode();
+          showPairMedia();
+          sequenceRunning = false;
+          gameStage = null;
+        });
       });
     }
 
-    // 🔄 switches to the pair's other animal at once (also when paused).
+    // ⏭ switches to the pair's other animal at once (also when paused).
     function nextAnimal() { return (gameStage === 'greet' || gameStage === 'a') ? 'b' : 'a'; }
-    function updateNextAnimalBtn() { gameNextBtn.textContent = '🔄 Kitas gyvūnas ' + ANIMALS[pair[nextAnimal()]].icon; }
+    function updateNextAnimalBtn() { gameNextBtn.innerHTML = '⏭<small>' + ANIMALS[pair[nextAnimal()]].icon + '</small>'; }
     function changeAnimal() {
       if (!sequenceRunning) { return; }
       var which = nextAnimal();
       var myToken = ++sequenceToken;
       if (seqTimer) { clearTimeout(seqTimer.id); seqTimer = null; }
+      document.body.classList.remove('game-ending');
       stopAllMusic();
       gamePaused = false;
       setPauseButton();
