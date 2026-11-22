@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MUSICATION — Mokytojo kambarys</title>
+<link rel="stylesheet" href="../styles/pages.css">
+<link rel="stylesheet" href="lessonEngine.css">
+<style>
+  [hidden] { display: none !important; }
+  body { min-height: 100vh; }
+
+  /* ── Sign in ── */
+  .auth { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-card { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 14px; }
+  .auth-logo { font-size: 30px; font-weight: 800; color: var(--navy); text-align: center; }
+  .auth-card h1 { font-size: 24px; text-align: center; }
+  .auth-card form { display: flex; flex-direction: column; gap: 12px; }
+  .auth-card .btn { justify-content: center; }
+  .auth-links { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .link { background: none; border: none; color: var(--teal); font-weight: 800; cursor: pointer; font-size: 15px; padding: 0; font-family: inherit; }
+  .auth-msg { min-height: 22px; text-align: center; font-weight: 700; }
+  .auth-msg.bad { color: var(--orange); }
+  .auth-msg.good { color: #1b8a3a; }
+  .demo-note { background: #fff6e0; border: 2px solid #f5c443; border-radius: 14px; padding: 8px 12px; font-weight: 700; font-size: 14px; }
+  .langs { display: flex; justify-content: center; gap: 6px; }
+
+  /* ── Top navigation: the teacher's icons ── */
+  .nav {
+    position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--navy); color: #fff; padding: 8px 16px;
+  }
+  .nav .brand { color: #fff; text-decoration: none; font-weight: 800; font-size: 20px; margin-right: 8px; display: flex; align-items: center; gap: 8px; }
+  .nav .brand small { font-size: 13px; opacity: 0.75; font-weight: 700; }
+  .nav nav { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+  .nav nav a, .nav nav button {
+    color: #fff; text-decoration: none; border: none; background: transparent; cursor: pointer; font-family: inherit;
+    border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 15px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .nav nav a:hover, .nav nav button:hover { background: rgba(255,255,255,0.14); }
+  .nav nav a.sel { background: #fff; color: var(--navy); }
+  .nav nav a.plus { background: var(--teal); }
+  .nav .ico { font-size: 19px; }
+  .nav .who { font-weight: 700; font-size: 14px; opacity: 0.85; }
+  .mode-badge { font-size: 12px; font-weight: 800; background: #f5c443; color: #3a2800; border-radius: 999px; padding: 2px 10px; }
+  @media (max-width: 1500px) { .nav .brand small { display: none; } .nav nav a, .nav nav button { padding: 6px 9px; font-size: 14px; } }
+  @media (max-width: 1250px) { .nav .who { display: none; } }
+  @media (max-width: 640px) {
+    .nav .brand { flex: 1; }
+    .nav nav { order: 3; flex: 1 1 100%; justify-content: space-between; flex-wrap: nowrap; }
+  }
+  @media (max-width: 900px) { .nav nav .lbl { display: none; } .nav nav a, .nav nav button { padding: 7px 10px; } .nav .ico { font-size: 22px; } }
+
+  h2.view-h { font-size: 30px; font-weight: 800; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  h2.view-h .grow { flex: 1; }
+  .sub-h { font-size: 20px; font-weight: 800; margin: 18px 0 10px; }
+
+  /* ── Home ── */
+  .home-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+  .home-tiles a { aspect-ratio: auto; min-height: 150px; text-decoration: none; color: inherit; }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .stat { background: #fff; border-radius: 18px; padding: 10px 18px; font-weight: 800; box-shadow: 0 4px 14px rgba(35,38,74,0.07); }
+  .stat b { font-size: 26px; margin-right: 6px; color: var(--teal); }
+
+  /* ── Filters and lesson cards ── */
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .filters label { display: flex; align-items: center; gap: 6px; font-weight: 800; background: #fff; border-radius: 999px; padding: 4px 6px 4px 12px; box-shadow: 0 2px 0 rgba(0,0,0,0.06); }
+  .filters select, .filters input { border: none; outline: none; font-size: 15px; font-weight: 700; background: transparent; padding: 4px; }
+  .filters input { min-width: 180px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .lcard {
+    background: #fff; border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+    border-left: 10px solid var(--c, var(--teal)); box-shadow: 0 5px 0 rgba(0,0,0,0.05), 0 10px 22px rgba(35,38,74,0.08);
+  }
+  .lcard .head { display: flex; gap: 12px; align-items: center; }
+  .lcard .pic { width: 52px; height: 52px; border-radius: 16px; flex: none; font-size: 30px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c, var(--teal)) 15%, #fff); }
+  .lcard h3 { font-size: 19px; line-height: 1.2; }
+  .lcard .meta { font-size: 13px; font-weight: 700; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .lcard .goal { font-size: 14px; font-weight: 600; color: var(--ink-soft); line-height: 1.3; }
+  .lcard .blocks { font-size: 20px; letter-spacing: 2px; }
+  .lcard .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+  .lcard .acts .btn { padding: 6px 12px; font-size: 14px; }
+  .lock { font-size: 12px; font-weight: 800; color: var(--violet); background: #f1ebfa; border-radius: 999px; padding: 2px 8px; }
+  .vtag { font-size: 12px; font-weight: 800; color: #fff; background: var(--navy); border-radius: 999px; padding: 1px 8px; }
+  .arch { opacity: 0.6; }
+
+  /* ── Lesson editor ── */
+  .ed-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .ed-top .title-in { flex: 1; min-width: 220px; font-size: 22px; font-weight: 800; }
+  .dirty { font-size: 13px; font-weight: 800; color: var(--orange); }
+  .ed-grid { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 980px) { .ed-grid { grid-template-columns: 1fr; } }
+  .settings-box { display: flex; flex-direction: column; gap: 10px; }
+  .settings-box h3 { font-size: 18px; }
+  .blist { display: flex; flex-direction: column; gap: 8px; }
+  .brow { background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(35,38,74,0.07); border: 2px solid transparent; }
+  .brow.open { border-color: var(--teal); }
+  .brow.drag-over { border-color: var(--yellow); border-style: dashed; }
+  .brow .bhead { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+  .brow .handle { cursor: grab; font-size: 20px; color: var(--ink-soft); padding: 0 4px; user-select: none; }
+  .brow .no { width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; font-size: 14px; }
+  .brow .bico { font-size: 24px; flex: none; }
+  .brow .btxt { flex: 1; min-width: 0; }
+  .brow .btxt b { display: block; font-size: 16px; }
+  .brow .btxt span { display: block; font-size: 13px; color: var(--ink-soft); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brow .thumb { width: 150px; flex: none; display: flex; justify-content: center; }
+  .brow .thumb svg { width: 100%; height: auto; max-height: 52px; }
+  .brow .thumb img { max-height: 52px; max-width: 100%; border-radius: 8px; }
+  .brow .bacts { display: flex; gap: 4px; flex: none; }
+  .brow .bacts button { border: none; background: #f3f1fb; border-radius: 10px; width: 34px; height: 34px; cursor: pointer; font-size: 15px; }
+  .brow .bacts button:hover { background: #e6e1f7; }
+  .brow .bbody { padding: 4px 14px 14px; border-top: 1px solid var(--line); }
+  @media (max-width: 700px) { .brow .thumb { display: none; } }
+  .palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .palette button { border: 2px solid var(--line); background: #fff; border-radius: 14px; padding: 10px; cursor: pointer; font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; font-family: inherit; }
+  .palette button span { font-size: 24px; }
+  .palette button:hover { border-color: var(--teal); }
+
+  /* ── Tables ── */
+  .tbl { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 14px rgba(35,38,74,0.07); }
+  .tbl th, .tbl td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: 15px; vertical-align: middle; }
+  .tbl th { background: #f3f1fb; font-weight: 800; font-size: 14px; white-space: nowrap; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td.c, .tbl th.c { text-align: center; }
+  .tbl tr.click { cursor: pointer; }
+  .tbl tr.click:hover td { background: #faf9ff; }
+  .tbl-wrap { overflow-x: auto; }
+  .code { font-family: ui-monospace, Consolas, monospace; font-weight: 800; font-size: 18px; letter-spacing: 2px; background: #f3f1fb; border-radius: 8px; padding: 2px 8px; }
+  .score { font-weight: 800; border-radius: 999px; padding: 2px 10px; display: inline-block; min-width: 52px; text-align: center; }
+  .score.hi { background: #e3f7e6; color: #1b7a33; }
+  .score.mid { background: #fff3d6; color: #8a5a00; }
+  .score.lo { background: #ffe5dc; color: #b23a12; }
+  .score.none { color: var(--ink-soft); }
+  .ibtn { border: none; background: #f3f1fb; border-radius: 10px; min-width: 34px; height: 34px; cursor: pointer; font-size: 15px; padding: 0 8px; font-weight: 700; font-family: inherit; }
+  .ibtn.on { background: #dff5f5; box-shadow: inset 0 0 0 2px var(--teal); }
+
+  .cols { display: grid; grid-template-columns: 260px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  .clist { display: flex; flex-direction: column; gap: 6px; }
+  .clist button { text-align: left; border: none; background: #fff; border-radius: 14px; padding: 10px 14px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; font-family: inherit; box-shadow: 0 2px 0 rgba(0,0,0,0.05); }
+  .clist button.sel { background: var(--teal); color: #fff; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+
+  /* ── Live lesson ── */
+  .live { display: grid; grid-template-columns: 1fr; gap: 14px; padding: 10px 16px 20px; max-width: 1500px; margin: 0 auto; }
+  .live.with-panel { grid-template-columns: 1fr 340px; }
+  @media (max-width: 1000px) { .live.with-panel { grid-template-columns: 1fr; } }
+  .live-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; grid-column: 1 / -1; }
+  .live-bar h2 { font-size: 22px; flex: 1; min-width: 200px; }
+  .ppanel { background: #fff; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 6px 24px rgba(35,38,74,0.1); align-self: start; position: sticky; top: 64px; }
+  .ppanel h3 { font-size: 18px; }
+  .pmodes { display: flex; flex-direction: column; gap: 6px; }
+  .pmodes button { text-align: left; border: 2px solid var(--line); background: #fff; border-radius: 14px; padding: 8px 12px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 15px; }
+  .pmodes button.sel { border-color: var(--teal); background: #e9f8f8; }
+  .slist { display: flex; flex-direction: column; gap: 4px; max-height: 42vh; overflow-y: auto; }
+  .srow { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 10px; background: #f6f4fd; font-weight: 700; font-size: 15px; }
+  .srow input { width: 18px; height: 18px; accent-color: var(--teal); }
+  .srow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .srow .st { font-size: 16px; min-width: 22px; text-align: center; }
+  .legend { font-size: 12px; font-weight: 700; color: var(--ink-soft); line-height: 1.5; }
+  :fullscreen .live { max-width: none; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(30px); opacity: 0; z-index: 400;
+    background: var(--navy); color: #fff; padding: 10px 22px; border-radius: 999px; font-weight: 800; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s; max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+  .toast.bad { background: var(--orange); }
+  .modal.wide { max-width: 1240px; height: 94vh; max-height: 94vh; }
+  .modal.wide .modal-body { flex: 1; }
+  .modal.mid { max-width: 820px; }
+  .pick-list { display: flex; flex-direction: column; gap: 6px; max-height: 40vh; overflow-y: auto; }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button { border: 2px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 800; cursor: pointer; font-family: inherit; font-size: 15px; }
+  .seg button.sel { border-color: var(--teal); background: #e9f8f8; }
+  .errs { margin: 4px 0 0 18px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+  .linkbox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: #fff; border-radius: 14px; padding: 8px 12px; font-weight: 700; }
+  .linkbox code { font-size: 14px; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div id="boot" class="empty" style="padding-top:30vh">⏳</div>
+
+<!-- T-01: sign in -->
+<div class="auth" id="authScreen" hidden>
+  <div class="panel auth-card">
+    <div class="auth-logo">🎼 MUSICATION</div>
+    <h1 data-i18n="t.loginTitle"></h1>
+    <div class="demo-note" id="demoNote" hidden data-i18n="t.demoNote"></div>
+    <form id="fLogin">
+      <label class="field"><span data-i18n="t.email"></span><input class="input" type="email" id="liEmail" autocomplete="username" required></label>
+      <label class="field"><span data-i18n="t.password"></span><input class="input" type="password" id="liPass" autocomplete="current-password"></label>
+      <button class="btn btn-teal" type="submit" data-i18n="t.signIn"></button>
+      <div class="auth-links">
+        <button class="link" type="button" data-to="fSignup" data-i18n="t.signUp"></button>
+        <button class="link" type="button" data-to="fForgot" data-i18n="t.forgot"></button>
+      </div>
+    </form>
+    <form id="fSignup" hidden>
+      <label class="field"><span data-i18n="t.name"></span><input class="input" type="text" id="suName" required></label>
+      <label class="field"><span data-i18n="t.email"></span><input class="input" type="email" id="suEmail" autocomplete="username" required></label>
+      <label class="field"><span data-i18n="t.passwordNew"></span><input class="input" type="password" id="suPass" autocomplete="new-password" minlength="6"></label>
+      <label class="field"><span data-i18n="t.language"></span><select class="select" id="suLang"><option value="lt">Lietuvių</option><option value="en">English</option></select></label>
+      <button class="btn btn-teal" type="submit" data-i18n="t.createAccount"></button>
+      <div class="auth-links"><button class="link" type="button" data-to="fLogin" data-i18n="t.haveAccount"></button></div>
+    </form>
+    <form id="fForgot" hidden>
+      <p class="muted" data-i18n="t.forgotHelp"></p>
+      <label class="field"><span data-i18n="t.email"></span><input class="input" type="email" id="fgEmail" required></label>
+      <button class="btn btn-teal" type="submit" data-i18n="t.sendLink"></button>
+      <div class="auth-links"><button class="link" type="button" data-to="fLogin" data-i18n="t.back"></button></div>
+    </form>
+    <form id="fNewPass" hidden>
+      <label class="field"><span data-i18n="t.passwordNew"></span><input class="input" type="password" id="npPass" autocomplete="new-password" minlength="6" required></label>
+      <button class="btn btn-teal" type="submit" data-i18n="t.savePassword"></button>
+    </form>
+    <p class="auth-msg" id="authMsg"></p>
+    <div class="langs"><button class="chip" data-lang="lt">LT</button><button class="chip" data-lang="en">EN</button></div>
+  </div>
+</div>
+
+<!-- The teacher's room -->
+<div id="app" hidden>
+  <header class="nav" id="nav">
+    <a class="brand" href="#home">🎼 MUSICATION <small data-i18n="t.room"></small></a>
+    <nav>
+      <a href="#library" data-r="library"><span class="ico">📚</span><span class="lbl" data-i18n="nav.library"></span></a>
+      <a href="#mine" data-r="mine"><span class="ico">📂</span><span class="lbl" data-i18n="nav.mine"></span></a>
+      <a href="#classes" data-r="classes"><span class="ico">👥</span><span class="lbl" data-i18n="nav.classes"></span></a>
+      <a href="#results" data-r="results"><span class="ico">📊</span><span class="lbl" data-i18n="nav.results"></span></a>
+      <a href="#new" data-r="new" class="plus"><span class="ico">＋</span><span class="lbl" data-i18n="nav.new"></span></a>
+      <a href="#settings" data-r="settings"><span class="ico">⚙️</span><span class="lbl" data-i18n="nav.settings"></span></a>
+      <button id="langBtn" type="button"><span class="ico">🌐</span><span id="langLbl">LT</span></button>
+    </nav>
+    <span class="mode-badge" id="modeBadge" hidden data-i18n="t.demo"></span>
+    <span class="who" id="who"></span>
+  </header>
+  <main id="view"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="lib/supabase.js"></script>
+<script src="db.js"></script>
+<script src="i18n.js"></script>
+<script src="auth.js"></script>
+<script src="solfedzioData.js"></script>
+<script src="lessonEngine.js"></script>
+<script src="programLessons.js"></script>
+<script>
+(function () {
+  'use strict';
+  var DB = window.MusicationDB, LE = window.LessonEngine, PL = window.ProgramLessons, I = window.I18N;
+  var t = I.t, esc = LE.esc;
+  function $(id) { return document.getElementById(id); }
+  function el(html) { var d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
+
+  var S = { user: null, profile: null, classes: [], students: [], lessons: [], assignments: [], attempts: [] };
+  var AREAS = [['notes', '🎼'], ['rhythm', '👏'], ['listening', '👂'], ['piano', '🎹'], ['other', '📝']];
+  var STATUS_ICO = { assigned: '📤', started: '▶', in_progress: '⏳', completed: '✓', repeat: '🔄' };
+  var ONLINE_MS = 45000;
+
+  // ───────────────────────────── Small helpers ─────────────────────────────
+  var toastT = null;
+  function toast(msg, bad) {
+    var x = $('toast');
+    x.textContent = msg; x.className = 'toast show' + (bad ? ' bad' : '');
+    clearTimeout(toastT); toastT = setTimeout(function () { x.className = 'toast' + (bad ? ' bad' : ''); }, bad ? 4200 : 2400);
+  }
+  function fail(e) { console.error(e); toast('⚠️ ' + ((e && e.message) || e), true); }
+  function title(l) { return (I.lang === 'en' && l.title_en) ? l.title_en : (l.title || t('t.untitled')); }
+  function fmtDate(iso) {
+    if (!iso) { return '—'; }
+    try { return new Date(iso).toLocaleString(I.lang === 'en' ? 'en-GB' : 'lt-LT', { dateStyle: 'short', timeStyle: 'short' }); } catch (e) { return iso; }
+  }
+  function gradeName(g) { return g === null || g === undefined || g === '' ? '—' : +g === 0 ? t('g.pre') : t('g.n', { n: g }); }
+  function topicName(id) { return id ? t('topic.' + id) : '—'; }
+  function stars(n) { return '⭐'.repeat(Math.max(1, Math.min(3, n || 1))); }
+  function pct(x) { return x === null || x === undefined ? null : Math.round(x * 100); }
+  function scoreHtml(x) {
+    var p = pct(x);
+    if (p === null) { return '<span class="score none">—</span>'; }
+    return '<span class="score ' + (p >= 85 ? 'hi' : p >= 60 ? 'mid' : 'lo') + '">' + p + '%</span>';
+  }
+  function blockIcons(blocks) {
+    return (blocks || []).map(function (b) { return b.type === 'game' ? (LE.GAMES.filter(function (g) { return g.id === b.game; })[0] || {}).ico || '🎮' : LE.ICO[b.type]; }).join('');
+  }
+  function className(id) { var c = S.classes.filter(function (x) { return x.id === id; })[0]; return c ? c.name : t('cl.none'); }
+  function studentName(id) { var s = S.students.filter(function (x) { return x.id === id; })[0]; return s ? s.name : '?'; }
+  function online(s) {
+    if (!s.last_seen) { return 'off'; }
+    var age = Date.now() - new Date(s.last_seen).getTime();
+    return age < ONLINE_MS ? (s.seen_from === 'home' ? 'home' : 'on') : 'off';
+  }
+  var ONLINE_ICO = { on: '🟢', home: '🏠', off: '⚪' };
+  function studentLink() { return new URL('mokinys.html', location.href).href.split('#')[0]; }
+
+  // ── Modals ──
+  var modalNow = null;
+  function openModal(o) {
+    if (modalNow) { modalNow.close(); }
+    var ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.innerHTML = '<div class="modal ' + (o.size || '') + '" style="--mc:' + (o.color || 'var(--teal)') + '"><div class="modal-head"><h2></h2>' +
+      '<button class="x" aria-label="✕">&times;</button></div><div class="modal-body"></div><div class="modal-foot"></div></div>';
+    ov.querySelector('h2').textContent = o.title || '';
+    var body = ov.querySelector('.modal-body'), foot = ov.querySelector('.modal-foot');
+    if (typeof o.body === 'string') { body.innerHTML = o.body; } else if (o.body) { body.appendChild(o.body); }
+    var m = {
+      el: ov, body: body, foot: foot,
+      close: function () {
+        if (m.closed) { return; }
+        m.closed = true;
+        if (o.onClose) { o.onClose(); }
+        ov.remove();
+        if (modalNow === m) { modalNow = null; }
+      }
+    };
+    (o.buttons || []).forEach(function (b) {
+      var x = document.createElement('button');
+      x.className = 'btn ' + (b.cls || '');
+      x.textContent = b.label;
+      x.addEventListener('click', function () { b.fn(m, x); });
+      foot.appendChild(x);
+    });
+    if (!o.buttons || !o.buttons.length) { foot.hidden = true; }
+    ov.querySelector('.x').addEventListener('click', m.close);
+    document.body.appendChild(ov);
+    modalNow = m;
+    return m;
+  }
+  function ask(text, okLabel, danger) {
+    return new Promise(function (res) {
+      var answered = false;
+      openModal({
+        title: t('t.sure'), body: '<p style="font-size:17px;font-weight:600">' + esc(text) + '</p>', color: danger ? 'var(--orange)' : 'var(--teal)',
+        onClose: function () { if (!answered) { res(false); } },
+        buttons: [
+          { label: t('t.cancel'), fn: function (m) { m.close(); } },
+          { label: okLabel || t('t.ok'), cls: danger ? 'btn-orange' : 'btn-teal', fn: function (m) { answered = true; m.close(); res(true); } }
+        ]
+      });
+    });
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modalNow && !modalNow.sticky) { modalNow.close(); } });
+
+  // ───────────────────────────── Data ─────────────────────────────
+  function loadAll() {
+    return Promise.all([DB.profile.get(), DB.classes.list(), DB.students.list(), DB.lessons.list(), DB.assign.list(), DB.results.attempts()])
+      .then(function (r) {
+        S.profile = r[0] || {}; S.classes = r[1] || []; S.students = r[2] || []; S.lessons = r[3] || []; S.assignments = r[4] || []; S.attempts = r[5] || [];
+      });
+  }
+  function reload(which) {
+    var jobs = which.map(function (w) {
+      if (w === 'classes') { return DB.classes.list().then(function (x) { S.classes = x || []; }); }
+      if (w === 'students') { return DB.students.list().then(function (x) { S.students = x || []; }); }
+      if (w === 'lessons') { return DB.lessons.list().then(function (x) { S.lessons = x || []; }); }
+      if (w === 'assignments') { return DB.assign.list().then(function (x) { S.assignments = x || []; }); }
+      if (w === 'attempts') { return DB.results.attempts().then(function (x) { S.attempts = x || []; }); }
+      return Promise.resolve();
+    });
+    return Promise.all(jobs);
+  }
+  // A lesson by its reference: 'program:…' or the id of an own lesson.
+  function lessonByRef(ref) {
+    if (PL.isProgram(ref)) { return Promise.resolve(PL.get(ref)); }
+    return DB.lessons.get(ref);
+  }
+
+  // ───────────────────────────── Sign in ─────────────────────────────
+  function authMsg(text, kind) { var m = $('authMsg'); m.textContent = text || ''; m.className = 'auth-msg ' + (kind || ''); }
+  function showForm(id) {
+    ['fLogin', 'fSignup', 'fForgot', 'fNewPass'].forEach(function (f) { $(f).hidden = f !== id; });
+    authMsg('');
+  }
+  function showAuth(form) {
+    $('boot').hidden = true; $('app').hidden = true; $('authScreen').hidden = false;
+    $('demoNote').hidden = DB.mode !== 'local';
+    showForm(form || 'fLogin');
+  }
+  document.querySelectorAll('[data-to]').forEach(function (b) { b.addEventListener('click', function () { showForm(b.dataset.to); }); });
+  function authError(e) {
+    var m = (e && e.message) || String(e);
+    if (/invalid login credentials/i.test(m)) { return t('t.errLogin'); }
+    if (/email not confirmed/i.test(m)) { return t('t.errConfirm'); }
+    if (/already registered|already been registered/i.test(m)) { return t('t.errExists'); }
+    if (/password/i.test(m) && /6/.test(m)) { return t('t.errShort'); }
+    return m;
+  }
+  function busy(form, on) { form.querySelectorAll('button, input, select').forEach(function (x) { x.disabled = on; }); }
+  $('fLogin').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = this; busy(f, true); authMsg('⏳');
+    DB.auth.signIn($('liEmail').value.trim(), $('liPass').value).then(function () { return start(); })
+      .catch(function (err) { authMsg(authError(err), 'bad'); }).then(function () { busy(f, false); });
+  });
+  $('fSignup').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = this, pass = $('suPass').value;
+    if (DB.mode !== 'local' && pass.length < 6) { authMsg(t('t.errShort'), 'bad'); return; }
+    busy(f, true); authMsg('⏳');
+    DB.auth.signUp($('suName').value.trim(), $('suEmail').value.trim(), pass, $('suLang').value).then(function (r) {
+      I.set($('suLang').value);
+      if (r.confirm) { showForm('fLogin'); authMsg(t('t.checkEmail'), 'good'); return; }
+      return start();
+    }).catch(function (err) { authMsg(authError(err), 'bad'); }).then(function () { busy(f, false); });
+  });
+  $('fForgot').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = this; busy(f, true); authMsg('⏳');
+    DB.auth.reset($('fgEmail').value.trim()).then(function () { authMsg(t('t.linkSent'), 'good'); })
+      .catch(function (err) { authMsg(authError(err), 'bad'); }).then(function () { busy(f, false); });
+  });
+  $('fNewPass').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = this; busy(f, true);
+    DB.auth.setPassword($('npPass').value).then(function () { toast('✓ ' + t('t.passSaved')); return start(); })
+      .catch(function (err) { authMsg(authError(err), 'bad'); }).then(function () { busy(f, false); });
+  });
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.addEventListener('click', function () { I.set(b.dataset.lang); }); });
+
+  var recovering = false;
+  DB.auth.onChange(function (user, event) {
+    if (event === 'PASSWORD_RECOVERY') { recovering = true; showAuth('fNewPass'); }
+  });
+
+  function start() {
+    S.user = DB.auth.current();
+    if (!S.user) { showAuth(); return Promise.resolve(); }
+    return loadAll().then(function () {
+      if (S.profile && S.profile.language && !localStorage.getItem('musication.lang')) { I.set(S.profile.language); }
+      $('authScreen').hidden = true; $('boot').hidden = true; $('app').hidden = false;
+      $('modeBadge').hidden = DB.mode !== 'local';
+      $('who').textContent = (S.profile && S.profile.name) || (S.user && S.user.email) || '';
+      if (/access_token|error_description|type=/.test(location.hash)) { history.replaceState(null, '', location.pathname + '#home'); }
+      onRoute();
+    }).catch(fail);
+  }
+
+  // ───────────────────────────── Router ─────────────────────────────
+  var view = $('view'), route = 'home', cleanup = null, guard = null;
+  function go(r) { if (location.hash === '#' + r) { onRoute(); } else { location.hash = r; } }
+  window.addEventListener('hashchange', function () {
+    if (guard && !guard()) { history.replaceState(null, '', '#' + route); return; }
+    onRoute();
+  });
+  window.addEventListener('beforeunload', function (e) { if (guard && !guard(true)) { e.preventDefault(); e.returnValue = ''; } });
+  function onRoute() {
+    if (!S.user || $('app').hidden) { return; }
+    var parts = location.hash.replace(/^#\/?/, '').split('/');
+    var name = parts[0] || 'home';
+    if (/access_token|error/.test(name)) { name = 'home'; }
+    if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
+    guard = null;
+    if (modalNow) { modalNow.close(); }
+    route = location.hash.replace(/^#\/?/, '') || 'home';
+    document.querySelectorAll('#nav [data-r]').forEach(function (a) { a.classList.toggle('sel', a.dataset.r === name || (name === 'edit' && a.dataset.r === 'mine')); });
+    $('nav').hidden = name === 'live' && !!document.fullscreenElement;
+    view.innerHTML = '';
+    view.className = name === 'live' ? '' : 'wrap';
+    var R = { home: vHome, library: vLibrary, mine: vMine, edit: vEdit, 'new': vNew, classes: vClasses, results: vResults, settings: vSettings, live: vLive };
+    (R[name] || vHome)(decodeURIComponent(parts.slice(1).join('/')));
+    window.scrollTo(0, 0);
+  }
+
+  // ───────────────────────────── T-02 Home ─────────────────────────────
+  function vHome() {
+    var name = (S.profile && S.profile.name) || '';
+    var tiles = [['library', '📚', 'nav.library', '#009D9D'], ['mine', '📂', 'nav.mine', '#56317D'], ['classes', '👥', 'nav.classes', '#FBAD04'],
+      ['results', '📊', 'nav.results', '#D11264'], ['new', '＋', 'nav.new', '#A6B908'], ['settings', '⚙️', 'nav.settings', '#012A5F']];
+    var active = S.assignments.filter(function (a) { return a.students.some(function (x) { return x.status !== 'completed'; }); }).length;
+    view.innerHTML = '<h2 class="view-h">👋 ' + esc(t('home.hello', { name: name })) + '</h2>' +
+      '<div class="home-tiles">' + tiles.map(function (x) {
+        return '<a class="tile" href="#' + x[0] + '" style="--c:' + x[3] + '"><div class="tile-pic" style="width:70px">' + x[1] + '</div><div class="tile-name">' + esc(t(x[2])) + '</div></a>';
+      }).join('') + '</div>' +
+      '<div class="stats">' +
+        '<div class="stat"><b>' + PL.list().length + '</b>' + esc(t('home.program')) + '</div>' +
+        '<div class="stat"><b>' + S.lessons.filter(function (l) { return !l.archived; }).length + '</b>' + esc(t('home.mine')) + '</div>' +
+        '<div class="stat"><b>' + S.students.length + '</b>' + esc(t('home.students')) + '</div>' +
+        '<div class="stat"><b>' + active + '</b>' + esc(t('home.active')) + '</div>' +
+      '</div>' +
+      '<div class="sub-h">🔑 ' + esc(t('home.studentLink')) + '</div>' +
+      '<div class="linkbox"><code>' + esc(studentLink()) + '</code><button class="btn btn-small" id="copyLink">⧉ ' + esc(t('t.copy')) + '</button></div>';
+    $('copyLink').addEventListener('click', function () { copyText(studentLink()); });
+  }
+  function copyText(s) {
+    (navigator.clipboard ? navigator.clipboard.writeText(s) : Promise.reject()).then(function () { toast('✓ ' + t('t.copied')); }, function () { prompt('', s); });
+  }
+
+  // ───────────────────────────── 📚 Library ─────────────────────────────
+  var libFilter = { grade: '', topic: '', diff: '', q: '' };
+  function lessonMeta(l) {
+    return '<span>🎓 ' + esc(gradeName(l.grade)) + '</span><span>🎼 ' + esc(topicName(l.topic)) + '</span><span>' + stars(l.difficulty) + '</span>' +
+      (l.duration ? '<span>⏱ ' + l.duration + ' min</span>' : '') + '<span>' + esc(t('lib.blocks', { n: (l.blocks || []).length })) + '</span>';
+  }
+  function filterBar(f, onChange) {
+    var bar = el('<div class="filters">' +
+      '<label title="' + esc(t('f.grade')) + '">🎓<select data-k="grade"><option value="">' + esc(t('f.all')) + '</option>' +
+        PL.GRADES.map(function (g) { return '<option value="' + g + '">' + esc(gradeName(g)) + '</option>'; }).join('') + '</select></label>' +
+      '<label title="' + esc(t('f.topic')) + '">🎼<select data-k="topic"><option value="">' + esc(t('f.all')) + '</option>' +
+        PL.TOPICS.map(function (x) { return '<option value="' + x.id + '">' + x.ico + ' ' + esc(topicName(x.id)) + '</option>'; }).join('') + '</select></label>' +
+      '<label title="' + esc(t('f.diff')) + '">⭐<select data-k="diff"><option value="">' + esc(t('f.all')) + '</option>' +
+        [1, 2, 3].map(function (d) { return '<option value="' + d + '">' + stars(d) + '</option>'; }).join('') + '</select></label>' +
+      '<label title="' + esc(t('f.search')) + '">🔎<input data-k="q" type="search" placeholder="' + esc(t('f.searchPh')) + '"></label>' +
+      '</div>');
+    bar.querySelectorAll('[data-k]').forEach(function (x) {
+      x.value = f[x.dataset.k];
+      x.addEventListener(x.tagName === 'INPUT' ? 'input' : 'change', function () { f[x.dataset.k] = x.value; onChange(); });
+    });
+    return bar;
+  }
+  function matches(l, f) {
+    if (f.grade !== '' && String(l.grade) !== f.grade) { return false; }
+    if (f.topic && l.topic !== f.topic) { return false; }
+    if (f.diff && String(l.difficulty) !== f.diff) { return false; }
+    if (f.q) {
+      var hay = [l.title, l.title_en, l.goal, topicName(l.topic)].concat((l.blocks || []).map(function (b) { return (b.title || '') + ' ' + (b.text || ''); })).join(' ').toLowerCase();
+      if (hay.indexOf(f.q.toLowerCase()) < 0) { return false; }
+    }
+    return true;
+  }
+  function vLibrary() {
+    view.innerHTML = '<h2 class="view-h">📚 ' + esc(t('nav.library')) + '</h2><p class="muted" style="margin:-8px 0 14px">' + esc(t('lib.help')) + '</p>';
+    var grid = el('<div class="cards"></div>');
+    view.appendChild(filterBar(libFilter, draw));
+    view.appendChild(grid);
+    function draw() {
+      var list = PL.list().filter(function (l) { return matches(l, libFilter); });
+      grid.innerHTML = list.length ? '' : '<div class="empty"><span class="big">🔎</span>' + esc(t('lib.none')) + '</div>';
+      list.forEach(function (l) {
+        var c = el('<div class="lcard" style="--c:' + (l.color || 'var(--teal)') + '">' +
+          '<div class="head"><div class="pic">' + l.ico + '</div><div><h3>' + esc(title(l)) + '</h3><div class="meta">' + lessonMeta(l) + '</div></div></div>' +
+          '<div class="goal">' + esc(l.goal || '') + '</div>' +
+          '<div class="blocks" title="' + esc(t('lib.blocksTitle')) + '">' + blockIcons(l.blocks) + '</div>' +
+          '<div><span class="lock">🔒 ' + esc(t('lib.original')) + '</span></div>' +
+          '<div class="acts">' +
+            '<button class="btn" data-a="preview">▶ ' + esc(t('a.preview')) + '</button>' +
+            '<button class="btn btn-teal" data-a="live">📺 ' + esc(t('a.live')) + '</button>' +
+            '<button class="btn" data-a="copy">⧉ ' + esc(t('a.copy')) + '</button>' +
+            '<button class="btn btn-yellow" data-a="assign">📤 ' + esc(t('a.assign')) + '</button>' +
+          '</div></div>');
+        c.querySelector('[data-a="preview"]').addEventListener('click', function () { preview(l); });
+        c.querySelector('[data-a="live"]').addEventListener('click', function () { go('live/' + l.id); });
+        c.querySelector('[data-a="copy"]').addEventListener('click', function () { copyLesson(l); });
+        c.querySelector('[data-a="assign"]').addEventListener('click', function () { assignDialog(l); });
+        grid.appendChild(c);
+      });
+    }
+    draw();
+  }
+
+  // ▶ Preview: the lesson as a child sees it; nothing is saved.
+  function preview(l, blocks) {
+    var box = document.createElement('div');
+    var p = null;
+    openModal({ title: '▶ ' + title(l), size: 'wide', color: 'var(--navy)', body: box, onClose: function () { if (p) { p.destroy(); } } });
+    p = LE.player(box, LE.clone(blocks || l.blocks || []), { mode: 'preview', role: 'teacher', mono: l.color_mode === 'mono' });
+  }
+
+  // ⧉ Copy: the original stays as it is; the copy is the teacher's own.
+  function copyLesson(src) {
+    var fields = ['title_en', 'grade', 'topic', 'difficulty', 'duration', 'order_mode', 'color_mode', 'language'];
+    var row = { title: (src.title || '') + ' ' + t('a.copySuffix'), source_lesson_id: src.id, blocks: LE.clone(src.blocks || []) };
+    fields.forEach(function (f) { if (src[f] !== undefined) { row[f] = src[f]; } });
+    if (row.title_en) { row.title_en = row.title_en + ' (copy)'; }
+    return DB.lessons.create(row).then(function (l) {
+      toast('✓ ' + t('a.copied'));
+      return reload(['lessons']).then(function () { go('edit/' + l.id); });
+    }).catch(fail);
+  }
+
+  // ───────────────────────────── 📤 Assign ─────────────────────────────
+  // l: a program or own lesson. o.blockIds: only these blocks (e.g. from the live lesson).
+  function assignDialog(l, o) {
+    o = o || {};
+    if (!S.students.length) {
+      openModal({ title: '📤 ' + t('a.assign'), body: '<div class="empty"><span class="big">👥</span>' + esc(t('as.noStudents')) + '</div>',
+        buttons: [{ label: t('as.toClasses'), cls: 'btn-teal', fn: function (m) { m.close(); go('classes'); } }] });
+      return;
+    }
+    var st = { who: 'class', classId: (S.classes[0] || {}).id || '', picked: {}, remote: false, blocks: {}, all: !o.blockIds };
+    (l.blocks || []).forEach(function (b) { st.blocks[b.id] = !o.blockIds || o.blockIds.indexOf(b.id) >= 0; });
+    var body = el('<div style="display:flex;flex-direction:column;gap:14px"></div>');
+    function draw() {
+      var withClass = S.classes.map(function (c) {
+        return '<option value="' + c.id + '"' + (c.id === st.classId ? ' selected' : '') + '>' + esc(c.name) + ' (' + S.students.filter(function (s) { return s.class_id === c.id; }).length + ')</option>';
+      }).join('');
+      body.innerHTML =
+        '<div class="field"><span>' + esc(t('as.what')) + '</span><div style="font-weight:800;font-size:18px">' + esc(title(l)) + '</div>' +
+          '<label class="check"><input type="checkbox" id="asAll"' + (st.all ? ' checked' : '') + '> <span>' + esc(t('as.whole')) + '</span></label>' +
+          '<div class="pick-list" id="asBlocks"' + (st.all ? ' hidden' : '') + '>' + (l.blocks || []).map(function (b, i) {
+            return '<label class="check"><input type="checkbox" data-b="' + b.id + '"' + (st.blocks[b.id] ? ' checked' : '') + '> <span>' + (i + 1) + '. ' +
+              (LE.ICO[b.type] || '') + ' ' + esc(b.title && b.title !== '🎯' ? b.title : LE.typeName(b.type)) + ' – ' + esc(LE.summary(b)).slice(0, 60) + '</span></label>';
+          }).join('') + '</div></div>' +
+        '<div class="field"><span>' + esc(t('as.who')) + '</span><div class="seg">' +
+          '<button data-w="class" class="' + (st.who === 'class' ? 'sel' : '') + '">👥 ' + esc(t('p.class')) + '</button>' +
+          '<button data-w="pick" class="' + (st.who === 'pick' ? 'sel' : '') + '">👤 ' + esc(t('p.pick')) + '</button></div></div>' +
+        (st.who === 'class'
+          ? (S.classes.length ? '<label class="field"><span>' + esc(t('as.class')) + '</span><select class="select" id="asClass">' + withClass + '</select></label>'
+            : '<p class="muted">' + esc(t('as.noClasses')) + '</p>')
+          : '<div class="pick-list">' + S.students.map(function (s) {
+              return '<label class="check"><input type="checkbox" data-s="' + s.id + '"' + (st.picked[s.id] ? ' checked' : '') + '> <span>' + esc(s.name) +
+                ' <span class="muted">· ' + esc(className(s.class_id)) + (s.remote_enabled ? ' · 🏠' : '') + '</span></span></label>';
+            }).join('') + '</div>') +
+        '<label class="check"><input type="checkbox" id="asRemote"' + (st.remote ? ' checked' : '') + '> <span>🏠 ' + esc(t('as.remote')) + '</span></label>' +
+        '<p class="muted" id="asCount"></p>';
+      body.querySelector('#asAll').addEventListener('change', function () { st.all = this.checked; draw(); });
+      body.querySelectorAll('[data-b]').forEach(function (x) { x.addEventListener('change', function () { st.blocks[x.dataset.b] = x.checked; count(); }); });
+      body.querySelectorAll('[data-w]').forEach(function (x) { x.addEventListener('click', function () { st.who = x.dataset.w; draw(); }); });
+      var cs = body.querySelector('#asClass');
+      if (cs) { if (!st.classId) { st.classId = cs.value; } cs.addEventListener('change', function () { st.classId = cs.value; count(); }); }
+      body.querySelectorAll('[data-s]').forEach(function (x) { x.addEventListener('change', function () { st.picked[x.dataset.s] = x.checked; count(); }); });
+      body.querySelector('#asRemote').addEventListener('change', function () { st.remote = this.checked; count(); });
+      count();
+    }
+    function targets() {
+      return st.who === 'class' ? S.students.filter(function (s) { return s.class_id === st.classId; }).map(function (s) { return s.id; })
+        : Object.keys(st.picked).filter(function (k) { return st.picked[k]; });
+    }
+    function chosenBlocks() { return (l.blocks || []).filter(function (b) { return st.all || st.blocks[b.id]; }); }
+    function count() {
+      var n = targets().length, noHome = st.remote ? targets().filter(function (id) { var s = S.students.filter(function (x) { return x.id === id; })[0]; return s && !s.remote_enabled; }).length : 0;
+      body.querySelector('#asCount').textContent = t('as.count', { n: n, b: chosenBlocks().length }) + (noHome ? ' ' + t('as.noHome', { n: noHome }) : '');
+    }
+    draw();
+    openModal({
+      title: '📤 ' + t('a.assign'), body: body, size: 'mid', color: 'var(--yellow)',
+      buttons: [
+        { label: t('t.cancel'), fn: function (m) { m.close(); } },
+        { label: '📤 ' + t('as.send'), cls: 'btn-teal', fn: function (m, btn) {
+          var ids = targets(), blocks = chosenBlocks();
+          if (!ids.length) { toast(t('as.pickSomeone'), true); return; }
+          if (!blocks.length) { toast(t('as.pickBlock'), true); return; }
+          btn.disabled = true;
+          sendAssignment(l, blocks, ids, st.remote).then(function () { m.close(); toast('✓ ' + t('as.sent', { n: ids.length })); })
+            .catch(fail).then(function () { btn.disabled = false; });
+        } }
+      ]
+    });
+  }
+  function sendAssignment(l, blocks, studentIds, remote) {
+    var whole = blocks.length === (l.blocks || []).length;
+    var name = whole ? title(l) : title(l) + ' · ' + (blocks.length === 1 ? (blocks[0].title && blocks[0].title !== '🎯' ? blocks[0].title : LE.typeName(blocks[0].type)) : t('as.part', { n: blocks.length }));
+    return DB.assign.create({
+      lessonId: PL.isProgram(l.id) ? null : l.id, programLessonId: PL.isProgram(l.id) ? l.id : null,
+      blockIds: blocks.map(function (b) { return b.id; }), title: name,
+      content: { blocks: LE.clone(blocks), order_mode: l.order_mode || 'fixed', color_mode: l.color_mode || 'color' },
+      studentIds: studentIds, remote: !!remote
+    }).then(function (a) { return reload(['assignments']).then(function () { return a; }); });
+  }
+
+  // ───────────────────────────── 📂 My lessons ─────────────────────────────
+  var showArchived = false;
+  var mineFilter = { grade: '', topic: '', diff: '', q: '' };
+  function vMine() {
+    view.innerHTML = '<h2 class="view-h">📂 ' + esc(t('nav.mine')) + '<span class="grow"></span>' +
+      '<label class="check" style="font-size:15px"><input type="checkbox" id="showArch"' + (showArchived ? ' checked' : '') + '> <span>🗄️ ' + esc(t('mine.archived')) + '</span></label>' +
+      '<a class="btn btn-teal" href="#new">＋ ' + esc(t('nav.new')) + '</a></h2>';
+    var grid = el('<div class="cards"></div>');
+    view.appendChild(filterBar(mineFilter, draw));
+    view.appendChild(grid);
+    $('showArch').addEventListener('change', function () { showArchived = this.checked; draw(); });
+    function draw() {
+      var list = S.lessons.filter(function (l) { return (showArchived || !l.archived) && matches(l, mineFilter); });
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty"><span class="big">📂</span>' + esc(t('mine.none')) + '</div>';
+        return;
+      }
+      grid.innerHTML = '';
+      list.forEach(function (l) {
+        var src = l.source_lesson_id ? (PL.get(l.source_lesson_id) || S.lessons.filter(function (x) { return x.id === l.source_lesson_id; })[0]) : null;
+        var c = el('<div class="lcard' + (l.archived ? ' arch' : '') + '" style="--c:' + (src && src.color || 'var(--violet)') + '">' +
+          '<div class="head"><div class="pic">' + (src && src.ico || '📝') + '</div><div><h3>' + esc(title(l)) + ' <span class="vtag">V' + (l.version || 1) + '</span></h3>' +
+            '<div class="meta">' + lessonMeta(l) + '</div></div></div>' +
+          (src ? '<div class="goal">⧉ ' + esc(t('mine.from', { name: title(src) })) + '</div>' : '') +
+          '<div class="blocks">' + blockIcons(l.blocks) + '</div>' +
+          '<div class="meta">🕘 ' + esc(fmtDate(l.updated_at)) + (l.archived ? ' · 🗄️ ' + esc(t('mine.isArchived')) : '') + '</div>' +
+          '<div class="acts">' +
+            '<button class="btn btn-teal" data-a="edit">✏️ ' + esc(t('a.edit')) + '</button>' +
+            '<button class="btn" data-a="preview">▶</button>' +
+            '<button class="btn" data-a="live" title="' + esc(t('a.live')) + '">📺</button>' +
+            '<button class="btn btn-yellow" data-a="assign" title="' + esc(t('a.assign')) + '">📤</button>' +
+            '<button class="btn" data-a="copy" title="' + esc(t('a.copy')) + '">⧉</button>' +
+            '<button class="btn" data-a="arch" title="' + esc(t(l.archived ? 'a.unarchive' : 'a.archive')) + '">' + (l.archived ? '↩' : '🗄️') + '</button>' +
+            '<button class="btn" data-a="del" title="' + esc(t('a.delete')) + '">🗑️</button>' +
+          '</div></div>');
+        c.querySelector('[data-a="edit"]').addEventListener('click', function () { go('edit/' + l.id); });
+        c.querySelector('[data-a="preview"]').addEventListener('click', function () { preview(l); });
+        c.querySelector('[data-a="live"]').addEventListener('click', function () { go('live/' + l.id); });
+        c.querySelector('[data-a="assign"]').addEventListener('click', function () { assignDialog(l); });
+        c.querySelector('[data-a="copy"]').addEventListener('click', function () { copyLesson(l); });
+        c.querySelector('[data-a="arch"]').addEventListener('click', function () {
+          DB.lessons.archive(l.id, !l.archived).then(function () { return reload(['lessons']); }).then(draw).catch(fail);
+        });
+        c.querySelector('[data-a="del"]').addEventListener('click', function () {
+          ask(t('mine.delAsk', { name: title(l) }), '🗑️ ' + t('a.delete'), true).then(function (yes) {
+            if (!yes) { return; }
+            DB.lessons.remove(l.id).then(function () { return reload(['lessons']); }).then(function () { toast('✓ ' + t('mine.deleted')); draw(); }).catch(fail);
+          });
+        });
+        grid.appendChild(c);
+      });
+    }
+    draw();
+  }
+
+  function vNew() {
+    view.innerHTML = '<div class="empty">⏳</div>';
+    DB.lessons.create({ title: t('ed.newTitle'), grade: 1, topic: 'rhythm', difficulty: 1, duration: 15, order_mode: 'fixed', color_mode: 'color',
+      language: I.lang, blocks: [LE.newBlock('text')] })
+      .then(function (l) { return reload(['lessons']).then(function () { history.replaceState(null, '', '#edit/' + l.id); onRoute(); }); })
+      .catch(fail);
+  }
+
+  // ───────────────────────────── ✏️ Lesson editor ─────────────────────────────
+  function vEdit(id) {
+    view.innerHTML = '<div class="empty">⏳</div>';
+    DB.lessons.get(id).then(function (l) { buildEditor(l); }).catch(function (e) { fail(e); go('mine'); });
+  }
+  function buildEditor(l) {
+    var ed = { l: l, blocks: LE.clone(l.blocks || []), dirty: false, open: null };
+    var FIELDS = ['title', 'title_en', 'grade', 'topic', 'difficulty', 'duration', 'order_mode', 'color_mode', 'language'];
+    ed.vals = {}; FIELDS.forEach(function (f) { ed.vals[f] = l[f]; });
+    guard = function (silent) { return !ed.dirty || (!silent && confirm(t('ed.leave'))); };
+    var src = l.source_lesson_id ? PL.get(l.source_lesson_id) : null;
+
+    view.innerHTML =
+      '<div class="ed-top">' +
+        '<a class="btn" href="#mine">← ' + esc(t('nav.mine')) + '</a>' +
+        '<input class="input title-in" id="edTitle" aria-label="' + esc(t('ed.title')) + '">' +
+        '<span class="vtag" id="edVer"></span><span class="dirty" id="edDirty" hidden>● ' + esc(t('ed.unsaved')) + '</span>' +
+        '<button class="btn" id="edPrev">▶ ' + esc(t('a.preview')) + '</button>' +
+        '<button class="btn" id="edLive">📺 ' + esc(t('a.live')) + '</button>' +
+        '<button class="btn" id="edVers">🕘 ' + esc(t('ed.versions')) + '</button>' +
+        '<button class="btn" id="edNewVer">💾 ' + esc(t('ed.saveNew')) + '</button>' +
+        '<button class="btn btn-teal" id="edSave">💾 ' + esc(t('ed.save')) + '</button>' +
+      '</div>' +
+      (src ? '<p class="muted" style="margin:-6px 0 12px">⧉ ' + esc(t('mine.from', { name: title(src) })) + ' · 🔒 ' + esc(t('ed.origSafe')) + '</p>' : '') +
+      '<div class="ed-grid"><div class="panel settings-box" id="edSettings"></div><div><div class="blist" id="edBlocks"></div>' +
+      '<div class="sub-h">＋ ' + esc(t('ed.addBlock')) + '</div><div class="palette" id="edPalette"></div></div></div>';
+    var titleIn = $('edTitle');
+    titleIn.value = ed.vals.title || '';
+    titleIn.addEventListener('input', function () { ed.vals.title = titleIn.value; dirty(); });
+    function dirty() { ed.dirty = true; $('edDirty').hidden = false; }
+    function ver() { $('edVer').textContent = 'V' + (ed.l.version || 1); }
+    ver();
+
+    // Lesson settings
+    var sb = $('edSettings');
+    function sel(k, label, opts) {
+      return '<label class="field"><span>' + label + '</span><select class="select" data-k="' + k + '">' + opts.map(function (o) {
+        return '<option value="' + o[0] + '"' + (String(ed.vals[k]) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select></label>';
+    }
+    sb.innerHTML = '<h3>⚙️ ' + esc(t('ed.settings')) + '</h3>' +
+      '<label class="field"><span>' + esc(t('ed.titleEn')) + '</span><input class="input" data-k="title_en"></label>' +
+      sel('grade', '🎓 ' + esc(t('f.grade')), PL.GRADES.map(function (g) { return [g, gradeName(g)]; })) +
+      sel('topic', '🎼 ' + esc(t('f.topic')), PL.TOPICS.map(function (x) { return [x.id, x.ico + ' ' + topicName(x.id)]; })) +
+      sel('difficulty', '⭐ ' + esc(t('f.diff')), [[1, '⭐'], [2, '⭐⭐'], [3, '⭐⭐⭐']]) +
+      '<label class="field"><span>⏱ ' + esc(t('ed.duration')) + '</span><input class="input" type="number" min="1" max="180" data-k="duration"></label>' +
+      sel('order_mode', '🔢 ' + esc(t('ed.order')), [['fixed', t('ed.orderFixed')], ['free', t('ed.orderFree')]]) +
+      sel('color_mode', '🎨 ' + esc(t('ed.color')), [['color', t('ed.colorOn')], ['mono', t('ed.colorOff')]]) +
+      sel('language', '🌐 ' + esc(t('t.language')), [['lt', 'Lietuvių'], ['en', 'English']]);
+    sb.querySelectorAll('[data-k]').forEach(function (x) {
+      var k = x.dataset.k;
+      if (x.tagName === 'INPUT') { x.value = ed.vals[k] == null ? '' : ed.vals[k]; }
+      x.addEventListener(x.tagName === 'INPUT' ? 'input' : 'change', function () {
+        ed.vals[k] = /grade|difficulty|duration/.test(k) ? (x.value === '' ? null : +x.value) : x.value;
+        dirty();
+      });
+    });
+
+    // Blocks
+    var listEl = $('edBlocks'), dragFrom = null;
+    function drawBlocks() {
+      listEl.innerHTML = '';
+      if (!ed.blocks.length) { listEl.innerHTML = '<div class="empty" style="padding:20px">' + esc(t('ed.noBlocks')) + '</div>'; }
+      ed.blocks.forEach(function (b, i) {
+        var row = el('<div class="brow' + (ed.open === b.id ? ' open' : '') + '" draggable="false">' +
+          '<div class="bhead"><span class="handle" title="' + esc(t('ed.drag')) + '">☰</span><span class="no">' + (i + 1) + '</span>' +
+          '<span class="bico">' + (b.type === 'game' ? (LE.GAMES.filter(function (g) { return g.id === b.game; })[0] || {}).ico : LE.ICO[b.type]) + '</span>' +
+          '<div class="btxt"><b>' + esc(b.title && b.title !== '🎯' ? b.title : LE.typeName(b.type)) + '</b><span>' + esc(LE.summary(b) || '—') + '</span></div>' +
+          '<div class="thumb">' + (/rhythm|notes|image/.test(b.type) ? LE.thumb(b) : '') + '</div>' +
+          '<div class="bacts">' +
+            '<button data-a="up" title="' + esc(t('ed.up')) + '"' + (i === 0 ? ' disabled' : '') + '>⬆</button>' +
+            '<button data-a="down" title="' + esc(t('ed.down')) + '"' + (i === ed.blocks.length - 1 ? ' disabled' : '') + '>⬇</button>' +
+            '<button data-a="edit" title="' + esc(t('a.edit')) + '">✏️</button>' +
+            '<button data-a="dup" title="' + esc(t('ed.dup')) + '">⧉</button>' +
+            '<button data-a="del" title="' + esc(t('a.delete')) + '">🗑️</button>' +
+          '</div></div></div>');
+        var handle = row.querySelector('.handle');
+        handle.addEventListener('mousedown', function () { row.draggable = true; });
+        handle.addEventListener('mouseup', function () { row.draggable = false; });
+        row.addEventListener('dragstart', function (e) { dragFrom = i; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(i)); } catch (x) {} });
+        row.addEventListener('dragend', function () { row.draggable = false; dragFrom = null; listEl.querySelectorAll('.drag-over').forEach(function (x) { x.classList.remove('drag-over'); }); });
+        row.addEventListener('dragover', function (e) { if (dragFrom === null) { return; } e.preventDefault(); row.classList.add('drag-over'); });
+        row.addEventListener('dragleave', function () { row.classList.remove('drag-over'); });
+        row.addEventListener('drop', function (e) {
+          e.preventDefault();
+          if (dragFrom === null || dragFrom === i) { return; }
+          var x = ed.blocks.splice(dragFrom, 1)[0];
+          ed.blocks.splice(i, 0, x);
+          dragFrom = null; dirty(); drawBlocks();
+        });
+        row.querySelector('[data-a="up"]').addEventListener('click', function () { move(i, -1); });
+        row.querySelector('[data-a="down"]').addEventListener('click', function () { move(i, 1); });
+        row.querySelector('[data-a="edit"]').addEventListener('click', function () { ed.open = ed.open === b.id ? null : b.id; drawBlocks(); });
+        row.querySelector('[data-a="dup"]').addEventListener('click', function () {
+          var c = LE.clone(b); c.id = LE.uid(); ed.blocks.splice(i + 1, 0, c); ed.open = c.id; dirty(); drawBlocks();
+        });
+        row.querySelector('[data-a="del"]').addEventListener('click', function () {
+          ask(t('ed.delBlock', { n: i + 1 }), '🗑️ ' + t('a.delete'), true).then(function (yes) {
+            if (!yes) { return; }
+            ed.blocks.splice(i, 1); dirty(); drawBlocks();
+          });
+        });
+        if (ed.open === b.id) {
+          var body = el('<div class="bbody"></div>');
+          LE.editor(b, body, function () {
+            dirty();
+            row.querySelector('.btxt b').textContent = b.title && b.title !== '🎯' ? b.title : LE.typeName(b.type);
+            row.querySelector('.btxt span').textContent = LE.summary(b) || '—';
+            row.querySelector('.thumb').innerHTML = /rhythm|notes|image/.test(b.type) ? LE.thumb(b) : '';
+          }, { upload: DB.media.upload });
+          var tryBtn = el('<button class="btn btn-small" style="margin-top:10px">▶ ' + esc(t('ed.tryBlock')) + '</button>');
+          tryBtn.addEventListener('click', function () { preview({ title: b.title || LE.typeName(b.type), color_mode: ed.vals.color_mode }, [b]); });
+          body.appendChild(tryBtn);
+          row.appendChild(body);
+        }
+        listEl.appendChild(row);
+      });
+    }
+    function move(i, d) {
+      var j = i + d;
+      if (j < 0 || j >= ed.blocks.length) { return; }
+      var x = ed.blocks[i]; ed.blocks[i] = ed.blocks[j]; ed.blocks[j] = x;
+      dirty(); drawBlocks();
+    }
+    var pal = $('edPalette');
+    LE.ORDER.forEach(function (type) {
+      var b = el('<button type="button"><span>' + LE.ICO[type] + '</span>' + esc(LE.typeName(type)) + '</button>');
+      b.addEventListener('click', function () {
+        var nb = LE.newBlock(type);
+        ed.blocks.push(nb); ed.open = nb.id; dirty(); drawBlocks();
+        setTimeout(function () { var r = listEl.lastChild; if (r && r.scrollIntoView) { r.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 30);
+      });
+      pal.appendChild(b);
+    });
+    drawBlocks();
+
+    function lessonNow() {
+      var o = { blocks: ed.blocks };
+      FIELDS.forEach(function (f) { o[f] = ed.vals[f]; });
+      o.title = (o.title || '').trim() || t('t.untitled');
+      return o;
+    }
+    function save(newVersion, note) {
+      var btns = [$('edSave'), $('edNewVer')];
+      btns.forEach(function (b) { b.disabled = true; });
+      return DB.lessons.save(ed.l.id, lessonNow(), { newVersion: newVersion, note: note }).then(function (l) {
+        ed.l = l; ed.dirty = false; $('edDirty').hidden = true; ver();
+        toast('✓ ' + (newVersion ? t('ed.savedNew', { v: l.version }) : t('ed.saved')));
+        return reload(['lessons']);
+      }).catch(fail).then(function () { btns.forEach(function (b) { b.disabled = false; }); });
+    }
+    $('edSave').addEventListener('click', function () { save(false); });
+    $('edNewVer').addEventListener('click', function () {
+      var box = el('<div><p class="muted">' + esc(t('ed.newVerHelp', { v: (ed.l.version || 1) + 1 })) + '</p>' +
+        '<label class="field"><span>' + esc(t('ed.note')) + '</span><input class="input" id="verNote" placeholder="' + esc(t('ed.notePh')) + '"></label></div>');
+      openModal({ title: '💾 ' + t('ed.saveNew'), body: box, buttons: [
+        { label: t('t.cancel'), fn: function (m) { m.close(); } },
+        { label: '💾 V' + ((ed.l.version || 1) + 1), cls: 'btn-teal', fn: function (m) { var n = $('verNote').value.trim(); m.close(); save(true, n); } }
+      ] });
+    });
+    $('edPrev').addEventListener('click', function () { preview({ title: ed.vals.title, color_mode: ed.vals.color_mode }, ed.blocks); });
+    $('edLive').addEventListener('click', function () {
+      if (ed.dirty) { save(false).then(function () { go('live/' + ed.l.id); }); } else { go('live/' + ed.l.id); }
+    });
+    $('edVers').addEventListener('click', function () {
+      DB.lessons.versions(ed.l.id).then(function (vs) {
+        var box = el('<div class="tbl-wrap"><table class="tbl"><thead><tr><th>' + esc(t('ed.version')) + '</th><th>' + esc(t('ed.date')) + '</th><th>' + esc(t('ed.note')) + '</th><th></th></tr></thead><tbody></tbody></table></div>');
+        var tb = box.querySelector('tbody');
+        (vs || []).forEach(function (v) {
+          var tr = el('<table><tr><td><span class="vtag">V' + v.version + '</span>' + (v.version === ed.l.version ? ' ' + esc(t('ed.current')) : '') + '</td><td>' + esc(fmtDate(v.created_at)) +
+            '</td><td>' + esc(v.note || '') + '</td><td style="white-space:nowrap"><button class="ibtn" data-a="see">▶</button> <button class="ibtn" data-a="back">↩ ' + esc(t('ed.restore')) + '</button></td></tr></table>').querySelector('tr');
+          tr.querySelector('[data-a="see"]').addEventListener('click', function () {
+            DB.lessons.version(ed.l.id, v.version).then(function (x) { preview({ title: (x.title || '') + ' · V' + v.version }, x.blocks || []); }).catch(fail);
+          });
+          tr.querySelector('[data-a="back"]').addEventListener('click', function () {
+            DB.lessons.version(ed.l.id, v.version).then(function (x) {
+              ed.blocks = LE.clone(x.blocks || []);
+              if (x.settings) { FIELDS.forEach(function (f) { if (x.settings[f] !== undefined) { ed.vals[f] = x.settings[f]; } }); }
+              if (x.title) { ed.vals.title = x.title; }
+              modalNow.close();
+              titleIn.value = ed.vals.title || '';
+              sb.querySelectorAll('[data-k]').forEach(function (inp) { inp.value = ed.vals[inp.dataset.k] == null ? '' : ed.vals[inp.dataset.k]; });
+              dirty(); drawBlocks();
+              toast(t('ed.restored', { v: v.version }));
+            }).catch(fail);
+          });
+          tb.appendChild(tr);
+        });
+        openModal({ title: '🕘 ' + t('ed.versions'), body: box, size: 'mid' });
+      }).catch(fail);
+    });
+  }
+
+  // ───────────────────────────── 👥 Classes and students ─────────────────────────────
+  var clSel = 'all';
+  function vClasses() {
+    view.innerHTML = '<h2 class="view-h">👥 ' + esc(t('nav.classes')) + '<span class="grow"></span>' +
+      '<button class="btn" id="printCodes">🖨️ ' + esc(t('cl.print')) + '</button></h2>' +
+      '<div class="cols"><div><div class="clist" id="clList"></div><button class="btn btn-teal" id="clAdd" style="margin-top:10px">＋ ' + esc(t('cl.add')) + '</button></div>' +
+      '<div id="clMain"></div></div>';
+    function drawList() {
+      var box = $('clList');
+      var items = [['all', '👥 ' + t('cl.all'), S.students.length]].concat(S.classes.map(function (c) {
+        return [c.id, c.name, S.students.filter(function (s) { return s.class_id === c.id; }).length];
+      }));
+      var loose = S.students.filter(function (s) { return !s.class_id; }).length;
+      if (loose) { items.push(['none', t('cl.none'), loose]); }
+      box.innerHTML = '';
+      items.forEach(function (x) {
+        var b = el('<button class="' + (clSel === x[0] ? 'sel' : '') + '"><span>' + esc(x[1]) + '</span><span>' + x[2] + '</span></button>');
+        b.addEventListener('click', function () { clSel = x[0]; drawList(); drawMain(); });
+        box.appendChild(b);
+      });
+    }
+    function drawMain() {
+      var main = $('clMain'), cls = S.classes.filter(function (c) { return c.id === clSel; })[0];
+      var list = S.students.filter(function (s) { return clSel === 'all' || (clSel === 'none' ? !s.class_id : s.class_id === clSel); });
+      main.innerHTML = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">' +
+        '<h3 style="font-size:22px;flex:1">' + esc(cls ? cls.name : clSel === 'none' ? t('cl.none') : t('cl.all')) + '</h3>' +
+        (cls ? '<button class="btn btn-small" id="clRen">✏️ ' + esc(t('cl.rename')) + '</button><button class="btn btn-small" id="clDel">🗑️ ' + esc(t('cl.delete')) + '</button>' : '') +
+        '</div>' +
+        '<div class="panel" style="margin-bottom:14px"><label class="field"><span>＋ ' + esc(t('cl.addStudents')) + '</span>' +
+        '<textarea class="textarea" id="newNames" placeholder="' + esc(t('cl.namesPh')) + '" style="min-height:70px"></textarea></label>' +
+        '<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">' +
+          (S.classes.length ? '<select class="select" id="newCls">' + S.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === clSel ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '<option value="">' + esc(t('cl.none')) + '</option></select>' : '') +
+          '<button class="btn btn-teal" id="addSt">＋ ' + esc(t('cl.addBtn')) + '</button></div></div>' +
+        (list.length ? '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>' + esc(t('cl.name')) + '</th><th>' + esc(t('cl.code')) + '</th><th class="c" title="' + esc(t('cl.remoteHelp')) + '">🏠 ' + esc(t('cl.remote')) + '</th><th>' + esc(t('cl.state')) + '</th><th>' + esc(t('cl.class')) + '</th><th></th></tr></thead><tbody id="stBody"></tbody></table></div>'
+          : '<div class="empty"><span class="big">🧒</span>' + esc(t('cl.noStudents')) + '</div>') +
+        '<p class="legend" style="margin-top:10px">🟢 ' + esc(t('st.on')) + ' · 🏠 ' + esc(t('st.home')) + ' · ⚪ ' + esc(t('st.off')) + '</p>';
+      if (cls) {
+        $('clRen').addEventListener('click', function () {
+          var n = prompt(t('cl.newName'), cls.name);
+          if (n && n.trim()) { DB.classes.rename(cls.id, n.trim()).then(function () { return reload(['classes']); }).then(redraw).catch(fail); }
+        });
+        $('clDel').addEventListener('click', function () {
+          ask(t('cl.delAsk', { name: cls.name }), '🗑️ ' + t('cl.delete'), true).then(function (yes) {
+            if (yes) { DB.classes.remove(cls.id).then(function () { clSel = 'all'; return reload(['classes', 'students']); }).then(redraw).catch(fail); }
+          });
+        });
+      }
+      $('addSt').addEventListener('click', function () {
+        var names = $('newNames').value.split(/\n|,/).map(function (s) { return s.trim(); }).filter(Boolean);
+        if (!names.length) { $('newNames').focus(); return; }
+        var cid = $('newCls') ? $('newCls').value || null : null;
+        var btn = this; btn.disabled = true;
+        names.reduce(function (p, n) { return p.then(function () { return DB.students.add(n, cid); }); }, Promise.resolve())
+          .then(function () { return reload(['students']); }).then(function () { toast('✓ ' + t('cl.added', { n: names.length })); redraw(); })
+          .catch(fail).then(function () { btn.disabled = false; });
+      });
+      var tb = $('stBody');
+      list.forEach(function (s) {
+        var o = online(s);
+        var tr = el('<table><tr><td><b>' + esc(s.name) + '</b></td><td><span class="code">' + esc(s.login_code) + '</span> <button class="ibtn" data-a="code" title="' + esc(t('cl.newCode')) + '">🔄</button></td>' +
+          '<td class="c"><button class="ibtn' + (s.remote_enabled ? ' on' : '') + '" data-a="remote">' + (s.remote_enabled ? '🏠 ' + esc(t('t.yes')) : esc(t('t.no'))) + '</button></td>' +
+          '<td title="' + esc(fmtDate(s.last_seen)) + '">' + ONLINE_ICO[o] + ' <span class="muted">' + esc(s.last_seen ? fmtDate(s.last_seen) : t('st.never')) + '</span></td>' +
+          '<td><select class="select" data-a="cls" style="padding:4px 8px;font-size:14px">' + S.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === s.class_id ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+            '<option value=""' + (!s.class_id ? ' selected' : '') + '>' + esc(t('cl.none')) + '</option></select></td>' +
+          '<td style="white-space:nowrap"><button class="ibtn" data-a="ren" title="' + esc(t('cl.rename')) + '">✏️</button> <button class="ibtn" data-a="del" title="' + esc(t('a.delete')) + '">🗑️</button></td></tr></table>').querySelector('tr');
+        tr.querySelector('[data-a="code"]').addEventListener('click', function () {
+          ask(t('cl.codeAsk', { name: s.name })).then(function (yes) { if (yes) { DB.students.newCode(s.id).then(function () { return reload(['students']); }).then(drawMain).catch(fail); } });
+        });
+        tr.querySelector('[data-a="remote"]').addEventListener('click', function () {
+          DB.students.update(s.id, { remote_enabled: !s.remote_enabled }).then(function () { return reload(['students']); }).then(drawMain).catch(fail);
+        });
+        tr.querySelector('[data-a="cls"]').addEventListener('change', function () {
+          DB.students.update(s.id, { class_id: this.value || null }).then(function () { return reload(['students']); }).then(redraw).catch(fail);
+        });
+        tr.querySelector('[data-a="ren"]').addEventListener('click', function () {
+          var n = prompt(t('cl.newName'), s.name);
+          if (n && n.trim()) { DB.students.update(s.id, { name: n.trim() }).then(function () { return reload(['students']); }).then(drawMain).catch(fail); }
+        });
+        tr.querySelector('[data-a="del"]').addEventListener('click', function () {
+          ask(t('cl.delStudent', { name: s.name }), '🗑️ ' + t('a.delete'), true).then(function (yes) {
+            if (yes) { DB.students.remove(s.id).then(function () { return reload(['students', 'assignments', 'attempts']); }).then(redraw).catch(fail); }
+          });
+        });
+        tb.appendChild(tr);
+      });
+    }
+    function redraw() { drawList(); drawMain(); }
+    $('clAdd').addEventListener('click', function () {
+      var n = prompt(t('cl.className'), '');
+      if (n && n.trim()) {
+        DB.classes.add(n.trim()).then(function (c) { clSel = c.id; return reload(['classes']); }).then(redraw).catch(fail);
+      }
+    });
+    $('printCodes').addEventListener('click', function () {
+      var list = S.students.filter(function (s) { return clSel === 'all' || (clSel === 'none' ? !s.class_id : s.class_id === clSel); });
+      var w = window.open('', '_blank');
+      if (!w) { return; }
+      w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>MUSICATION</title><style>body{font-family:Segoe UI,sans-serif;display:flex;flex-wrap:wrap;gap:10px;padding:10px}' +
+        '.c{border:2px dashed #999;border-radius:12px;padding:12px 16px;width:300px}.n{font-size:20px;font-weight:700}.k{font:700 26px Consolas,monospace;letter-spacing:3px;margin:6px 0}.l{font-size:12px;color:#555;word-break:break-all}</style></head><body>' +
+        list.map(function (s) { return '<div class="c"><div class="n">🎼 ' + esc(s.name) + '</div><div class="k">' + esc(s.login_code) + '</div><div class="l">' + esc(studentLink()) + '</div></div>'; }).join('') +
+        '<script>window.print()<\/script></body></html>');
+      w.document.close();
+    });
+    redraw();
+    var iv = setInterval(function () { reload(['students']).then(function () { if ($('stBody')) { drawMain(); } }).catch(function () {}); }, 15000);
+    cleanup = function () { clearInterval(iv); };
+  }
+
+  // ───────────────────────────── 📊 Results ─────────────────────────────
+  var resTab = 'results', resClass = '', resAsg = '';
+  function latestAttempts(filterFn) {
+    var m = {};
+    S.attempts.forEach(function (a) {
+      if (filterFn && !filterFn(a)) { return; }
+      var k = a.assignment_id + '|' + a.student_id + '|' + (a.block_id || '');
+      if (!m[k] || m[k].completed_at < a.completed_at) { m[k] = a; }
+    });
+    return Object.keys(m).map(function (k) { return m[k]; });
+  }
+  function avg(list) { return list.length ? list.reduce(function (s, a) { return s + Number(a.score); }, 0) / list.length : null; }
+  function vResults() {
+    view.innerHTML = '<h2 class="view-h">📊 ' + esc(t('nav.results')) + '<span class="grow"></span><button class="btn btn-small" id="resReload">🔄 ' + esc(t('t.refresh')) + '</button></h2>' +
+      '<div class="tabs"><button class="chip' + (resTab === 'results' ? ' sel' : '') + '" data-tab="results">📊 ' + esc(t('r.tabResults')) + '</button>' +
+      '<button class="chip' + (resTab === 'tasks' ? ' sel' : '') + '" data-tab="tasks">📤 ' + esc(t('r.tabTasks')) + '</button></div><div id="resBody"></div>';
+    view.querySelectorAll('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { resTab = b.dataset.tab; vResults(); }); });
+    $('resReload').addEventListener('click', function () { reload(['students', 'assignments', 'attempts']).then(vResults).catch(fail); });
+    if (resTab === 'tasks') { drawTasks($('resBody')); } else { drawResults($('resBody')); }
+  }
+  function drawResults(box) {
+    box.innerHTML = '<div class="filters">' +
+      '<label>👥<select id="rCls"><option value="">' + esc(t('cl.all')) + '</option>' + S.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === resClass ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label>' +
+      '<label>📤<select id="rAsg"><option value="">' + esc(t('r.allTasks')) + '</option>' + S.assignments.map(function (a) { return '<option value="' + a.id + '"' + (a.id === resAsg ? ' selected' : '') + '>' + esc(a.title) + ' · ' + esc(fmtDate(a.assigned_at)) + '</option>'; }).join('') + '</select></label>' +
+      '</div><p class="muted" style="margin:-6px 0 12px">' + esc(t('r.help')) + '</p><div id="rTable"></div>';
+    $('rCls').addEventListener('change', function () { resClass = this.value; drawResults(box); });
+    $('rAsg').addEventListener('change', function () { resAsg = this.value; drawResults(box); });
+    var students = S.students.filter(function (s) { return !resClass || s.class_id === resClass; });
+    if (!students.length) { $('rTable').innerHTML = '<div class="empty"><span class="big">📊</span>' + esc(t('cl.noStudents')) + '</div>'; return; }
+    var latest = latestAttempts(function (a) { return !resAsg || a.assignment_id === resAsg; });
+    var html = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>' + esc(t('cl.name')) + '</th>' +
+      AREAS.map(function (x) { return '<th class="c">' + x[1] + ' ' + esc(t('area.' + x[0])) + '</th>'; }).join('') +
+      '<th class="c">' + esc(t('r.overall')) + '</th><th class="c">' + esc(t('r.done')) + '</th><th>' + esc(t('r.last')) + '</th></tr></thead><tbody>';
+    students.forEach(function (s) {
+      var mine = latest.filter(function (a) { return a.student_id === s.id; });
+      var asg = S.assignments.filter(function (a) { return (!resAsg || a.id === resAsg) && a.students.some(function (x) { return x.student_id === s.id; }); });
+      var doneN = asg.filter(function (a) { return a.students.some(function (x) { return x.student_id === s.id && x.status === 'completed'; }); }).length;
+      var last = mine.reduce(function (m, a) { return !m || a.completed_at > m ? a.completed_at : m; }, null);
+      html += '<tr class="click" data-s="' + s.id + '"><td><b>' + esc(s.name) + '</b> <span class="muted">' + esc(className(s.class_id)) + '</span></td>' +
+        AREAS.map(function (x) { return '<td class="c">' + scoreHtml(avg(mine.filter(function (a) { return a.area === x[0]; }))) + '</td>'; }).join('') +
+        '<td class="c">' + scoreHtml(avg(mine)) + '</td><td class="c">' + (asg.length ? doneN + '/' + asg.length : '—') + '</td><td>' + esc(last ? fmtDate(last) : '—') + '</td></tr>';
+    });
+    $('rTable').innerHTML = html + '</tbody></table></div>';
+    $('rTable').querySelectorAll('[data-s]').forEach(function (tr) { tr.addEventListener('click', function () { studentDetail(tr.dataset.s); }); });
+  }
+  function studentDetail(sid) {
+    var list = S.attempts.filter(function (a) { return a.student_id === sid; });
+    var box = el('<div></div>');
+    if (!list.length) { box.innerHTML = '<div class="empty"><span class="big">—</span>' + esc(t('r.noAttempts')) + '</div>'; }
+    else {
+      var html = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>' + esc(t('r.task')) + '</th><th>' + esc(t('r.block')) + '</th><th class="c">' + esc(t('r.score')) + '</th><th>' + esc(t('r.where')) + '</th><th>' + esc(t('ed.date')) + '</th></tr></thead><tbody>';
+      list.forEach(function (a) {
+        var asg = S.assignments.filter(function (x) { return x.id === a.assignment_id; })[0];
+        var b = asg ? LE.blocksOf(asg.content).filter(function (x) { return x.id === a.block_id; })[0] : null;
+        var errs = (a.errors || []).map(LE.errorText).filter(Boolean);
+        html += '<tr><td>' + esc(asg ? asg.title : '?') + '</td><td>' + (b ? (LE.ICO[b.type] || '') + ' ' + esc(b.title && b.title !== '🎯' ? b.title : LE.typeName(b.type)) : esc(a.block_id || '')) + '</td>' +
+          '<td class="c">' + scoreHtml(Number(a.score)) + '</td><td>' + (errs.length ? '<ul class="errs">' + errs.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>' : '<span class="muted">' + esc(t('r.noErrors')) + '</span>') + '</td>' +
+          '<td>' + esc(fmtDate(a.completed_at)) + '</td></tr>';
+      });
+      box.innerHTML = html + '</tbody></table></div>';
+    }
+    openModal({ title: '📊 ' + studentName(sid), body: box, size: 'mid' });
+  }
+  function drawTasks(box) {
+    if (!S.assignments.length) { box.innerHTML = '<div class="empty"><span class="big">📤</span>' + esc(t('r.noTasks')) + '</div>'; return; }
+    box.innerHTML = '<p class="legend" style="margin-bottom:10px">' + Object.keys(STATUS_ICO).map(function (k) { return STATUS_ICO[k] + ' ' + esc(t('s.' + k)); }).join(' · ') + '</p>';
+    S.assignments.forEach(function (a) {
+      var counts = {};
+      a.students.forEach(function (x) { counts[x.status] = (counts[x.status] || 0) + 1; });
+      var card = el('<div class="panel" style="margin-bottom:12px;padding:14px">' +
+        '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b style="font-size:18px">' + esc(a.title) + '</b>' + (a.remote ? ' 🏠' : '') +
+        '<div class="muted">' + esc(fmtDate(a.assigned_at)) + ' · ' + blockIcons(LE.blocksOf(a.content)) + '</div></div>' +
+        '<div style="font-weight:800">' + Object.keys(STATUS_ICO).filter(function (k) { return counts[k]; }).map(function (k) { return STATUS_ICO[k] + ' ' + counts[k]; }).join('  ') + '</div>' +
+        '<button class="ibtn" data-a="open">👁</button><button class="ibtn" data-a="del" title="' + esc(t('a.delete')) + '">🗑️</button></div>' +
+        '<div data-list hidden style="margin-top:10px"></div></div>');
+      var lst = card.querySelector('[data-list]');
+      function drawList() {
+        lst.innerHTML = '';
+        a.students.forEach(function (x) {
+          var r = el('<div class="srow"><span class="st">' + (STATUS_ICO[x.status] || '○') + '</span><span class="nm">' + esc(studentName(x.student_id)) + ' <span class="muted">· ' + esc(t('s.' + x.status)) + ' · ' + esc(fmtDate(x.updated_at)) + '</span></span>' +
+            '<button class="ibtn" data-a="rep" title="' + esc(t('r.markRepeat')) + '">🔄</button><button class="ibtn" data-a="un" title="' + esc(t('r.unassign')) + '">✕</button></div>');
+          r.querySelector('[data-a="rep"]').addEventListener('click', function () {
+            DB.assign.setStatus(a.id, x.student_id, 'repeat').then(function () { x.status = 'repeat'; drawList(); }).catch(fail);
+          });
+          r.querySelector('[data-a="un"]').addEventListener('click', function () {
+            DB.assign.unassign(a.id, x.student_id).then(function () { a.students = a.students.filter(function (y) { return y !== x; }); drawList(); }).catch(fail);
+          });
+          lst.appendChild(r);
+        });
+      }
+      card.querySelector('[data-a="open"]').addEventListener('click', function () { lst.hidden = !lst.hidden; if (!lst.hidden) { drawList(); } });
+      card.querySelector('[data-a="del"]').addEventListener('click', function () {
+        ask(t('r.delTask', { name: a.title }), '🗑️ ' + t('a.delete'), true).then(function (yes) {
+          if (yes) { DB.assign.remove(a.id).then(function () { return reload(['assignments', 'attempts']); }).then(vResults).catch(fail); }
+        });
+      });
+      box.appendChild(card);
+    });
+  }
+
+  // ───────────────────────────── ⚙️ Settings ─────────────────────────────
+  function vSettings() {
+    var p = S.profile || {};
+    view.innerHTML = '<h2 class="view-h">⚙️ ' + esc(t('nav.settings')) + '</h2>' +
+      '<div class="panel" style="max-width:620px;display:flex;flex-direction:column;gap:14px">' +
+        '<label class="field"><span>' + esc(t('t.name')) + '</span><input class="input" id="sName"></label>' +
+        '<label class="field"><span>🌐 ' + esc(t('t.language')) + '</span><select class="select" id="sLang"><option value="lt">Lietuvių</option><option value="en">English</option></select></label>' +
+        '<div><button class="btn btn-teal" id="sSave">💾 ' + esc(t('ed.save')) + '</button></div>' +
+        (DB.mode === 'supabase' ? '<hr style="border:none;border-top:1px solid var(--line)"><label class="field"><span>🔑 ' + esc(t('t.passwordNew')) + '</span><input class="input" type="password" id="sPass" autocomplete="new-password" minlength="6"></label>' +
+          '<div><button class="btn" id="sPassBtn">' + esc(t('t.savePassword')) + '</button></div>' : '') +
+        '<hr style="border:none;border-top:1px solid var(--line)">' +
+        '<div class="muted">' + esc(t(DB.mode === 'supabase' ? 'set.cloud' : 'set.local')) + (S.user && S.user.email ? ' · ' + esc(S.user.email) : '') + '</div>' +
+        '<div class="linkbox"><span>🔑 ' + esc(t('home.studentLink')) + ':</span><code>' + esc(studentLink()) + '</code></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="rasymas.html">🎼 ' + esc(t('set.toApp')) + '</a><button class="btn btn-orange" id="sOut">🚪 ' + esc(t('set.signOut')) + '</button></div>' +
+      '</div>';
+    $('sName').value = p.name || '';
+    $('sLang').value = I.lang;
+    $('sSave').addEventListener('click', function () {
+      var lang = $('sLang').value;
+      DB.profile.save({ name: $('sName').value.trim(), language: lang }).then(function (np) {
+        S.profile = np; $('who').textContent = np.name || '';
+        toast('✓ ' + t('ed.saved'));
+        if (lang !== I.lang) { I.set(lang); }
+      }).catch(fail);
+    });
+    if ($('sPassBtn')) {
+      $('sPassBtn').addEventListener('click', function () {
+        var v = $('sPass').value;
+        if (v.length < 6) { toast(t('t.errShort'), true); return; }
+        DB.auth.setPassword(v).then(function () { $('sPass').value = ''; toast('✓ ' + t('t.passSaved')); }).catch(fail);
+      });
+    }
+    $('sOut').addEventListener('click', function () { DB.auth.signOut().then(function () { S.user = null; showAuth(); }).catch(fail); });
+  }
+
+  // ───────────────────────────── 📺 Live lesson ─────────────────────────────
+  // The lesson on the board. Students take part only if the teacher opens
+  // 👥: the whole class, chosen students, or remote ones get the current
+  // block (or the whole lesson) as a task, and their state shows live.
+  var part = { open: false, mode: 'class', classId: '', picked: {}, lastAsg: null };
+  function vLive(ref) {
+    view.innerHTML = '<div class="empty">⏳</div>';
+    lessonByRef(ref).then(function (l) {
+      if (!l) { go('library'); return; }
+      buildLive(l);
+    }).catch(function (e) { fail(e); go('library'); });
+  }
+  function buildLive(l) {
+    if (!part.classId && S.classes[0]) { part.classId = S.classes[0].id; }
+    view.innerHTML = '';
+    var wrap = el('<div class="live' + (part.open ? ' with-panel' : '') + '">' +
+      '<div class="live-bar"><button class="btn" id="lvBack">← ' + esc(t('t.back')) + '</button><h2>📺 ' + esc(title(l)) + '</h2>' +
+      '<button class="btn' + (part.open ? ' btn-teal' : '') + '" id="lvPart">👥 ' + esc(t('p.title')) + '</button>' +
+      '<button class="btn" id="lvFull">⛶ ' + esc(t('p.full')) + '</button></div>' +
+      '<div id="lvPlayer"></div><div class="ppanel" id="lvPanel"' + (part.open ? '' : ' hidden') + '></div></div>');
+    view.appendChild(wrap);
+    var player = LE.player($('lvPlayer'), LE.clone(l.blocks || []), { mode: 'teacher', role: 'teacher', mono: l.color_mode === 'mono', onChange: function () { drawPanel(); } });
+    $('lvBack').addEventListener('click', function () { history.length > 1 ? history.back() : go('library'); });
+    $('lvFull').addEventListener('click', function () {
+      if (document.fullscreenElement) { document.exitFullscreen(); } else if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen().catch(function () {}); }
+    });
+    function onFs() { $('nav').hidden = !!document.fullscreenElement; }
+    document.addEventListener('fullscreenchange', onFs);
+    $('lvPart').addEventListener('click', function () {
+      part.open = !part.open;
+      wrap.classList.toggle('with-panel', part.open);
+      $('lvPanel').hidden = !part.open;
+      this.classList.toggle('btn-teal', part.open);
+      drawPanel();
+    });
+
+    function who() {
+      if (part.mode === 'class') { return S.students.filter(function (s) { return s.class_id === part.classId; }); }
+      if (part.mode === 'remote') { return S.students.filter(function (s) { return s.remote_enabled && (!part.classId || s.class_id === part.classId); }); }
+      return S.students.filter(function (s) { return !part.classId || s.class_id === part.classId; });
+    }
+    function targets() {
+      var list = who();
+      return part.mode === 'pick' ? list.filter(function (s) { return part.picked[s.id]; }) : list;
+    }
+    function drawPanel() {
+      var pn = $('lvPanel');
+      if (!pn || pn.hidden || !player) { return; }
+      var b = player.block();
+      var asg = part.lastAsg ? S.assignments.filter(function (a) { return a.id === part.lastAsg; })[0] : null;
+      var stOf = function (sid) { var x = asg ? asg.students.filter(function (y) { return y.student_id === sid; })[0] : null; return x ? x.status : null; };
+      pn.innerHTML = '<h3>👥 ' + esc(t('p.title')) + '</h3>' +
+        '<div class="pmodes">' +
+          '<button data-m="class" class="' + (part.mode === 'class' ? 'sel' : '') + '">👥 ' + esc(t('p.class')) + '</button>' +
+          '<button data-m="pick" class="' + (part.mode === 'pick' ? 'sel' : '') + '">👤 ' + esc(t('p.pick')) + '</button>' +
+          '<button data-m="remote" class="' + (part.mode === 'remote' ? 'sel' : '') + '">🏠 ' + esc(t('p.remote')) + '</button></div>' +
+        (S.classes.length ? '<select class="select" id="pCls">' + (part.mode !== 'class' ? '<option value="">' + esc(t('cl.all')) + '</option>' : '') +
+          S.classes.map(function (c) { return '<option value="' + c.id + '"' + (c.id === part.classId ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select>' : '') +
+        '<div class="slist" id="pList"></div>' +
+        '<p class="legend">🟢 ' + esc(t('st.on')) + ' · ⚪ ' + esc(t('st.off')) + ' · 🏠 ' + esc(t('st.home')) + ' · ✓ ' + esc(t('s.completed')) + '</p>' +
+        '<button class="btn btn-teal" id="pSendBlock" style="justify-content:center">📤 ' + esc(t('p.sendBlock')) + '</button>' +
+        '<div class="muted" style="text-align:center">' + (b ? (LE.ICO[b.type] || '') + ' ' + esc(b.title && b.title !== '🎯' ? b.title : LE.typeName(b.type)) : '') + '</div>' +
+        '<button class="btn" id="pSendAll" style="justify-content:center">📤 ' + esc(t('p.sendAll')) + '</button>' +
+        (asg ? '<div class="muted">📤 ' + esc(asg.title) + ' · ' + esc(fmtDate(asg.assigned_at)) + '</div>' : '');
+      pn.querySelectorAll('[data-m]').forEach(function (x) { x.addEventListener('click', function () { part.mode = x.dataset.m; if (part.mode === 'class' && !part.classId && S.classes[0]) { part.classId = S.classes[0].id; } drawPanel(); }); });
+      if ($('pCls')) { $('pCls').addEventListener('change', function () { part.classId = this.value; drawPanel(); }); }
+      var list = who(), box = $('pList');
+      if (!list.length) { box.innerHTML = '<div class="muted">' + esc(t(S.students.length ? 'p.nobody' : 'as.noStudents')) + '</div>'; }
+      list.forEach(function (s) {
+        var o = online(s), st = stOf(s.id);
+        var r = el('<label class="srow">' + (part.mode === 'pick' ? '<input type="checkbox"' + (part.picked[s.id] ? ' checked' : '') + '>' : '') +
+          '<span class="st" title="' + esc(t('st.' + o)) + '">' + ONLINE_ICO[o] + '</span><span class="nm">' + esc(s.name) + '</span>' +
+          '<span class="st" title="' + esc(st ? t('s.' + st) : t('s.none')) + '">' + (st ? STATUS_ICO[st] : '○') + '</span></label>');
+        var cb = r.querySelector('input');
+        if (cb) { cb.addEventListener('change', function () { part.picked[s.id] = cb.checked; }); }
+        box.appendChild(r);
+      });
+      $('pSendBlock').disabled = !b;
+      $('pSendBlock').addEventListener('click', function () { send(b ? [b] : []); });
+      $('pSendAll').addEventListener('click', function () { send(l.blocks || []); });
+    }
+    function send(blocks) {
+      var ids = targets().map(function (s) { return s.id; });
+      if (!ids.length) { toast(t('as.pickSomeone'), true); return; }
+      if (!blocks.length) { return; }
+      sendAssignment(l, blocks, ids, part.mode === 'remote').then(function (a) {
+        part.lastAsg = a.id;
+        toast('✓ ' + t('as.sent', { n: ids.length }));
+        drawPanel();
+      }).catch(fail);
+    }
+    var iv = setInterval(function () {
+      if (!part.open) { return; }
+      reload(['students', 'assignments']).then(drawPanel).catch(function () {});
+    }, 5000);
+    cleanup = function () { clearInterval(iv); player.destroy(); document.removeEventListener('fullscreenchange', onFs); if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); } };
+    drawPanel();
+  }
+
+  // ───────────────────────────── Language ─────────────────────────────
+  $('langBtn').addEventListener('click', function () { I.set(I.lang === 'lt' ? 'en' : 'lt'); });
+  I.onChange(function () {
+    $('langLbl').textContent = I.lang.toUpperCase();
+    document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('sel', b.dataset.lang === I.lang); });
+    if (!$('app').hidden) {
+      if (guard && !guard(true)) { return; }   // keep an unsaved editor as it is
+      onRoute();
+    }
+  });
+  I.apply(document);
+  $('langLbl').textContent = I.lang.toUpperCase();
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('sel', b.dataset.lang === I.lang); });
+
+  // ───────────────────────────── Start ─────────────────────────────
+  if (/error_description=/.test(location.hash)) {
+    var em = decodeURIComponent((/error_description=([^&]*)/.exec(location.hash) || [])[1] || '').replace(/\+/g, ' ');
+    history.replaceState(null, '', location.pathname);
+    DB.auth.init().then(function () { showAuth(); authMsg(em, 'bad'); });
+  } else {
+    DB.auth.init().then(function () { if (!recovering) { return start(); } }).catch(function (e) { showAuth(); authMsg(e.message, 'bad'); });
+  }
+})();
+</script>
+</body>
+</html>

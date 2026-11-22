@@ -173,6 +173,12 @@
     color: rgba(255,255,255,0.75); font-family: inherit; font-size: 18px; font-weight: 700;
   }
   .back:hover { color: #fff; text-decoration: underline; }
+  .extra-links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px; position: relative; z-index: 2; }
+  .extra-links a {
+    color: #fff; text-decoration: none; font-weight: 800; font-size: 17px; border-radius: 999px; padding: 8px 18px;
+    border: 2px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.08);
+  }
+  .extra-links a:hover { border-color: #ffd65c; background: rgba(255,255,255,0.16); }
   .crumb { font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 10px; letter-spacing: 1px; }
 
   /* --- Step 4: login form --- */
@@ -290,6 +296,10 @@
         <span data-t="student"></span>
       </button>
     </div>
+    <div class="extra-links">
+      <a href="mokinys.html"><span>🔑</span> <span data-t="codeLink"></span></a>
+      <a href="mokytojas.html"><span>🏫</span> <span data-t="roomLink"></span></a>
+    </div>
 
     <form class="form" id="loginForm" hidden autocomplete="off">
       <h2 id="formTitle"></h2>
@@ -314,13 +324,15 @@
       teacher: 'Mokytojas', student: 'Mokinys',
       teacherForm: '👩‍🏫 Mokytojo prisijungimas', studentForm: '🧒 Mokinio prisijungimas',
       user: 'Vartotojo vardas', pass: 'Slaptažodis', submit: 'Prisijungti',
-      error: 'Neteisingas vartotojo vardas arba slaptažodis.', back: '← Atgal'
+      error: 'Neteisingas vartotojo vardas arba slaptažodis.', back: '← Atgal',
+      codeLink: 'Turiu užduoties kodą', roomLink: 'Mokytojo kambarys'
     },
     en: {
       teacher: 'Teacher', student: 'Student',
       teacherForm: '👩‍🏫 Teacher login', studentForm: '🧒 Student login',
       user: 'Username', pass: 'Password', submit: 'Log in',
-      error: 'Wrong username or password.', back: '← Back'
+      error: 'Wrong username or password.', back: '← Back',
+      codeLink: 'I have a task code', roomLink: 'Teacher’s room'
     }
   };
 

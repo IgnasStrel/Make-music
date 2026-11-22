@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MUSICATION — Mano užduotys</title>
+<link rel="stylesheet" href="../styles/pages.css">
+<link rel="stylesheet" href="lessonEngine.css">
+<style>
+  [hidden] { display: none !important; }
+  body { background-color: #fdf8ec; }
+  .center { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login { width: 100%; max-width: 520px; display: flex; flex-direction: column; gap: 16px; text-align: center; }
+  .login h1 { font-size: 38px; font-weight: 800; color: #1b2a6b; }
+  .login .big { font-size: 80px; line-height: 1; }
+  .code-in {
+    font: 800 38px ui-monospace, Consolas, monospace; letter-spacing: 8px; text-align: center; text-transform: uppercase;
+    border: 4px solid #f3d77a; border-radius: 20px; padding: 12px; width: 100%; outline: none; background: #fff; color: #1b2a6b;
+  }
+  .code-in:focus { border-color: var(--teal); }
+  .where { display: flex; gap: 12px; justify-content: center; }
+  .where button {
+    flex: 1; border: 4px solid transparent; background: #fff; border-radius: 22px; padding: 14px 10px; cursor: pointer; font-family: inherit;
+    font-size: 22px; font-weight: 800; color: #1b2a6b; box-shadow: 0 5px 0 rgba(0,0,0,0.06);
+  }
+  .where button span { display: block; font-size: 44px; line-height: 1.1; }
+  .where button.sel { border-color: var(--teal); background: #e9f8f8; }
+  .go { font-size: 26px; padding: 14px 30px; justify-content: center; }
+  .msg { min-height: 30px; font-size: 19px; font-weight: 800; color: var(--orange); }
+  .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 18px; }
+  .top h1 { font-size: 28px; font-weight: 800; color: #1b2a6b; flex: 1; }
+  .badge { background: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 800; box-shadow: 0 2px 0 rgba(0,0,0,0.06); }
+  .tasks { max-width: 900px; margin: 0 auto; padding: 0 18px 40px; display: flex; flex-direction: column; gap: 12px; }
+  .task {
+    display: flex; align-items: center; gap: 16px; background: #fff; border-radius: 24px; padding: 14px 18px; cursor: pointer;
+    border-left: 12px solid var(--c, var(--teal)); box-shadow: 0 5px 0 rgba(0,0,0,0.05), 0 10px 22px rgba(35,38,74,0.08);
+    font-family: inherit; text-align: left; border-top: none; border-right: none; border-bottom: none; width: 100%;
+  }
+  .task:hover { transform: translateX(5px); }
+  .task.new { animation: arrive 0.6s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes arrive { from { transform: scale(0.85); opacity: 0; } to { transform: none; opacity: 1; } }
+  .task .st { font-size: 40px; width: 56px; text-align: center; flex: none; }
+  .task .txt { flex: 1; min-width: 0; }
+  .task b { display: block; font-size: 22px; color: #1b2a6b; line-height: 1.2; }
+  .task small { display: block; font-size: 15px; font-weight: 700; color: var(--ink-soft); margin-top: 2px; }
+  .task .icons { font-size: 22px; letter-spacing: 2px; }
+  .task .gobtn { font-size: 20px; font-weight: 800; color: #fff; background: var(--c, var(--teal)); border-radius: 999px; padding: 8px 18px; flex: none; }
+  .doing { max-width: 1400px; margin: 0 auto; padding: 8px 18px 18px; }
+  .doing-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .doing-top h2 { font-size: 22px; flex: 1; color: #1b2a6b; }
+  .sync { font-size: 14px; font-weight: 800; color: var(--ink-soft); }
+  .demo-note { background: #fff6e0; border: 2px solid #f5c443; border-radius: 14px; padding: 8px 12px; font-weight: 700; font-size: 14px; }
+  .lang { position: fixed; right: 12px; bottom: 12px; z-index: 20; }
+</style>
+</head>
+<body>
+
+<!-- Log in with the code from the teacher -->
+<div class="center" id="loginScreen" hidden>
+  <form class="panel login" id="fCode" autocomplete="off">
+    <div class="big">🎒</div>
+    <h1 data-i18n="s.title"></h1>
+    <div class="demo-note" id="demoNote" hidden data-i18n="s.demoNote"></div>
+    <label class="field"><span data-i18n="s.codeLabel" style="font-size:18px"></span>
+      <input class="code-in" id="code" maxlength="12" inputmode="text" autocapitalize="characters" spellcheck="false" placeholder="ABCD2345"></label>
+    <div class="where">
+      <button type="button" data-w="class" class="sel"><span>🏫</span><b data-i18n="s.inClass"></b></button>
+      <button type="button" data-w="home"><span>🏠</span><b data-i18n="s.atHome"></b></button>
+    </div>
+    <button class="btn btn-teal go" type="submit"><span data-i18n="s.enter"></span> ➡️</button>
+    <div class="msg" id="msg"></div>
+  </form>
+</div>
+
+<!-- My tasks -->
+<div id="listScreen" hidden>
+  <div class="top">
+    <h1 id="hello"></h1>
+    <span class="badge" id="whereBadge"></span>
+    <button class="btn" id="notMe">🚪 <span data-i18n="s.notMe"></span></button>
+  </div>
+  <div class="tasks" id="tasks"></div>
+</div>
+
+<!-- Doing one task -->
+<div class="doing" id="doScreen" hidden>
+  <div class="doing-top">
+    <button class="btn" id="doBack">← <span data-i18n="s.toTasks"></span></button>
+    <h2 id="doTitle"></h2>
+    <span class="sync" id="sync"></span>
+  </div>
+  <div id="doPlayer"></div>
+</div>
+
+<button class="btn btn-small lang" id="langBtn">🌐 <span id="langLbl">LT</span></button>
+
+<script src="config.js"></script>
+<script src="lib/supabase.js"></script>
+<script src="db.js"></script>
+<script src="i18n.js"></script>
+<script src="auth.js"></script>
+<script src="solfedzioData.js"></script>
+<script src="lessonEngine.js"></script>
+<script>
+(function () {
+  'use strict';
+  var DB = window.MusicationDB, LE = window.LessonEngine, I = window.I18N;
+  var t = I.t, esc = LE.esc;
+  function $(id) { return document.getElementById(id); }
+
+  var KEY = 'musication.student';
+  var STATUS_ICO = { assigned: '📤', started: '▶', in_progress: '⏳', completed: '✅', repeat: '🔄' };
+  var COLORS = ['#009D9D', '#D11264', '#FBAD04', '#56317D', '#EA5223', '#A6B908'];
+  var me = null, where = 'class', tasks = [], seen = {}, pollT = null, player = null, current = null;
+
+  function saved() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+  function remember(v) { try { if (v) { localStorage.setItem(KEY, JSON.stringify(v)); } else { localStorage.removeItem(KEY); } } catch (e) {} }
+  function show(id) { ['loginScreen', 'listScreen', 'doScreen'].forEach(function (s) { $(s).hidden = s !== id; }); }
+  function fmtDate(iso) { try { return new Date(iso).toLocaleDateString(I.lang === 'en' ? 'en-GB' : 'lt-LT', { month: 'long', day: 'numeric' }); } catch (e) { return ''; } }
+  function chime() {
+    try {
+      var c = new (window.AudioContext || window.webkitAudioContext)();
+      [784, 1047].forEach(function (f, i) {
+        var o = c.createOscillator(), g = c.createGain(), at = c.currentTime + i * 0.14;
+        o.frequency.value = f; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.2, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+        o.connect(g); g.connect(c.destination); o.start(at); o.stop(at + 0.55);
+      });
+    } catch (e) {}
+  }
+
+  // ── Log in ──
+  document.querySelectorAll('[data-w]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      where = b.dataset.w;
+      document.querySelectorAll('[data-w]').forEach(function (x) { x.classList.toggle('sel', x === b); });
+    });
+  });
+  $('code').addEventListener('input', function () { this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); $('msg').textContent = ''; });
+  $('fCode').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('code').value.trim();
+    if (code.length < 6) { $('msg').textContent = t('s.codeShort'); return; }
+    login(code, where, true);
+  });
+  function login(code, w, typed) {
+    $('msg').textContent = '⏳';
+    return DB.student.login(code, w).then(function (r) {
+      if (!r || r.error) {
+        $('msg').textContent = r && r.error === 'remote_disabled' ? t('s.noHome') : t('s.badCode');
+        if (!typed) { remember(null); show('loginScreen'); }
+        return;
+      }
+      $('msg').textContent = '';
+      me = { code: code, where: w, name: r.name, teacher: r.teacher };
+      remember(me);
+      if (window.MusicationAuth && !MusicationAuth.getSession()) { MusicationAuth.enter('student', { level: 'I' }); }
+      openList();
+    }).catch(function (err) { $('msg').textContent = '⚠️ ' + err.message; show('loginScreen'); });
+  }
+  $('notMe').addEventListener('click', function () {
+    stopPoll(); remember(null); me = null; $('code').value = ''; show('loginScreen'); $('code').focus();
+  });
+
+  // ── Task list ──
+  function openList() {
+    if (player) { player.destroy(); player = null; }
+    current = null;
+    show('listScreen');
+    $('hello').textContent = '👋 ' + t('s.hello', { name: me.name });
+    $('whereBadge').textContent = me.where === 'home' ? '🏠 ' + t('s.atHome') : '🏫 ' + t('s.inClass');
+    refresh(true);
+    startPoll();
+  }
+  function refresh(first) {
+    return DB.student.tasks(me.code, me.where).then(function (list) {
+      if (list === null) { remember(null); show('loginScreen'); $('msg').textContent = t('s.badCode'); stopPoll(); return; }
+      var fresh = (list || []).filter(function (x) { return !seen[x.id]; });
+      tasks = list || [];
+      if (!first && fresh.length) { chime(); }
+      tasks.forEach(function (x) { seen[x.id] = true; });
+      if (!current) { drawList(first ? [] : fresh.map(function (x) { return x.id; })); }
+    }).catch(function () {});
+  }
+  function drawList(fresh) {
+    var box = $('tasks');
+    box.innerHTML = '';
+    if (!tasks.length) { box.innerHTML = '<div class="empty"><span class="big">🎵</span>' + esc(t('s.noTasks')) + '</div>'; return; }
+    tasks.forEach(function (x, i) {
+      var blocks = LE.blocksOf(x.content);
+      var b = document.createElement('button');
+      b.className = 'task' + (fresh.indexOf(x.id) >= 0 ? ' new' : '');
+      b.style.setProperty('--c', x.status === 'completed' ? '#22a83a' : x.status === 'repeat' ? '#EA5223' : COLORS[i % COLORS.length]);
+      b.innerHTML = '<span class="st">' + (STATUS_ICO[x.status] || '📤') + '</span><span class="txt"><b>' + esc(x.title) + '</b>' +
+        '<small>' + esc(t('s.st.' + x.status)) + ' · ' + esc(fmtDate(x.assigned_at)) + '</small>' +
+        '<span class="icons">' + blocks.map(function (bl) { return bl.type === 'game' ? (LE.GAMES.filter(function (g) { return g.id === bl.game; })[0] || {}).ico || '🎮' : LE.ICO[bl.type]; }).join('') + '</span></span>' +
+        '<span class="gobtn">' + (x.status === 'completed' ? '🔁 ' + esc(t('s.again')) : x.status === 'repeat' ? '🔄 ' + esc(t('s.redo')) : '▶ ' + esc(t('s.start'))) + '</span>';
+      b.addEventListener('click', function () { openTask(x); });
+      box.appendChild(b);
+    });
+  }
+  function startPoll() { stopPoll(); pollT = setInterval(function () { refresh(false); }, 8000); }
+  function stopPoll() { clearInterval(pollT); pollT = null; }
+
+  // ── Doing a task: every finished block goes to the teacher ──
+  var queue = Promise.resolve(), pending = 0;
+  function submit(args) {
+    pending++; sync();
+    queue = queue.then(function () { return DB.student.submit.apply(null, args); })
+      .catch(function () { $('sync').textContent = '⚠️ ' + t('s.notSent'); })
+      .then(function (r) { pending--; sync(); return r; });
+    return queue;
+  }
+  function sync() { $('sync').textContent = pending ? '⏳ ' + t('s.sending') : ''; }
+  function openTask(x) {
+    current = x;
+    show('doScreen');
+    $('doTitle').textContent = x.title;
+    var content = x.content || {};
+    if (x.status !== 'completed' && x.status !== 'in_progress') { DB.student.setStatus(me.code, x.id, 'started').catch(function () {}); }
+    player = LE.player($('doPlayer'), LE.clone(LE.blocksOf(content)), {
+      mode: 'student', role: 'student',
+      lockOrder: content.order_mode !== 'free', mono: content.color_mode === 'mono',
+      onBlockDone: function (b, r) {
+        submit([me.code, x.id, b.id, r.area, r.score, r.errors, r.startedAt, false]);
+      },
+      onFinish: function () {
+        submit([me.code, x.id, null, null, null, [], null, true]).then(function (st) {
+          if (st) { x.status = st; $('sync').textContent = '✓ ' + t('s.sent'); }
+        });
+      },
+      finale: [['📋 ' + t('s.toTasks'), function () { openList(); }, 'btn-teal']]
+    });
+  }
+  $('doBack').addEventListener('click', openList);
+
+  // ── Language ──
+  $('langBtn').addEventListener('click', function () { I.set(I.lang === 'lt' ? 'en' : 'lt'); });
+  I.onChange(function () {
+    $('langLbl').textContent = I.lang.toUpperCase();
+    if (me && !current) { openList(); }
+  });
+  I.apply(document);
+  $('langLbl').textContent = I.lang.toUpperCase();
+
+  // ── Start: the code this device remembers ──
+  $('demoNote').hidden = DB.mode !== 'local';
+  var s = saved();
+  if (s && s.code) { where = s.where || 'class'; login(s.code, where, false); }
+  else { show('loginScreen'); setTimeout(function () { $('code').focus(); }, 50); }
+  var urlCode = /[?&]kodas=([A-Za-z0-9]+)/.exec(location.search);
+  if (urlCode && !(s && s.code)) { $('code').value = urlCode[1].toUpperCase(); }
+})();
+</script>
+</body>
+</html>

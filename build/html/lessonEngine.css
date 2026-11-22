@@ -1,0 +1,237 @@
+/* MUSICATION lesson engine (lessonEngine.js): the lesson player used on the
+   teacher's board, in the lesson preview and on the student's screen. */
+@font-face { font-family: 'Bravura'; src: url('../styles/fonts/Bravura_1.392.woff') format('woff'); }
+
+.le {
+  --le-ink: #1b2a6b; --le-frame: #f3d77a; --le-gold: #f5b400;
+  display: flex; flex-direction: column; gap: 10px; color: var(--le-ink);
+  font-family: var(--font, 'Baloo 2', 'Segoe UI', system-ui, sans-serif);
+}
+.le [hidden] { display: none !important; }
+.le-top { display: flex; align-items: center; gap: 12px; }
+.le-rail { flex: 1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.le-rail button {
+  --b: #1f6fe5; position: relative;
+  width: 48px; height: 48px; border-radius: 50%; border: 3px solid #fff; cursor: pointer;
+  font-size: 22px; line-height: 1; color: #fff;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--b) 45%, #fff), var(--b) 70%);
+  box-shadow: 0 0 0 3px var(--b), 0 4px 0 rgba(0,0,0,0.15);
+}
+.le-rail button.done { --b: #22a83a; }
+.le-rail button.cur { --b: #f26a1b; transform: scale(1.1); }
+.le-rail button.done::after {
+  content: '✓'; position: absolute; right: -7px; bottom: -7px; width: 22px; height: 22px; border-radius: 50%;
+  background: #22a83a; color: #fff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+  border: 2px solid #fff;
+}
+.le-pill {
+  min-width: 96px; padding: 4px 20px; border-radius: 999px; text-align: center;
+  background: linear-gradient(#3d8cf7, #1d63d8); color: #fff; font-size: 26px; font-weight: 800;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px #3d8cf7;
+}
+.le-name { font-size: 17px; font-weight: 800; color: #6a6f8f; text-align: center; margin-bottom: -4px; }
+.le-box { background: rgba(255,253,246,0.94); border: 3px solid var(--le-frame); border-radius: 24px; }
+.le-explain { padding: 8px 24px; text-align: center; font-size: clamp(18px, 2.1vw, 26px); font-weight: 700; line-height: 1.3; white-space: pre-line; }
+.le-stage { position: relative; padding: 10px 20px; min-height: clamp(150px, 26vh, 280px); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.le-stage svg.mus { width: 100%; height: auto; max-height: clamp(140px, 25vh, 260px); display: block; overflow: visible; }
+.le-text { font-size: clamp(22px, 2.8vw, 36px); font-weight: 700; text-align: center; line-height: 1.35; white-space: pre-line; padding: 10px; }
+.le-media { max-width: 100%; max-height: clamp(180px, 40vh, 460px); border-radius: 16px; display: block; }
+.le-video { width: min(100%, 820px); aspect-ratio: 16 / 9; border: 0; border-radius: 16px; background: #000; }
+.le-audio { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.le-audio .big { font-size: 80px; line-height: 1; }
+.le-audio audio { width: min(100%, 520px); }
+.le-missing { color: #6a6f8f; font-weight: 700; font-size: 20px; text-align: center; }
+
+.le-controls { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.le-cbtn { display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 800; font-size: 15px; }
+.le-rbtn {
+  --b: #1f6fe5;
+  width: 76px; height: 76px; border-radius: 50%; flex: none; cursor: pointer;
+  border: 5px solid #fff; color: #fff; font-size: 36px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--b) 55%, #fff), var(--b) 60%, color-mix(in srgb, var(--b) 75%, #000));
+  box-shadow: 0 0 0 3px var(--b), 0 7px 0 rgba(0,0,0,0.15), 0 10px 18px rgba(0,0,0,0.15);
+  display: inline-flex; align-items: center; justify-content: center; transition: transform 0.12s;
+}
+.le-rbtn:hover { transform: translateY(-2px) scale(1.04); }
+.le-rbtn:active { transform: translateY(3px) scale(0.97); }
+.le-rbtn.red { --b: #e8333a; }
+.le-rbtn.pulse { animation: lePulse 1.4s ease-in-out infinite; }
+@keyframes lePulse { 0%, 100% { box-shadow: 0 0 0 3px var(--b), 0 7px 0 rgba(0,0,0,0.15); } 50% { box-shadow: 0 0 0 3px var(--b), 0 0 0 14px rgba(31,111,229,0.18), 0 7px 0 rgba(0,0,0,0.15); } }
+.le-tempo { display: flex; align-items: center; gap: 10px; padding: 6px 18px; }
+.le-tempo .ani { font-size: 34px; cursor: pointer; user-select: none; }
+.le-tempo .mid { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.le-tempo input { width: 170px; accent-color: #1f6fe5; height: 26px; cursor: pointer; }
+.le-tempo .names { display: flex; gap: 4px; }
+.le-tempo .names button { border: none; background: transparent; font-weight: 800; font-size: 12px; color: #6a6f8f; cursor: pointer; padding: 2px 6px; border-radius: 999px; font-family: inherit; }
+.le-tempo .names button.sel { background: #1f6fe5; color: #fff; }
+.le-next {
+  border: none; cursor: pointer; border-radius: 999px; padding: 12px 28px; font-size: 24px; font-weight: 800; font-family: inherit;
+  background: linear-gradient(#41c35a, #22a83a); color: #fff; box-shadow: 0 6px 0 #17782a, 0 10px 18px rgba(0,0,0,0.15);
+}
+.le-next.ready { animation: leNudge 1.1s ease-in-out infinite; }
+@keyframes leNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(8px) scale(1.04); } }
+
+/* Music drawings */
+.mus .ln, .mus .bar, .mus .beam { fill: #1b2a6b; }
+.mus .nt, .mus .tk { fill: #14142b; stroke: #14142b; transition: fill 0.12s, stroke 0.12s; }
+.mus .nt { transform-box: fill-box; transform-origin: center; }
+.mus .rest { font-family: 'Bravura'; text-anchor: middle; stroke: none; }
+.mus .clef { font-family: 'Bravura'; fill: #1b2a6b; }
+.mus .syl { font-family: var(--font, sans-serif); font-weight: 800; font-size: 38px; text-anchor: middle; fill: #1b2a6b; stroke: none; }
+.mus .syl.r { fill: #9a9cb5; }
+.mus .hold { fill: rgba(245,180,0,0.28); stroke: none; }
+.mus .hold.r { fill: none; stroke: #c9cbe0; stroke-width: 4; stroke-dasharray: 8 8; }
+.mus .nt.on { fill: #f5b400; stroke: #c98a00; filter: drop-shadow(0 0 10px rgba(255,196,0,0.95)); }
+.mus .tk.on .syl { fill: #c98a00; }
+.mus .nt.hit { fill: #1f6fe5; stroke: #1f6fe5; }
+.mus .nt.ok { fill: #22a83a; stroke: #22a83a; }
+.mus .nt.off { fill: #f29b1b; stroke: #f29b1b; }
+.mus .bt circle { fill: #fff; stroke: #c9cbe0; stroke-width: 3; }
+.mus .bt.strong circle { stroke: #D11264; stroke-width: 4; }
+.mus .bt text { font-family: var(--font, sans-serif); font-weight: 800; font-size: 20px; text-anchor: middle; fill: #6a6f8f; }
+.mus .bt.on circle { fill: #ffe9a6; stroke: #f5b400; }
+.mel .nt.on { transform: scale(1.15); }
+.mel .nt.ok ellipse { stroke: #22a83a; stroke-width: 6; }
+.mel .nt.off ellipse { stroke: #f29b1b; stroke-width: 6; }
+.mel .nt.hit ellipse { stroke: #1f6fe5; stroke-width: 6; }
+.mel .nlab { font-family: var(--font, sans-serif); font-weight: 800; font-size: 22px; text-anchor: middle; stroke: none; }
+.lines .ln-g { cursor: pointer; }
+.lines .ln-g .vis { fill: #1b2a6b; transition: fill 0.15s; }
+.lines .ln-g .num { opacity: 0; transition: opacity 0.2s; }
+.lines .ln-g.counted .num, .lines .ln-g.on .num { opacity: 1; }
+.lines .ln-g.counted .vis { fill: var(--lc); }
+.lines .ln-g.on .vis { fill: #f5b400; }
+.lines .num text { font-family: var(--font, sans-serif); font-weight: 800; font-size: 26px; text-anchor: middle; fill: #fff; }
+.clefg { cursor: pointer; transform-box: fill-box; transform-origin: center; }
+.clefg.on { fill: #f5b400; filter: drop-shadow(0 0 10px rgba(255,196,0,0.95)); }
+.le-wig { animation: leBounce 0.7s ease; }
+@keyframes leBounce { 0%, 100% { transform: none; } 30% { transform: translateY(-10px) rotate(-6deg) scale(1.08); } 60% { transform: rotate(5deg) scale(1.02); } }
+
+/* Cards to choose from (listening, task, game) */
+.le-quiz { display: flex; gap: 18px; justify-content: center; width: 100%; flex-wrap: wrap; }
+.le-card {
+  flex: 1; min-width: 180px; max-width: 420px; background: #fff; border: 4px solid #e8e2cc; border-radius: 22px;
+  padding: 10px 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-weight: 800; font-size: 20px; color: #1b2a6b; transition: transform 0.12s, border-color 0.12s; font-family: inherit; min-height: 80px;
+}
+.le-card:hover { transform: translateY(-3px); border-color: #b8c8f5; }
+.le-card svg { width: 100%; height: auto; max-height: 150px; }
+.le-card.right { border-color: #22a83a; background: #eafbe9; }
+.le-card.wrong { border-color: #f29b1b; background: #fff6e0; }
+.le-card.shake { animation: leShake 0.45s ease; }
+@keyframes leShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.le-q { font-size: clamp(22px, 2.6vw, 32px); font-weight: 800; text-align: center; margin-bottom: 12px; }
+.le-col { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.le-stars { font-size: 30px; letter-spacing: 2px; text-align: center; min-height: 40px; }
+.le-dots { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.le-dots span {
+  width: 64px; height: 64px; border-radius: 50%; border: 4px dashed #c9cbe0; background: #fff;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #1b2a6b;
+}
+.le-dots span.filled { border-style: solid; border-color: rgba(0,0,0,0.15); }
+.le-dots span.bad { box-shadow: 0 0 0 4px #f29b1b; }
+.le-dots span.good { box-shadow: 0 0 0 4px #22a83a; }
+.le-play {
+  border: none; cursor: pointer; border-radius: 26px; padding: 18px 36px; font-family: inherit;
+  font-size: 30px; font-weight: 800; color: #fff; background: linear-gradient(#41c35a, #22a83a); box-shadow: 0 7px 0 #17782a;
+  display: inline-flex; align-items: center; gap: 14px;
+}
+.le-gamepic { font-size: 90px; line-height: 1; margin-bottom: 8px; text-align: center; }
+.le-rec { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.le-rec .rbig { width: 120px; height: 120px; font-size: 56px; }
+.le-rec .rbig.on { --b: #e8333a; animation: lePulse 1s ease-in-out infinite; }
+.le-rec .time { font-size: 28px; font-weight: 800; }
+.le-rec audio { width: min(100%, 460px); }
+.le-small { font-size: 14px; font-weight: 700; color: #6a6f8f; text-align: center; }
+
+.le-bubble {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.6); opacity: 0;
+  padding: 16px 36px; border-radius: 30px; font-size: clamp(26px, 3.6vw, 46px); font-weight: 800; pointer-events: none;
+  background: #fff; color: #1b2a6b; box-shadow: 0 12px 34px rgba(35,38,74,0.25); white-space: nowrap; z-index: 5;
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+}
+.le-bubble.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.le-bubble.good { background: #eafbe9; border: 4px solid #22a83a; }
+.le-bubble.soft { background: #fff6e0; border: 4px solid #f5b400; }
+.le-bubble.count { background: #e9f1ff; border: 4px solid #1f6fe5; font-size: 60px; padding: 6px 44px; }
+.le-confetti { position: absolute; font-size: 34px; pointer-events: none; animation: lePop 1.1s ease-out forwards; z-index: 4; }
+@keyframes lePop { from { transform: translate(0, 0) scale(0.4); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(40deg); opacity: 0; } }
+
+/* Bottom: piano or the big rhythm button */
+.le-piano { background: #1d1d24; border-radius: 24px 24px 32px 32px; padding: 10px 12px 14px; box-shadow: 0 10px 0 #0d0d12; }
+.le-keys { position: relative; display: flex; gap: 6px; height: clamp(120px, 22vh, 220px); user-select: none; }
+.le-wk {
+  --k: #f25757;
+  flex: 1; border: none; border-radius: 8px 8px 20px 20px; cursor: pointer; color: #1b2a6b; font-family: inherit;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--k) 70%, #fff) 0%, var(--k) 38%, color-mix(in srgb, var(--k) 82%, #000) 100%);
+  box-shadow: inset 0 -10px 0 rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.55);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; padding-bottom: 12px;
+  transition: transform 0.08s, filter 0.08s; touch-action: manipulation;
+}
+.le-wk.light { color: #fff; }
+.le-wk .ico { font-size: clamp(24px, 4.5vh, 44px); line-height: 1; }
+.le-wk .nm { font-size: clamp(18px, 3.2vh, 30px); font-weight: 800; line-height: 1; }
+.le-wk.down { transform: translateY(4px) scale(0.985); filter: brightness(1.12); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15), 0 0 26px var(--k); }
+.le-bk {
+  position: absolute; top: 0; width: 7.4%; height: 44%; transform: translateX(-50%); z-index: 2;
+  border: none; border-radius: 0 0 10px 10px; cursor: pointer; touch-action: manipulation;
+  background: linear-gradient(#3b3b46, #101016); box-shadow: inset 0 -8px 0 #000, 0 4px 6px rgba(0,0,0,0.4);
+}
+.le-bk.down { background: linear-gradient(#5a5a70, #26262f); }
+.le-pad {
+  width: 100%; height: clamp(120px, 22vh, 220px); border: none; border-radius: 32px; cursor: pointer; font-family: inherit;
+  background: radial-gradient(circle at 50% 35%, #ffd877, #f59b2b 60%, #e0711c);
+  box-shadow: 0 10px 0 #b3540f; display: flex; align-items: center; justify-content: center; gap: 22px;
+  font-size: clamp(24px, 3.4vw, 40px); font-weight: 800; color: #5a2600; touch-action: manipulation; user-select: none;
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+.le-pad .ico { font-size: clamp(56px, 9vh, 96px); }
+.le-pad small { display: block; font-size: 16px; opacity: 0.75; }
+.le-pad.down { transform: translateY(6px); box-shadow: 0 4px 0 #b3540f; }
+
+/* A game page on top of everything */
+.le-gamebox { position: fixed; inset: 0; z-index: 300; background: #000; }
+.le-gamebox iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.le-gamebox .close {
+  position: absolute; top: 10px; right: 10px; z-index: 2; border: none; cursor: pointer;
+  width: 52px; height: 52px; border-radius: 50%; font-size: 26px; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+
+/* Block editor */
+.le-ed { display: flex; flex-direction: column; gap: 12px; }
+.le-ed .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.le-ed .row > .field { flex: 1; min-width: 160px; }
+.le-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.le-tok { border: 2px solid rgba(35,38,74,0.12); background: #fff; border-radius: 12px; padding: 3px 7px; cursor: pointer; display: flex; flex-direction: column; align-items: center; font-weight: 800; font-size: 12px; font-family: inherit; }
+.le-tok svg { height: 46px; width: auto; }
+.le-key { border: none; border-radius: 10px; padding: 7px 11px; font-weight: 800; cursor: pointer; color: #1b2a6b; font-family: inherit; font-size: 15px; }
+.le-key.light { color: #fff; }
+.le-prev { min-height: 64px; background: #fff; border: 2px solid rgba(35,38,74,0.1); border-radius: 12px; padding: 6px; display: flex; align-items: center; justify-content: center; color: #6a6f8f; font-weight: 700; }
+.le-prev svg { width: 100%; height: auto; max-height: 120px; }
+.le-prev img { max-width: 100%; max-height: 160px; border-radius: 10px; }
+.le-opts { display: flex; flex-direction: column; gap: 6px; }
+.le-opt { display: flex; align-items: center; gap: 10px; background: #f6f4fd; border-radius: 12px; padding: 5px 10px; }
+.le-opt .p { flex: 1; min-width: 0; }
+.le-opt .p svg { width: 100%; height: auto; max-height: 56px; }
+.le-opt label { display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 14px; white-space: nowrap; cursor: pointer; }
+.le-opt button { border: none; background: #fff; border-radius: 10px; width: 32px; height: 32px; cursor: pointer; }
+.le-opt input[type=text] { flex: 1; }
+
+@media (max-height: 840px) and (min-width: 901px) {
+  .le { gap: 7px; }
+  .le-rbtn { width: 60px; height: 60px; font-size: 28px; border-width: 4px; }
+  .le-explain { font-size: 20px; padding: 5px 18px; }
+  .le-stage { min-height: 0; padding: 4px 16px; }
+  .le-stage svg.mus { max-height: 160px; }
+  .le-card svg { max-height: 110px; }
+  .le-next { font-size: 20px; padding: 9px 22px; }
+  .le-keys, .le-pad { height: clamp(110px, 24vh, 200px); }
+}
+@media (max-width: 640px) {
+  .le-rbtn { width: 60px; height: 60px; font-size: 28px; }
+  .le-rail button { width: 40px; height: 40px; font-size: 18px; }
+  .le-pill { font-size: 20px; min-width: 70px; padding: 2px 12px; }
+  .le-tempo input { width: 120px; }
+  .le-wk .ico { display: none; }
+  .le-controls { gap: 12px; }
+}
