@@ -469,7 +469,7 @@
 
   // ───────────────────────────── T-02 Home ─────────────────────────────
   function vHome() {
-    var name = (S.profile && S.profile.name) || '';
+    var name = (S.profile && S.profile.name) || ((S.user && S.user.email) || '').split('@')[0] || '🎵';
     var tiles = [['library', '📚', 'nav.library', '#009D9D'], ['mine', '📂', 'nav.mine', '#56317D'], ['classes', '👥', 'nav.classes', '#FBAD04'],
       ['results', '📊', 'nav.results', '#D11264'], ['new', '＋', 'nav.new', '#A6B908'], ['settings', '⚙️', 'nav.settings', '#012A5F']];
     var active = S.assignments.filter(function (a) { return a.students.some(function (x) { return x.status !== 'completed'; }); }).length;
