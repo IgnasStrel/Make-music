@@ -94,17 +94,21 @@
   .topic-head .big { font-size: 84px; line-height: 1; }
   .topic-head h2 { font-size: 34px; font-weight: 800; line-height: 1.1; }
   .topic-head p { font-size: 19px; font-weight: 600; max-width: 760px; }
+  .topic-head .tmeta { font-size: 15px; color: var(--ink-soft); margin-top: 4px; }
   .sec-title { font-size: 22px; font-weight: 800; margin: 6px 0 12px; }
 
-  /* ── Lesson screen ── */
-  .lesson { max-width: 1400px; margin: 0 auto; padding: 10px 18px 14px; display: flex; flex-direction: column; }
-  .lhead { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
-  .lhead .mid { display: flex; align-items: center; gap: 18px; }
-  .lhead .right { justify-self: end; }
+  .tbar .ttempo { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; }
+  .tbar .ttempo button.sel { background: #fff; color: var(--navy); }
+
+  /* ── Lesson screen (template B): number and topic, explanation, the fixed
+     staff, 🎧 🔄, the piano with 📝 and 🎮 beside it ── */
+  .lesson { max-width: 1400px; margin: 0 auto; padding: 8px 18px 14px; display: flex; flex-direction: column; gap: 9px; min-height: calc(100vh - var(--tbar-h, 0px)); }
+  .lhead { display: flex; align-items: center; gap: 14px; }
+  .lhead h1 { flex: 1; text-align: center; font-size: clamp(22px, 2.8vw, 36px); font-weight: 800; color: var(--navy-ink); line-height: 1.15; }
   .rbtn {
     --b: #1f6fe5;
-    width: 70px; height: 70px; border-radius: 50%; flex: none; cursor: pointer;
-    border: 5px solid #fff; color: #fff; font-size: 36px;
+    width: 64px; height: 64px; border-radius: 50%; flex: none; cursor: pointer;
+    border: 5px solid #fff; color: #fff; font-size: 30px;
     background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--b) 55%, #fff), var(--b) 60%, color-mix(in srgb, var(--b) 75%, #000));
     box-shadow: 0 0 0 3px var(--b), 0 7px 0 rgba(0,0,0,0.15), 0 10px 18px rgba(0,0,0,0.15);
     display: inline-flex; align-items: center; justify-content: center;
@@ -112,58 +116,48 @@
   }
   .rbtn:hover { transform: translateY(-2px) scale(1.04); }
   .rbtn:active { transform: translateY(3px) scale(0.97); }
-  .rbtn.green { --b: #22a83a; }
   .rbtn.red { --b: #e8333a; }
-  .rbtn.big { width: 94px; height: 94px; font-size: 44px; }
-  .banner {
-    position: relative; display: inline-flex; align-items: center; gap: 12px;
-    padding: 6px 36px; border-radius: 16px; font-size: clamp(26px, 3.4vw, 42px); font-weight: 800; color: var(--navy-ink);
-    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 18px, rgba(0,0,0,0.03) 18px 36px), linear-gradient(#f9cd77, #e9a84a);
-    border: 4px solid #c9802f;
-    box-shadow: inset 0 3px 0 rgba(255,255,255,0.5), 0 6px 0 #a8651f, 0 10px 18px rgba(0,0,0,0.12);
+  .rbtn.big { width: 88px; height: 88px; font-size: 42px; }
+  .look { display: flex; gap: 2px; background: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 3px 0 rgba(0,0,0,0.08); flex: none; }
+  .look button { border: none; background: transparent; border-radius: 999px; height: 40px; min-width: 52px; font-size: 20px; cursor: pointer; padding: 0 8px; }
+  .look button.sel { background: #e9f1ff; box-shadow: inset 0 0 0 2px #1f6fe5; }
+  .box { background: rgba(255,253,246,0.94); border: 3px solid var(--frame); border-radius: 26px; }
+  .explain { padding: 8px 26px; text-align: center; font-size: clamp(17px, 1.9vw, 24px); font-weight: 700; color: var(--navy-ink); line-height: 1.35; }
+  .explain .tnum { display: block; font-size: 15px; color: var(--ink-soft); font-weight: 800; letter-spacing: 0.5px; }
+  .legend { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: -3px; }
+  .lchip {
+    display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 2px solid var(--frame); border-radius: 999px;
+    padding: 1px 14px 1px 6px; font-weight: 800; font-size: 15px; color: var(--navy-ink); font-family: inherit; min-height: 44px;
   }
-  .banner::before, .banner::after { content: ''; position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%; background: #8a5418; transform: translateY(-50%); }
-  .banner::before { left: 11px; } .banner::after { right: 11px; }
-  .pill {
-    min-width: 120px; padding: 8px 26px; border-radius: 999px; text-align: center;
-    background: linear-gradient(#3d8cf7, #1d63d8); color: #fff; font-size: 34px; font-weight: 800;
-    box-shadow: 0 0 0 4px #fff, 0 0 0 7px #3d8cf7, 0 6px 14px rgba(0,0,0,0.15);
+  span.lchip { padding-left: 14px; }
+  button.lchip { cursor: pointer; }
+  button.lchip:hover { border-color: var(--gold); }
+  .lchip.on { background: #fff3cc; }
+  .lchip svg { height: 38px; width: auto; }
+  .stage { position: relative; flex: 1 1 auto; padding: 6px 22px; min-height: clamp(150px, 27vh, 290px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .staffwrap { width: 100%; display: flex; justify-content: center; }
+  .stage svg.mus { width: 100%; height: auto; max-height: clamp(140px, 32vh, 340px); display: block; overflow: visible; }
+  .stage.echoing .staffwrap svg.mus { max-height: clamp(110px, 20vh, 220px); }
+  .stage .tshow svg.mus { height: 100px; width: auto; max-height: none; }
+  .stage .card svg.bare { width: auto; height: 120px; max-height: none; }
+  .echo { display: flex; align-items: center; gap: 10px; background: #eef4ff; border-radius: 18px; padding: 0 16px; }
+  .echo .echo-ico { font-size: 26px; }
+  .stage .echo svg.mus { height: 88px; width: auto; max-height: none; max-width: 70vw; }
+  .exdots { position: absolute; top: 8px; right: 12px; display: flex; gap: 6px; }
+  .exdots button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #c9cbe0; background: #fff; font-weight: 800; cursor: pointer; color: var(--navy-ink); font-family: inherit; }
+  .exdots button.cur { border-color: #f26a1b; background: #fff1e6; }
+  .exdots button.done { border-color: #22a83a; color: #22a83a; }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 28px; }
+  .bottom { display: flex; gap: 12px; align-items: stretch; }
+  .bigbtn {
+    flex: none; width: clamp(92px, 9vw, 132px); border: none; border-radius: 28px; cursor: pointer;
+    font-size: clamp(46px, 5vw, 66px); display: flex; align-items: center; justify-content: center; transition: transform 0.12s;
   }
-  .lbody { display: flex; gap: 18px; margin-top: 10px; flex: 1; }
-  .lmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-  .lsub { text-align: center; font-weight: 800; color: var(--ink-soft); font-size: 17px; margin-bottom: -4px; }
-  .box { background: rgba(255,253,246,0.92); border: 3px solid var(--frame); border-radius: 26px; }
-  .explain { padding: 8px 26px; text-align: center; font-size: clamp(19px, 2.2vw, 28px); font-weight: 700; color: var(--navy-ink); line-height: 1.3; }
-  .stage { position: relative; padding: 8px 22px; min-height: clamp(150px, 26vh, 270px); display: flex; align-items: center; justify-content: center; }
-  .stage svg.mus { width: 100%; height: auto; max-height: clamp(140px, 25vh, 260px); display: block; overflow: visible; }
-  .controls { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; }
-  .cbtn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 800; color: var(--navy-ink); font-size: 16px; }
-  .tempo { display: flex; align-items: center; gap: 12px; padding: 10px 22px; }
-  .tempo .ani { font-size: 40px; cursor: pointer; }
-  .tempo .mid { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .tempo .lbl { font-weight: 800; font-size: 15px; letter-spacing: 1px; color: var(--navy-ink); }
-  .tempo input { width: 200px; accent-color: #1f6fe5; height: 28px; cursor: pointer; }
-  .tempo .names { display: flex; gap: 6px; }
-  .tempo .names button { border: none; background: transparent; font-weight: 800; font-size: 13px; color: var(--ink-soft); cursor: pointer; padding: 2px 6px; border-radius: 999px; }
-  .tempo .names button.sel { background: #1f6fe5; color: #fff; }
-  .next {
-    border: none; cursor: pointer; border-radius: 999px; padding: 14px 30px; font-size: 26px; font-weight: 800;
-    background: linear-gradient(#41c35a, #22a83a); color: #fff; box-shadow: 0 6px 0 #17782a, 0 10px 18px rgba(0,0,0,0.15);
-  }
-  .next.ready { animation: nudge 1.1s ease-in-out infinite; }
-  @keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(8px) scale(1.04); } }
-
-  .rail { width: 96px; flex: none; padding: 12px 0; display: flex; flex-direction: column; align-items: center; gap: 12px; align-self: flex-start; }
-  .rail button {
-    --b: #1f6fe5;
-    width: 68px; height: 68px; border-radius: 50%; border: 4px solid #fff; cursor: pointer;
-    font-size: 30px; font-weight: 800; color: #fff;
-    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--b) 55%, #fff), var(--b) 65%);
-    box-shadow: 0 0 0 3px var(--b), 0 5px 0 rgba(0,0,0,0.15);
-  }
-  .rail button.cur { --b: #f26a1b; transform: scale(1.08); }
-  .rail button.done { --b: #22a83a; }
-  .rail button.game { --b: #22a83a; font-size: 28px; }
+  .bigbtn.tasks { background: linear-gradient(#ffd96e, #f5b400); box-shadow: 0 8px 0 #c98a00; }
+  .bigbtn.games { background: linear-gradient(#6ad885, #22a83a); box-shadow: 0 8px 0 #17782a; }
+  .bigbtn:hover { transform: translateY(-2px); }
+  .bigbtn:active { transform: translateY(4px); }
+  .bigbtn.on { outline: 5px solid var(--navy-ink); outline-offset: 3px; }
 
   /* ── Music drawings ── */
   .mus .ln, .mus .bar, .mus .beam { fill: var(--navy-ink); }
@@ -180,10 +174,25 @@
   .mus .nt.hit { fill: #1f6fe5; stroke: #1f6fe5; }
   .mus .nt.ok { fill: #22a83a; stroke: #22a83a; }
   .mus .nt.off { fill: #f29b1b; stroke: #f29b1b; }
+  .mus .mk { font-family: var(--font); font-weight: 800; font-size: 28px; text-anchor: middle; stroke: none; }
   .mus .bt circle { fill: #fff; stroke: #c9cbe0; stroke-width: 3; }
   .mus .bt.strong circle { stroke: var(--pink); stroke-width: 4; }
-  .mus .bt text { font-family: var(--font); font-weight: 800; font-size: 20px; text-anchor: middle; fill: var(--ink-soft); }
+  .mus .bt text { font-family: var(--font); font-weight: 800; font-size: 20px; text-anchor: middle; fill: var(--ink-soft); stroke: none; }
   .mus .bt.on circle { fill: #ffe9a6; stroke: var(--gold); }
+  /* the staff rhythm */
+  .mus.st .nt, .mus.st .tk { fill: #14142b; stroke: none; }
+  .mus.st .beam, .mus.st .ln, .mus.st .bar { fill: #14142b; }
+  .mus.st .clef { fill: #14142b; }
+  .mus.st .g { font-family: 'Bravura'; }
+  .mus.st .hl { fill: transparent; transition: fill 0.12s; }
+  .mus.st .hold { fill: rgba(245,180,0,0.3); }
+  .mus.st .nt.on { fill: #f08a00; stroke: none; filter: drop-shadow(0 0 7px rgba(255,180,0,0.85)); }
+  .mus.st .nt.on .hl { fill: rgba(245,180,0,0.16); }
+  .mus.st .nt.hit { fill: #1f6fe5; }
+  .mus.st .nt.ok { fill: #22a83a; }
+  .mus.st .nt.off { fill: #e8731b; }
+  .mus .nt.ok .mk { fill: #22a83a; }
+  .mus .nt.off .mk { fill: #e8731b; }
   .mel .nt.on { transform: scale(1.15); }
   .mel .nt.ok ellipse { stroke: #22a83a; stroke-width: 6; }
   .mel .nt.off ellipse { stroke: #f29b1b; stroke-width: 6; }
@@ -201,17 +210,31 @@
   .clefg.on { fill: var(--gold); filter: drop-shadow(0 0 10px rgba(255,196,0,0.95)); }
   .wig { animation: picBounce 0.7s ease; }
 
-  .quiz { display: flex; gap: 22px; justify-content: center; width: 100%; flex-wrap: wrap; }
+  /* ── Cards: tasks, the clef quiz, the game ── */
+  .quiz { display: flex; gap: 20px; justify-content: center; width: 100%; flex-wrap: wrap; }
   .card {
-    flex: 1; min-width: 200px; max-width: 420px; background: #fff; border: 4px solid #e8e2cc; border-radius: 22px;
-    padding: 10px 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    font-weight: 800; font-size: 20px; color: var(--navy-ink); transition: transform 0.12s, border-color 0.12s;
+    flex: 1; min-width: 160px; max-width: 420px; background: #fff; border: 4px solid #e8e2cc; border-radius: 22px;
+    padding: 10px 14px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    font-weight: 800; font-size: 20px; color: var(--navy-ink); transition: transform 0.12s, border-color 0.12s; font-family: inherit; min-height: 90px;
   }
   .card:hover { transform: translateY(-3px); border-color: #b8c8f5; }
-  .card svg { width: 100%; height: auto; max-height: 160px; }
+  .card svg { width: 100%; height: auto; max-height: 150px; }
+  .card svg.bare { width: auto; height: 120px; }
+  .card .ctext { font-size: 58px; font-weight: 800; line-height: 1; padding: 6px 0; }
   .card.right { border-color: #22a83a; background: #eafbe9; }
   .card.shake { animation: shake 0.45s ease; }
   @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  .taskbox { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .tshow svg { height: 104px; width: auto; }
+  .tdots { display: flex; gap: 8px; }
+  .tdots span { width: 12px; height: 12px; border-radius: 50%; background: #d9dbe9; }
+  .tdots .done { background: #22a83a; }
+  .tdots .cur { background: #f26a1b; }
+  .result { text-align: center; }
+  .rstars { font-size: 52px; line-height: 1.1; }
+  .rstars .dim { opacity: 0.22; }
+  .rtext { font-size: clamp(24px, 3vw, 34px); font-weight: 800; color: var(--navy-ink); }
+  .rbtns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
   .stars { font-size: 30px; letter-spacing: 2px; text-align: center; min-height: 40px; }
 
   .bubble {
@@ -227,21 +250,20 @@
   .confetti { position: absolute; font-size: 34px; pointer-events: none; animation: pop 1.1s ease-out forwards; z-index: 4; }
   @keyframes pop { from { transform: translate(0, 0) scale(0.4); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(40deg); opacity: 0; } }
 
-  /* ── Bottom: piano or the big rhythm button ── */
-  .bottom { margin-top: 12px; }
-  .piano { background: #1d1d24; border-radius: 26px 26px 34px 34px; padding: 12px 14px 16px; box-shadow: 0 10px 0 #0d0d12, 0 18px 30px rgba(0,0,0,0.22); }
-  .keys { position: relative; display: flex; gap: 6px; height: clamp(130px, 23vh, 230px); user-select: none; }
+  /* ── Piano ── */
+  .piano { flex: 1; min-width: 0; background: #1d1d24; border-radius: 26px 26px 34px 34px; padding: 12px 14px 16px; box-shadow: 0 10px 0 #0d0d12, 0 18px 30px rgba(0,0,0,0.22); }
+  .keys { position: relative; display: flex; gap: 6px; height: clamp(120px, 22vh, 220px); user-select: none; }
   .wk {
     --k: #f25757;
     flex: 1; border: none; border-radius: 8px 8px 20px 20px; cursor: pointer; color: var(--navy-ink);
     background: linear-gradient(180deg, color-mix(in srgb, var(--k) 70%, #fff) 0%, var(--k) 38%, color-mix(in srgb, var(--k) 82%, #000) 100%);
     box-shadow: inset 0 -10px 0 rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.55);
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; padding-bottom: 14px;
-    transition: transform 0.08s, filter 0.08s; touch-action: manipulation;
+    transition: transform 0.08s, filter 0.08s; touch-action: manipulation; font-family: inherit;
   }
   .wk.light { color: #fff; }
-  .wk-ico { font-size: clamp(28px, 5vh, 48px); line-height: 1; }
-  .wk-name { font-size: clamp(20px, 3.4vh, 32px); font-weight: 800; line-height: 1; }
+  .wk-ico { font-size: clamp(26px, 4.6vh, 46px); line-height: 1; }
+  .wk-name { font-size: clamp(18px, 3.2vh, 30px); font-weight: 800; line-height: 1; }
   .wk.down { transform: translateY(4px) scale(0.985); filter: brightness(1.12); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.15), 0 0 26px var(--k); }
   .bk {
     position: absolute; top: 0; width: 7.4%; height: 44%; transform: translateX(-50%); z-index: 2;
@@ -249,17 +271,55 @@
     background: linear-gradient(#3b3b46, #101016); box-shadow: inset 0 -8px 0 #000, 0 4px 6px rgba(0,0,0,0.4);
   }
   .bk.down { background: linear-gradient(#5a5a70, #26262f); }
-  .pad {
-    width: 100%; height: clamp(130px, 23vh, 230px); border: none; border-radius: 34px; cursor: pointer;
-    background: radial-gradient(circle at 50% 35%, #ffd877, #f59b2b 60%, #e0711c);
-    box-shadow: 0 10px 0 #b3540f, 0 18px 30px rgba(0,0,0,0.2);
-    display: flex; align-items: center; justify-content: center; gap: 24px;
-    font-size: clamp(26px, 3.6vw, 42px); font-weight: 800; color: #5a2600; touch-action: manipulation; user-select: none;
-    transition: transform 0.06s, box-shadow 0.06s;
-  }
-  .pad .pad-ico { font-size: clamp(60px, 10vh, 100px); }
-  .pad small { display: block; font-size: 17px; opacity: 0.75; }
-  .pad.down { transform: translateY(6px); box-shadow: 0 4px 0 #b3540f; }
+
+  /* ── ⚫⚪ Black and white: classic notation, a natural piano; the active
+     note is shown by an outline and a bolder sign, not by colour ── */
+  body.bw { background: #fff; }
+  .bw .box { background: #fff; border-color: #2b2b2b; }
+  .bw .lhead h1, .bw .explain, .bw .rtext { color: #111; }
+  .bw .rbtn { --b: #2b2b2b; background: #fff; color: #111; filter: grayscale(1); }
+  .bw .look { box-shadow: 0 0 0 2px #2b2b2b; }
+  .bw .look button.sel { background: #eee; box-shadow: inset 0 0 0 2px #111; }
+  .bw .bigbtn { background: #fff; box-shadow: 0 0 0 3px #2b2b2b, 0 7px 0 #2b2b2b; filter: grayscale(1); }
+  .bw .bigbtn.on { outline-color: #000; }
+  .bw .lchip { border-color: #2b2b2b; color: #111; }
+  .bw .lchip.on { background: #eee; }
+  .bw .mus .ln, .bw .mus .bar, .bw .mus .beam, .bw .mus .clef { fill: #000; }
+  .bw .mus.st .nt, .bw .mus.st .tk { fill: #000; }
+  .bw .mus .hold { display: none; }
+  .bw .mus.st .nt.on, .bw .mus.st .nt.hit, .bw .mus.st .nt.ok, .bw .mus.st .nt.off { fill: #000; filter: none; }
+  .bw .mus.st .nt.on .hl { fill: #ececec; stroke: #000; stroke-width: 2.5; }
+  .bw .mus.st .nt.on .g { stroke: #000; stroke-width: 1.8px; }
+  .bw .mus.st .nt.hit .hl { fill: #f4f4f4; stroke: #666; stroke-width: 2; stroke-dasharray: 6 4; }
+  .bw .mus .nt.ok .mk, .bw .mus .nt.off .mk { fill: #000; }
+  .bw .mus .bt circle { stroke: #9a9a9a; }
+  .bw .mus .bt.strong circle { stroke: #000; }
+  .bw .mus .bt.on circle { fill: #dcdcdc; stroke: #000; }
+  .bw .mus .bt text { fill: #333; }
+  .bw .mel ellipse { fill: #111; }
+  .bw .mel .lab { fill: #fff; stroke: #111; stroke-width: 2; }
+  .bw .mel .nlab { fill: #111; }
+  .bw .mel .nt.on { filter: none; }
+  .bw .mel .nt.on ellipse { stroke: #000; stroke-width: 7; }
+  .bw .mel .nt.ok ellipse, .bw .mel .nt.off ellipse, .bw .mel .nt.hit ellipse { stroke: #000; }
+  .bw .lines .ln-g .vis, .bw .lines .ln-g.counted .vis { fill: #000; }
+  .bw .lines .ln-g.on .vis { fill: #777; }
+  .bw .lines .num circle { fill: #333; }
+  .bw .clefg.on { fill: #000; filter: none; stroke: #000; stroke-width: 2px; }
+  .bw .card { border-color: #cfcfcf; color: #111; }
+  .bw .card.right { border-color: #000; background: #f1f1f1; }
+  .bw .bubble.good, .bw .bubble.soft, .bw .bubble.count { background: #fff; border-color: #111; color: #111; }
+  .bw .confetti, .bw .stars, .bw .rstars { filter: grayscale(1); }
+  .bw .echo { background: #f2f2f2; }
+  .bw .exdots button.cur { border-color: #000; background: #eee; }
+  .bw .exdots button.done { border-color: #000; color: #000; }
+  .bw .tdots .done { background: #000; }
+  .bw .tdots .cur { background: #888; }
+  .bw .wk { background: linear-gradient(#fff, #f0f0f0); color: #444; box-shadow: inset 0 -8px 0 #d4d4d4, inset 0 0 0 1px #bdbdbd; }
+  .bw .wk.light { color: #444; }
+  .bw .wk-ico { display: none; }
+  .bw .wk-name { font-size: clamp(14px, 2.2vh, 20px); color: #666; }
+  .bw .wk.down { background: linear-gradient(#e0e0e0, #cfcfcf); box-shadow: inset 0 -3px 0 #b5b5b5; filter: none; }
 
   /* ── Editor ── */
   .editor .modal { max-width: 860px; }
@@ -280,46 +340,49 @@
 
   /* Laptops (768 px tall) and wall boards: the whole lesson fits without scrolling. */
   @media (max-height: 840px) and (min-width: 901px) {
-    .lesson { padding-top: 6px; }
-    .rbtn { width: 58px; height: 58px; font-size: 26px; border-width: 4px; }
-    .rbtn.big { width: 74px; height: 74px; font-size: 34px; }
-    .banner { font-size: 30px; padding: 2px 30px; }
-    .pill { font-size: 26px; padding: 4px 20px; min-width: 96px; }
-    .lbody { margin-top: 6px; }
-    .lmain { gap: 7px; }
-    .lsub { font-size: 14px; }
-    .explain { font-size: 21px; padding: 5px 20px; }
-    .stage { min-height: 0; padding: 4px 18px; }
-    .stage svg.mus { max-height: 165px; }
-    .card svg { max-height: 115px; }
-    .controls { gap: 16px; }
-    .cbtn { font-size: 14px; gap: 2px; }
-    .tempo { padding: 4px 16px; }
-    .tempo .ani { font-size: 32px; }
-    .next { font-size: 22px; padding: 10px 24px; }
-    .rail { width: 80px; gap: 9px; padding: 9px 0; }
-    .rail button { width: 54px; height: 54px; font-size: 24px; }
-    .bottom { margin-top: 8px; }
-    .keys, .pad { height: clamp(120px, 25vh, 205px); }
-    .wk-ico { font-size: 30px; }
-    .wk-name { font-size: 24px; }
-    .wk { padding-bottom: 10px; }
+    .lesson { gap: 6px; padding-top: 4px; }
+    .rbtn { width: 54px; height: 54px; font-size: 25px; border-width: 4px; }
+    .rbtn.big { width: 64px; height: 64px; font-size: 30px; }
+    .lhead h1 { font-size: 26px; }
+    .explain { font-size: 17px; padding: 4px 18px; }
+    .lchip { min-height: 36px; font-size: 14px; }
+    .lchip svg { height: 30px; }
+    .stage { min-height: 0; padding: 2px 16px; }
+    .stage svg.mus { max-height: 210px; }
+    .stage.echoing .staffwrap svg.mus { max-height: 130px; }
+    .stage .echo svg.mus { height: 74px; }
+    .stage .tshow svg.mus { height: 84px; }
+    .card svg { max-height: 105px; }
+    .stage .card svg.bare { height: 96px; }
+    .controls { gap: 20px; }
+    .keys { height: clamp(108px, 21vh, 180px); }
+    .wk-ico { font-size: 26px; }
+    .wk-name { font-size: 21px; }
+    .wk { padding-bottom: 8px; }
+    .bigbtn { font-size: 46px; }
   }
   @media (max-width: 900px) {
-    .lbody { flex-direction: column-reverse; }
-    .rail { width: auto; flex-direction: row; align-self: center; padding: 8px 12px; }
-    .rail button { width: 52px; height: 52px; font-size: 22px; }
-    .lhead { grid-template-columns: auto 1fr auto; }
-    .rbtn { width: 60px; height: 60px; font-size: 28px; }
-    .rbtn.big { width: 84px; height: 84px; font-size: 40px; }
-    .pill { min-width: 80px; font-size: 24px; padding: 6px 16px; }
-    .banner { padding: 4px 22px; }
     .srow .sprev { width: 110px; }
+    .rbtn { width: 52px; height: 52px; font-size: 24px; }
+    .rbtn.big { width: 72px; height: 72px; font-size: 34px; }
   }
-  @media (max-width: 560px) {
-    .lhead .mid .rbtn { display: none; }
+  @media (max-width: 640px) {
+    .lesson { padding: 6px 10px 12px; }
+    .lhead { gap: 8px; }
+    .lhead h1 { font-size: 19px; }
+    .look button { min-width: 38px; height: 34px; font-size: 16px; padding: 0 4px; }
+    .bottom { flex-wrap: wrap; }
+    .piano { order: -1; flex-basis: 100%; padding: 8px 8px 12px; }
+    .bigbtn { flex: 1; width: auto; height: 70px; font-size: 40px; }
     .wk-ico { display: none; }
-    .tempo input { width: 130px; }
+    .wk-name { font-size: 15px; }
+    .stage { padding: 4px 8px; }
+    .exdots { position: static; }
+    .card .ctext { font-size: 44px; }
+    .explain { font-size: 15px; padding: 6px 12px; }
+    .legend { gap: 4px; }
+    .lchip { font-size: 12px; min-height: 32px; padding-right: 10px; }
+    .lchip svg { height: 24px; }
   }
 </style>
 </head>
@@ -339,39 +402,28 @@
   <div id="listBody"></div>
 </div>
 
-<!-- One lesson (pamokėlė) -->
+<!-- One lesson (pamokėlė): the same screen for every lesson (template B) -->
 <div class="lesson" id="lessonScreen" hidden>
   <div class="lhead">
-    <button class="rbtn" id="lsBack" title="Grįžti" aria-label="Grįžti">⬅</button>
-    <div class="mid">
-      <div class="banner" id="banner">📖 Užduotėlės</div>
-      <button class="rbtn green" id="modeBtn" title="Žaidimai" aria-label="Žaidimai">🎮</button>
+    <button class="rbtn" id="lsBack" title="Atgal" aria-label="Atgal">⬅</button>
+    <h1 id="lsTitle"></h1>
+    <div class="look" role="group" aria-label="Natų išvaizda">
+      <button data-look="color" title="Spalvotas režimas" aria-label="Spalvotas režimas">🌈</button>
+      <button data-look="bw" title="Juodai baltas režimas" aria-label="Juodai baltas režimas">⚫⚪</button>
     </div>
-    <div class="right"><div class="pill" id="pill">1/4</div></div>
   </div>
-  <div class="lbody">
-    <div class="lmain">
-      <div class="lsub" id="lsub"></div>
-      <div class="box explain" id="explain"></div>
-      <div class="box stage" id="stage"></div>
-      <div class="controls" id="controls">
-        <div class="cbtn"><button class="rbtn big" id="listenBtn" aria-label="Paklausyk">🎧</button>Paklausyk</div>
-        <div class="cbtn"><button class="rbtn big red" id="repeatBtn" aria-label="Pakartok">🔄</button><span id="repeatLbl">Pakartok</span></div>
-        <div class="box tempo" title="Tempas">
-          <span class="ani" data-t="0" title="Lėtai">🐌</span>
-          <div class="mid">
-            <span class="lbl">🎚️ TEMPAS</span>
-            <input type="range" id="tempo" min="0" max="2" step="1" aria-label="Tempas">
-            <div class="names" id="tempoNames"></div>
-          </div>
-          <span class="ani" data-t="2" title="Greitai">🐇</span>
-        </div>
-        <button class="next" id="nextBtn">Toliau ➡️</button>
-      </div>
-    </div>
-    <div class="box rail" id="rail"></div>
+  <div class="box explain" id="explain"></div>
+  <div class="legend" id="legend" hidden></div>
+  <div class="box stage" id="stage"></div>
+  <div class="controls">
+    <button class="rbtn big" id="listenBtn" title="Paklausyk" aria-label="Paklausyk">🎧</button>
+    <button class="rbtn big red" id="repeatBtn" title="Pakartok" aria-label="Pakartok">🔄</button>
   </div>
-  <div class="bottom" id="bottom"></div>
+  <div class="bottom">
+    <button class="bigbtn tasks" id="tasksBtn" title="Užduotys" aria-label="Užduotys">📝</button>
+    <div class="piano" id="piano"></div>
+    <button class="bigbtn games" id="gameBtn" title="Žaidimai" aria-label="Žaidimai">🎮</button>
+  </div>
 </div>
 
 <!-- Lesson editor (teacher) -->
@@ -500,19 +552,21 @@
   // ───────────────────────────── Rhythm signs ─────────────────────────────
   // One token = one sign a child learns. parts: [length in beats, sounds?]
   var TOK = window.SolfedzioData.TOK;
+  // ...plus a single eighth note (♪), drawn with a flag in the legend and the tasks.
+  var TOKX = Object.assign({ e: { beats: 0.5, parts: [[0.5, 1]], syl: 'ti', name: 'Aštuntinė' } }, TOK);
   function events(pattern) {
     var out = [], b = 0;
     pattern.forEach(function (t, ti) {
       var ps = 0;
-      TOK[t].parts.forEach(function (p) {
+      TOKX[t].parts.forEach(function (p) {
         out.push({ t: ti, i: out.length, start: b + ps, dur: p[0], sound: !!p[1] });
         ps += p[0];
       });
-      b += TOK[t].beats;
+      b += TOKX[t].beats;
     });
     return out;
   }
-  function beatsOf(pattern) { return pattern.reduce(function (s, t) { return s + TOK[t].beats; }, 0); }
+  function beatsOf(pattern) { return pattern.reduce(function (s, t) { return s + TOKX[t].beats; }, 0); }
 
   // ───────────────────────────── Piano ─────────────────────────────
   var KEYS = window.SolfedzioData.KEYS;
@@ -606,14 +660,14 @@
     s += '<text class="clef" x="30" y="' + (bot - sp) + '" font-size="' + (sp * 4) + '"></text>';
     notes.forEach(function (n, i) {
       var k = keyOf(n), idx = staffIdx(n), x = X0 + i * NW + NW / 2 - 20, y = bot - idx * sp / 2;
-      s += '<g class="nt" data-i="' + i + '">';
+      s += '<g class="nt" data-i="' + i + '"><text class="mk" x="' + x + '" y="24"></text>';
       for (var l = -2; l >= idx; l -= 2) { s += '<rect class="ln" x="' + (x - 24) + '" y="' + (bot - l * sp / 2 - 1.5) + '" width="48" height="3"/>'; }
       for (var u = 10; u <= idx; u += 2) { s += '<rect class="ln" x="' + (x - 24) + '" y="' + (bot - u * sp / 2 - 1.5) + '" width="48" height="3"/>'; }
       if (idx < 4) { s += '<rect x="' + (x + 10) + '" y="' + (y - 62) + '" width="4" height="62" stroke-width="0"/>'; }
       else { s += '<rect x="' + (x - 14) + '" y="' + y + '" width="4" height="62" stroke-width="0"/>'; }
       s += '<ellipse cx="' + x + '" cy="' + y + '" rx="13" ry="9.5" transform="rotate(-22 ' + x + ' ' + y + ')" fill="' + k.c + '" stroke-width="2.5"/>';
       if (!o.noNames) {
-        s += '<rect x="' + (x - 32) + '" y="208" width="64" height="34" rx="12" fill="' + k.c + '" stroke-width="0"/>' +
+        s += '<rect class="lab" x="' + (x - 32) + '" y="208" width="64" height="34" rx="12" fill="' + k.c + '" stroke-width="0"/>' +
           '<text class="nlab" x="' + x + '" y="233" fill="' + (k.light ? '#fff' : '#1b2a6b') + '">' + k.name + '</text>';
       }
       s += '</g>';
@@ -646,6 +700,83 @@
     return '<svg class="mus" viewBox="0 0 ' + W + ' ' + (o.bare ? 200 : 236) + '" xmlns="http://www.w3.org/2000/svg">' + s + '</svg>';
   }
 
+  // ── A rhythm on the staff (lesson template B): treble clef, the notes on
+  // G (the sound 🎧 plays), classic noteheads, stems, beams and rests from
+  // the Bravura font, spacing by length, and under the staff one circle per
+  // judesys (beat). o.noStaff: just the notes (legend, task cards).
+  // o.compact: no beat circles. o.meter: bar lines; o.timeSig: 2/4, 3/4…
+  var SP = 20, HW = 1.18 * SP, STW = 2.6;
+  var GL = { clef: '', black: '', half: '', whole: '', flag8: '', flag16: '',
+    rest: { 4: '', 2: '', 1: '', 0.5: '', 0.25: '' } };
+  function staffRhythmSvg(pattern, o) {
+    o = o || {};
+    var bare = !!o.noStaff, beats = !bare && !o.compact;
+    var top = bare ? 14 : 50, yB = top + 4 * SP, yG = yB - SP, yMid = yB - 2 * SP, stemTop = yG - 3.5 * SP;
+    var meter = o.meter || 0, total = beatsOf(pattern);
+    var BWD = bare ? 58 : o.compact ? 100 : 130, pad = bare ? 6 : 14;
+    var tsw = !bare && o.timeSig && meter ? 46 : 0;
+    var x0 = bare ? 6 : 92 + tsw;
+    var xEnd = x0 + total * BWD + (bare ? 0 : 8);
+    var W = bare ? xEnd + 12 : xEnd + 12;
+    var H = bare ? yG + 14 : yB + (beats ? 64 : 18);
+    var s = '';
+    if (!bare) {
+      for (var i = 0; i < 5; i++) { s += '<rect class="ln" x="8" y="' + (top + i * SP - 1) + '" width="' + (xEnd - 8) + '" height="2"/>'; }
+      s += '<text class="clef" x="16" y="' + yG + '" font-size="' + (4 * SP) + '">' + GL.clef + '</text>';
+      if (tsw) {
+        s += '<text class="clef" x="' + (92 + 4) + '" y="' + (yB - 3 * SP) + '" font-size="' + (4 * SP) + '">' + String.fromCharCode(0xE080 + meter) + '</text>' +
+          '<text class="clef" x="' + (92 + 4) + '" y="' + (yB - SP) + '" font-size="' + (4 * SP) + '">' + String.fromCharCode(0xE084) + '</text>';
+      }
+      if (meter && total > meter && total % meter === 0) {
+        for (var b = meter; b < total; b += meter) { s += '<rect class="bar" x="' + (x0 + b * BWD - 6) + '" y="' + top + '" width="2.4" height="' + (4 * SP) + '"/>'; }
+      }
+      s += '<rect class="bar" x="' + (xEnd - 10) + '" y="' + top + '" width="2.4" height="' + (4 * SP) + '"/>' +
+        '<rect class="bar" x="' + (xEnd - 5) + '" y="' + top + '" width="6" height="' + (4 * SP) + '"/>';
+    }
+    var ev = events(pattern);
+    pattern.forEach(function (t, ti) {
+      var parts = ev.filter(function (e) { return e.t === ti; });
+      var beamed = t === 'ee' || t === 's4', xs = [];
+      s += '<g class="tk" data-t="' + ti + '">';
+      parts.forEach(function (e) {
+        var x = x0 + e.start * BWD + pad, flagged = e.sound && !beamed && e.dur <= 0.5;
+        xs.push(x);
+        s += '<g class="nt" data-i="' + e.i + '">';
+        if (!bare) { s += '<rect class="hl" x="' + (x - 10) + '" y="' + (stemTop - 6) + '" width="' + (HW + 20 + (flagged ? 14 : 0)) + '" height="' + (yB + 8 - stemTop + 6) + '" rx="10"/>'; }
+        if (e.sound) {
+          if (e.dur >= 2 && !bare) {
+            var hx = x + HW + 6, hw = x0 + (e.start + e.dur) * BWD - 10 - hx;
+            if (hw > 0) { s += '<rect class="hold" x="' + hx + '" y="' + (yG - 5) + '" width="' + hw + '" height="10" rx="5"/>'; }
+          }
+          s += '<text class="g" x="' + x + '" y="' + yG + '" font-size="' + (4 * SP) + '">' + (e.dur >= 4 ? GL.whole : e.dur >= 2 ? GL.half : GL.black) + '</text>';
+          if (e.dur < 4) {
+            var sx = x + HW - STW;
+            s += '<rect x="' + sx + '" y="' + stemTop + '" width="' + STW + '" height="' + (yG - 3 - stemTop) + '"/>';
+            if (flagged) { s += '<text class="g" x="' + sx + '" y="' + stemTop + '" font-size="' + (4 * SP) + '">' + (e.dur === 0.5 ? GL.flag8 : GL.flag16) + '</text>'; }
+          }
+        } else {
+          s += '<text class="g" x="' + (x + 2) + '" y="' + (e.dur >= 4 ? yB - 3 * SP : yMid) + '" font-size="' + (4 * SP) + '">' + (GL.rest[e.dur] || GL.rest[1]) + '</text>';
+        }
+        if (!bare) { s += '<text class="mk" x="' + (x + HW / 2) + '" y="' + (stemTop - 12) + '"></text>'; }
+        s += '</g>';
+      });
+      if (beamed) {
+        var x1 = xs[0] + HW - STW, x2 = xs[xs.length - 1] + HW;
+        s += '<rect class="beam" x="' + x1 + '" y="' + stemTop + '" width="' + (x2 - x1) + '" height="' + (0.5 * SP) + '"/>';
+        if (t === 's4') { s += '<rect class="beam" x="' + x1 + '" y="' + (stemTop + 0.75 * SP) + '" width="' + (x2 - x1) + '" height="' + (0.5 * SP) + '"/>'; }
+      }
+      s += '</g>';
+    });
+    if (beats) {
+      for (var k = 0; k < Math.ceil(total); k++) {
+        var cx = x0 + k * BWD + pad + HW / 2;
+        s += '<g class="bt' + (meter && o.accent && k % meter === 0 ? ' strong' : '') + '" data-b="' + k + '"><circle cx="' + cx + '" cy="' + (yB + 38) + '" r="15"/>' +
+          (meter && o.accent ? '<text x="' + cx + '" y="' + (yB + 45) + '">' + (k % meter + 1) + '</text>' : '') + '</g>';
+      }
+    }
+    return '<svg class="mus st' + (bare ? ' bare' : '') + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' + s + '</svg>';
+  }
+
   var CLEF_TUNE = { treble: ['C5', 'E5', 'G5', 'C6', 'G5'], bass: ['C3', 'G2', 'E2', 'C2', 'G2'] };
 
   function stepSummary(st) {
@@ -670,13 +801,16 @@
     var m = /^b(\d)$/.exec(id || '');
     if (m) {
       var t = topicByNo(m[1]);
-      return t ? { id: id, builtin: true, title: t.name, topic: t, steps: t.presets.slice(0, t.base), games: true } : null;
+      return t ? { id: id, builtin: true, title: t.name, topic: t, games: true,
+        examples: t.staff ? [t.staff] : t.presets.slice(0, t.base),
+        explain: t.explain || null, legend: t.legend || null, repeat: t.repeat || null, tasks: t.tasks || null } : null;
     }
     var r = L.get(id);
     var s = r && L.load(id);
     if (!r || r.kind !== 'solfedzis' || !s) { return null; }
     var tp = topicByNo(s.topic);
-    return tp ? { id: id, builtin: false, title: r.title, topic: tp, steps: s.steps || [], games: s.games !== false } : null;
+    return tp ? { id: id, builtin: false, title: r.title, topic: tp, examples: s.steps || [], games: s.games !== false,
+      explain: null, legend: null, repeat: null, tasks: null } : null;
   }
   function ownLessons(topicNo) {
     return L.list({ kind: 'solfedzis', archived: false }).filter(function (r) {
@@ -686,8 +820,9 @@
   }
 
   // ───────────────────────────── Teacher strip ─────────────────────────────
-  function teacherBar(btns) {
+  function teacherBar(btns, withTempo) {
     $('tbar').hidden = !TEACHER;
+    setTimeout(tbarHeight, 0);
     if (!TEACHER) { return; }
     var box = $('tbarBtns');
     box.innerHTML = '';
@@ -697,7 +832,16 @@
       el.addEventListener('click', b[1]);
       box.appendChild(el);
     });
+    if (withTempo) {
+      var tg = document.createElement('span');
+      tg.className = 'ttempo';
+      tg.innerHTML = '🎚️ Tempas:' + TEMPI.map(function (t, i) { return '<button data-tempo="' + i + '" class="' + (i === tempoI ? 'sel' : '') + '">' + t.name + '</button>'; }).join('');
+      tg.querySelectorAll('[data-tempo]').forEach(function (b) { b.addEventListener('click', function () { setTempo(+b.dataset.tempo); }); });
+      box.appendChild(tg);
+    }
   }
+  function tbarHeight() { document.documentElement.style.setProperty('--tbar-h', ($('tbar').hidden ? 0 : $('tbar').offsetHeight) + 'px'); }
+  window.addEventListener('resize', tbarHeight);
   function fullscreen() {
     try {
       if (document.fullscreenElement) { document.exitFullscreen(); }
@@ -709,12 +853,13 @@
   function showList() {
     $('listScreen').hidden = false;
     $('lessonScreen').hidden = true;
+    document.body.classList.remove('bw');
   }
 
   function renderTopics() {
     showList();
     teacherBar([['🖥️ Visas ekranas', fullscreen]]);
-    var h = '<div class="brand"><h1>MUSICATION <span>I</span></h1><p>Muzikos rašto pradžiamokslis 5–7 metų vaikams</p></div><div class="trows">';
+    var h = '<div class="brand"><h1>MUSICATION <span>I</span></h1><p>Interaktyvios solfedžio pamokėlės 1–4 klasėms ir suaugusiesiems</p></div><div class="trows">';
     TOPICS.forEach(function (t, i) {
       var own = ownLessons(t.no).length;
       h += '<a class="trow" href="#tema=' + t.no + '" style="--c:' + t.color + ';animation-delay:' + (i * 0.04) + 's">' +
@@ -735,7 +880,8 @@
       ['🖥️ Visas ekranas', fullscreen]
     ]);
     var h = '<div class="topic-head" style="--c:' + t.color + '"><div class="big">' + t.ico + '</div><div>' +
-      '<h2>' + t.no + '. ' + esc(t.name) + '</h2><p>🎯 ' + esc(t.goal) + '</p></div></div>';
+      '<h2>' + t.no + '. ' + esc(t.name) + '</h2><p>🎯 ' + esc(t.goal) + '</p>' +
+      (t.grade ? '<p class="tmeta">🎓 ' + esc(t.grade) + (t.age ? ' · ' + esc(t.age) : '') + (t.source ? ' · 📖 ' + esc(t.source) : '') + '</p>' : '') + '</div></div>';
     h += '<div class="sec-title">Pamokėlės</div><div class="tiles" id="lessonTiles"></div>';
     $('listBody').innerHTML = h;
     var box = $('lessonTiles');
@@ -756,10 +902,10 @@
       el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { location.hash = 'pamoka=' + id; } });
       box.appendChild(el);
     }
-    tile('b' + t.no, 'Programos pamokėlė', plural(t.base, 'užduotėlė', 'užduotėlės', 'užduotėlių') + ' · 🎮', false);
+    tile('b' + t.no, 'Programos pamokėlė', (t.tasks ? '📝 ' + plural(t.tasks.length, 'užduotis', 'užduotys', 'užduočių') : plural(t.base, 'pavyzdys', 'pavyzdžiai', 'pavyzdžių')) + ' · 🎮', false);
     ownLessons(t.no).forEach(function (r) {
       var s = L.load(r.id) || {};
-      tile(r.id, r.title, plural((s.steps || []).length, 'užduotėlė', 'užduotėlės', 'užduotėlių') + (s.games !== false ? ' · 🎮' : ''), true);
+      tile(r.id, r.title, plural((s.steps || []).length, 'pavyzdys', 'pavyzdžiai', 'pavyzdžių') + (s.games !== false ? ' · 🎮' : ''), true);
     });
     if (TEACHER) {
       var n = document.createElement('button');
@@ -776,20 +922,39 @@
   });
 
   // ───────────────────────────── Lesson screen ─────────────────────────────
-  var lesson = null, cur = 0, done = [], mode = 'steps', attempt = null, game = null;
+  // Every pamokėlė has the same screen (lesson template, part B): number and
+  // topic on top, a short explanation, the fixed staff with the lesson's
+  // example, 🎧 and 🔄 as icons only, the piano, and the two big buttons
+  // 📝 Užduotys and 🎮 Žaidimai. The child never changes the staff.
+  var lesson = null, ex = 0, done = [], mode = 'lesson', attempt = null, game = null, tk = null;
   var stage = $('stage');
+  function example() { return lesson.examples[ex]; }
 
-  function step() { return lesson.steps[cur]; }
+  // 🌈 colour or ⚫⚪ classic black-and-white notation (remembered on this
+  // device). Sound and everything interactive stay exactly the same.
+  var LOOK_KEY = 'musication.solf.look', look = 'color';
+  try { if (localStorage.getItem(LOOK_KEY) === 'bw') { look = 'bw'; } } catch (e) {}
+  function setLook(l) {
+    look = l === 'bw' ? 'bw' : 'color';
+    document.body.classList.toggle('bw', look === 'bw' && !$('lessonScreen').hidden);
+    document.querySelectorAll('[data-look]').forEach(function (b) {
+      b.classList.toggle('sel', b.dataset.look === look);
+      b.setAttribute('aria-pressed', b.dataset.look === look ? 'true' : 'false');
+    });
+    try { localStorage.setItem(LOOK_KEY, look); } catch (e) {}
+  }
+  document.querySelectorAll('[data-look]').forEach(function (b) { b.addEventListener('click', function () { setLook(b.dataset.look); }); });
 
   function openLesson(id) {
     var ls = getLesson(id);
     if (!ls) { location.hash = ''; return; }
-    if (!ls.steps.length) { ls.steps = ls.topic.presets.slice(0, 1); }
-    lesson = ls; cur = 0; mode = 'steps'; game = null;
-    done = ls.steps.map(function () { return false; });
+    if (!ls.examples.length) { ls.examples = ls.topic.presets.slice(0, 1); }
+    lesson = ls; ex = 0; mode = 'lesson'; game = null; tk = null;
+    done = ls.examples.map(function () { return false; });
     $('listScreen').hidden = true;
     $('lessonScreen').hidden = false;
-    $('lsub').textContent = 'Pamokėlė ' + ls.topic.no + ' · ' + ls.topic.name + (ls.builtin ? '' : ' · ' + ls.title);
+    setLook(look);
+    $('lsTitle').textContent = ls.topic.no + ' pamokėlė. ' + (ls.builtin ? ls.topic.name : ls.title);
     var btns = [['🗣️ Perskaityti', function () { say($('explain').textContent); }], ['🖥️ Visas ekranas', fullscreen]];
     if (ls.builtin) {
       btns.push(['📋 Kurti savo pagal šią', function () { location.hash = 'nauja=' + ls.topic.no + '&nuo=' + ls.id; }]);
@@ -797,67 +962,76 @@
       btns.push(['✏️ Keisti pamokėlę', function () { location.hash = 'keisti=' + ls.id; }]);
     }
     btns.push(['📚 Temos pamokėlės', function () { location.hash = 'tema=' + ls.topic.no; }]);
-    teacherBar(btns);
-    $('modeBtn').hidden = !ls.games;
+    teacherBar(btns, true);
+    $('gameBtn').hidden = !ls.games;
+    renderPiano();
     render();
   }
 
   function render() {
     stopAll(); attempt = null; hideBubble();
-    var n = lesson.steps.length;
-    $('banner').textContent = mode === 'game' ? '🎮 Žaidimai' : '📖 Užduotėlės';
-    $('modeBtn').textContent = mode === 'game' ? '📖' : '🎮';
-    $('modeBtn').title = mode === 'game' ? 'Užduotėlės' : 'Žaidimai';
-    $('pill').textContent = mode === 'game' ? '🎮' : (cur + 1) + '/' + n;
-    renderRail();
+    stage.classList.remove('echoing');
+    $('lessonScreen').dataset.mode = mode;
+    $('tasksBtn').classList.toggle('on', mode === 'tasks');
+    $('gameBtn').classList.toggle('on', mode === 'game');
+    $('legend').hidden = true;
+    if (mode === 'tasks') { renderTask(); return; }
     if (mode === 'game') { renderGame(); return; }
-    var st = step();
-    $('explain').textContent = st.text || 'Paklausyk ir pakartok!';
-    $('repeatLbl').textContent = st.type === 'clefs' ? 'Dar kartą' : 'Pakartok';
-    $('nextBtn').classList.toggle('ready', !!done[cur]);
-    $('nextBtn').textContent = cur < n - 1 ? 'Toliau ➡️' : (lesson.games ? 'Žaidimas 🎮' : 'Baigti 🎉');
-    renderBottom(st.type === 'rhythm' ? 'pad' : 'piano');
-
-    if (st.type === 'rhythm') { stage.innerHTML = rhythmSvg(st.pattern, st.meter, { beats: !!st.accent }); }
-    else if (st.type === 'melody') { stage.innerHTML = melodySvg(st.notes); }
-    else if (st.type === 'lines') { stage.innerHTML = linesSvg(); bindLines(); }
-    else if (st.type === 'clef') { stage.innerHTML = clefSvg(st.clef); bindClef(st.clef); }
+    var st = example();
+    $('explain').textContent = lesson.explain || st.text || 'Paklausyk ir pakartok!';
+    renderLegend();
+    $('listenBtn').hidden = false;
+    $('repeatBtn').hidden = false;
+    $('repeatBtn').title = st.type === 'clefs' ? 'Kitas garsas' : 'Pakartok';
+    var h = '<div class="staffwrap" id="staffwrap">';
+    if (st.type === 'rhythm') { h += staffRhythmSvg(st.pattern, { meter: st.meter, timeSig: !!st.accent, accent: !!st.accent }); }
+    else if (st.type === 'melody') { h += melodySvg(st.notes); }
+    else if (st.type === 'lines') { h += linesSvg(); }
+    else if (st.type === 'clef') { h += clefSvg(st.clef); }
+    h += '</div><div class="echo" id="echo" hidden></div>';
+    if (lesson.examples.length > 1) {
+      h += '<div class="exdots" title="Pavyzdžiai">' + lesson.examples.map(function (_, i) {
+        return '<button data-ex="' + i + '" class="' + (i === ex ? 'cur' : '') + (done[i] ? ' done' : '') + '" aria-label="Pavyzdys ' + (i + 1) + '">' +
+          (done[i] && i !== ex ? '✓' : i + 1) + '</button>';
+      }).join('') + '</div>';
+    }
+    stage.innerHTML = h;
+    if (st.type === 'lines') { bindLines(); }
+    else if (st.type === 'clef') { bindClef(st.clef); }
     else if (st.type === 'clefs') { renderClefQuiz(); }
+    stage.querySelectorAll('[data-ex]').forEach(function (b) {
+      b.addEventListener('click', function () { ex = +b.dataset.ex; render(); });
+    });
     stage.appendChild(bubbleEl);
   }
 
-  function renderRail() {
-    var r = $('rail');
-    r.innerHTML = '';
-    lesson.steps.forEach(function (s, i) {
-      var b = document.createElement('button');
-      b.textContent = done[i] && !(mode === 'steps' && i === cur) ? '✓' : (i + 1);
-      b.className = (mode === 'steps' && i === cur ? 'cur' : '') + (done[i] ? ' done' : '');
-      b.title = 'Užduotėlė ' + (i + 1);
-      b.addEventListener('click', function () { mode = 'steps'; cur = i; render(); });
-      r.appendChild(b);
+  // Note lengths under the explanation; a chip with notes plays them.
+  function renderLegend() {
+    var lg = $('legend');
+    if (!lesson.legend) { return; }
+    lg.innerHTML = '';
+    lesson.legend.forEach(function (it) {
+      var c = document.createElement(it.notes ? 'button' : 'span');
+      c.className = 'lchip';
+      c.innerHTML = (it.notes ? staffRhythmSvg(it.notes, { noStaff: true }) : '') + '<span>' + esc(it.text) + '</span>';
+      if (it.notes) {
+        c.title = 'Paklausyk';
+        c.addEventListener('click', function () {
+          c.classList.add('on');
+          playRhythm({ pattern: it.notes }, true, function () { c.classList.remove('on'); }, c, true);
+        });
+      }
+      lg.appendChild(c);
     });
-    if (lesson.games) {
-      var g = document.createElement('button');
-      g.className = 'game' + (mode === 'game' ? ' cur' : '');
-      g.textContent = '🎮'; g.title = 'Žaidimas';
-      g.addEventListener('click', function () { startGame(); });
-      r.appendChild(g);
-    }
+    lg.hidden = false;
   }
 
-  // ── Bottom: piano or rhythm pad ──
-  var bottomKind = '';
-  function renderBottom(kind) {
-    if (kind === bottomKind) { return; }
-    bottomKind = kind;
-    var box = $('bottom');
-    if (kind === 'pad') {
-      box.innerHTML = '<button class="pad" id="pad"><span class="pad-ico">🥁</span><span>Plok čia!<small>arba tarpo klavišas</small></span></button>';
-      $('pad').addEventListener('pointerdown', function (e) { e.preventDefault(); tapPad(); });
-      return;
-    }
-    var h = '<div class="piano"><div class="keys">';
+  // ── Piano: always at the bottom; every key sounds and lights up ──
+  function renderPiano() {
+    var box = $('piano');
+    if (box.dataset.ready) { return; }
+    box.dataset.ready = '1';
+    var h = '<div class="keys">';
     KEYS.forEach(function (k) {
       h += '<button class="wk' + (k.light ? ' light' : '') + '" data-n="' + k.n + '" style="--k:' + k.c + '" aria-label="' + k.name + '">' +
         '<span class="wk-ico">' + k.ico + '</span><span class="wk-name">' + k.name + '</span></button>';
@@ -865,13 +1039,13 @@
     BLACK.forEach(function (b) {
       h += '<button class="bk" data-n="' + b.n + '" style="left:calc(' + (b.after + 1) + ' * (100% - 42px) / 8 + ' + (b.after * 6 + 3) + 'px)" aria-label="' + b.n + '"></button>';
     });
-    box.innerHTML = h + '</div></div>';
+    box.innerHTML = h + '</div>';
     box.querySelectorAll('[data-n]').forEach(function (el) {
       el.addEventListener('pointerdown', function (e) { e.preventDefault(); pressKey(el.dataset.n); });
     });
   }
   function flashKey(n, ms) {
-    var el = document.querySelector('#bottom [data-n="' + n + '"]');
+    var el = document.querySelector('#piano [data-n="' + n + '"]');
     if (!el) { return; }
     el.classList.add('down');
     setTimeout(function () { el.classList.remove('down'); }, ms || 180);
@@ -879,26 +1053,30 @@
   function pressKey(n) {
     tone(freq(n), 0, 1.1, { gain: 0.32 });
     flashKey(n);
-    if (mode === 'game' || !lesson) { return; }
-    if (attempt && attempt.kind === 'melody') { melodyPress(n); }
+    if (!lesson || mode !== 'lesson' || !attempt) { return; }
+    if (attempt.kind === 'rhythm') { rhythmTap(); }     // during 🔄 any key is a clap
+    else if (attempt.kind === 'melody') { melodyPress(n); }
   }
-  function tapPad() {
-    drum(0, 0.6);
-    var p = $('pad');
-    if (p) { p.classList.add('down'); setTimeout(function () { p.classList.remove('down'); }, 110); }
-    if (attempt && attempt.kind === 'rhythm') { rhythmTap(); }
+  // A clap with the space bar or on the staff.
+  function clap() {
+    if (attempt && attempt.kind === 'rhythm') { drum(0, 0.6); rhythmTap(); }
   }
+  stage.addEventListener('pointerdown', function (e) {
+    if (attempt && attempt.kind === 'rhythm' && attempt.open && !e.target.closest('button')) { e.preventDefault(); clap(); }
+  });
 
   var PC_KEYS = { a: 'C4', s: 'D4', d: 'E4', f: 'F4', g: 'G4', h: 'A4', j: 'B4', k: 'C5', w: 'C#4', e: 'D#4', t: 'F#4', y: 'G#4', u: 'A#4' };
   document.addEventListener('keydown', function (e) {
     if ($('lessonScreen').hidden || !$('editor').hidden || e.repeat || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    if (e.key === ' ' && bottomKind === 'pad') { e.preventDefault(); if (document.activeElement) { document.activeElement.blur(); } tapPad(); }
-    else if (PC_KEYS[e.key] && bottomKind === 'piano') { pressKey(PC_KEYS[e.key]); }
+    if (e.key === ' ') { e.preventDefault(); if (document.activeElement) { document.activeElement.blur(); } if (attempt && attempt.kind === 'rhythm') { clap(); } else { drum(0, 0.5); } }
+    else if (PC_KEYS[e.key]) { pressKey(PC_KEYS[e.key]); }
   });
 
   // ── Highlighting ──
-  function marks(root) { return (root || stage).querySelectorAll('.nt, .tk, .bt'); }
-  function clearMarks() { marks().forEach(function (el) { el.classList.remove('on', 'hit', 'ok', 'off'); }); }
+  function clearMarks(root) {
+    (root || stage).querySelectorAll('.nt, .tk, .bt').forEach(function (el) { el.classList.remove('on', 'hit', 'ok', 'off'); });
+    (root || stage).querySelectorAll('.mk').forEach(function (el) { el.textContent = ''; });
+  }
   function setOn(i, root) {
     root = root || stage;
     root.querySelectorAll('.nt.on, .tk.on').forEach(function (el) { el.classList.remove('on'); });
@@ -906,40 +1084,49 @@
     var nt = root.querySelector('.nt[data-i="' + i + '"]');
     if (nt) {
       nt.classList.add('on');
-      var tk = nt.closest('.tk');
-      if (tk) { tk.classList.add('on'); }
+      var g = nt.closest('.tk');
+      if (g) { g.classList.add('on'); }
     }
   }
-  function setBeat(b) {
-    stage.querySelectorAll('.bt.on').forEach(function (el) { el.classList.remove('on'); });
-    var el = b == null ? null : stage.querySelector('.bt[data-b="' + b + '"]');
+  function setBeat(b, root) {
+    root = root || stage;
+    root.querySelectorAll('.bt.on').forEach(function (el) { el.classList.remove('on'); });
+    var el = b == null ? null : root.querySelector('.bt[data-b="' + b + '"]');
     if (el) { el.classList.add('on'); }
+  }
+  function mark(el, ok) {
+    el.classList.remove('hit', 'on');
+    el.classList.add(ok ? 'ok' : 'off');
+    var m = el.querySelector('.mk');
+    if (m) { m.textContent = ok ? '✓' : '✗'; }
   }
 
   // ── Playback ──
-  // highlight: false while a game plays, so the answer is not given away.
-  function playRhythm(st, highlight, onDone) {
+  // 🎧: the notes light up one by one, each for its own length (a quarter
+  // for one judesys, each eighth for half of one), then everything goes back.
+  function playRhythm(st, highlight, onDone, root, quiet) {
     stopAll();
+    root = root || stage;
     var ev = events(st.pattern), beat = beatSec(), meter = st.meter || 4, total = beatsOf(st.pattern), lead = 0.15;
     ev.forEach(function (e) {
       var strong = st.accent && e.start % meter === 0;
       if (e.sound) { tone(freq('G4'), lead + e.start * beat, Math.max(0.14, e.dur * beat * 0.9), { sustain: true, gain: strong ? 0.34 : 0.24 }); }
-      if (highlight) { later(function () { setOn(e.i); }, (lead + e.start * beat) * 1000); }
+      if (highlight) { later(function () { setOn(e.i, root); }, (lead + e.start * beat) * 1000); }
     });
-    for (var b = 0; b < total; b++) {
-      if (st.accent && b % meter === 0) { drum(lead + b * beat, 0.45); } else { tick(lead + b * beat, false); }
-      if (highlight && st.accent) { (function (b) { later(function () { setBeat(b); }, (lead + b * beat) * 1000); })(b); }
+    for (var b = 0; b < Math.ceil(total); b++) {
+      if (!quiet) {
+        if (st.accent && b % meter === 0) { drum(lead + b * beat, 0.45); } else { tick(lead + b * beat, false); }
+      }
+      if (highlight) { (function (b) { later(function () { setBeat(b, root); }, (lead + b * beat) * 1000); })(b); }
     }
-    later(function () { if (highlight) { setOn(null); setBeat(null); } if (onDone) { onDone(); } }, (lead + total * beat) * 1000 + 150);
+    later(function () { if (highlight) { setOn(null, root); setBeat(null, root); } if (onDone) { onDone(); } }, (lead + total * beat) * 1000 + 150);
   }
   function playMelody(notes, highlight, onDone) {
     stopAll();
     var beat = beatSec(), lead = 0.15;
     notes.forEach(function (n, i) {
       tone(freq(n), lead + i * beat, Math.max(0.5, beat * 1.1), { gain: 0.3 });
-      if (highlight) {
-        later(function () { setOn(i); flashKey(n, beat * 800); }, (lead + i * beat) * 1000);
-      }
+      if (highlight) { later(function () { setOn(i); flashKey(n, beat * 800); }, (lead + i * beat) * 1000); }
     });
     later(function () { if (highlight) { setOn(null); } if (onDone) { onDone(); } }, (lead + notes.length * beat) * 1000 + 150);
   }
@@ -948,6 +1135,11 @@
     var gap = beatSec() * 0.6;
     CLEF_TUNE[clef].forEach(function (n, i) { tone(freq(n), 0.1 + i * gap, 0.7, { gain: clef === 'bass' ? 0.4 : 0.25 }); });
     later(function () { if (onDone) { onDone(); } }, (0.1 + CLEF_TUNE[clef].length * gap) * 1000 + 300);
+  }
+  function playItem(it) {
+    if (it.type === 'rhythm') { playRhythm(it, false); }
+    else if (it.type === 'melody') { playMelody(it.notes, false); }
+    else if (it.type === 'clef') { playClefTune(it.clef); }
   }
 
   // ── Feedback ──
@@ -981,20 +1173,24 @@
   function praise(msg) {
     bubble('⭐ ' + (msg || 'Puikiai!'), 'good');
     happy(); confetti();
-    if (mode === 'steps') {
-      done[cur] = true;
-      renderRail();
-      $('nextBtn').classList.add('ready');
+    if (mode === 'lesson') {
+      done[ex] = true;
+      var d = stage.querySelector('[data-ex="' + ex + '"]');
+      if (d) { d.classList.add('done'); }
     }
   }
   function encourage(msg) { bubble('🙂 ' + (msg || 'Pabandykime dar kartą'), 'soft', 2600); soft(); }
 
   // ── 🎧 / 🔄 ──
   $('listenBtn').addEventListener('click', function () {
+    hideBubble();
     if (mode === 'game') { if (game && game.target) { playTarget(); } return; }
-    var st = step();
-    attempt = null; hideBubble(); clearMarks();
-    if (st.type === 'rhythm') { playRhythm(st, true); }
+    if (mode === 'tasks') { playTaskTarget(); return; }
+    var st = example();
+    attempt = null; clearMarks();
+    $('echo').hidden = true;
+    stage.classList.remove('echoing');
+    if (st.type === 'rhythm') { playRhythm(st, true, null, $('staffwrap')); }
     else if (st.type === 'melody') { playMelody(st.notes, true); }
     else if (st.type === 'lines') { demoLines(); }
     else if (st.type === 'clef') {
@@ -1005,71 +1201,57 @@
     else if (st.type === 'clefs') { playClefTune(quizClef); }
   });
   $('repeatBtn').addEventListener('click', function () {
+    hideBubble();
     if (mode === 'game') { newRound(); return; }
-    var st = step();
-    hideBubble(); clearMarks();
+    var st = example();
     if (st.type === 'rhythm') { startRhythmAttempt(); }
     else if (st.type === 'melody') { startMelodyAttempt(); }
     else if (st.type === 'lines' || st.type === 'clef') { render(); }
     else if (st.type === 'clefs') { renderClefQuiz(true); }
   });
-  $('nextBtn').addEventListener('click', function () {
-    if (mode === 'game') { mode = 'steps'; render(); return; }
-    if (cur < lesson.steps.length - 1) { cur++; render(); }
-    else if (lesson.games) { startGame(); }
-    else { finale(); }
+  $('tasksBtn').addEventListener('click', function () { if (mode === 'tasks') { mode = 'lesson'; render(); } else { startTasks(); } });
+  $('gameBtn').addEventListener('click', function () { if (mode === 'game') { mode = 'lesson'; render(); } else { startGame(); } });
+  $('lsBack').addEventListener('click', function () {
+    if (mode !== 'lesson') { mode = 'lesson'; render(); return; }
+    location.hash = 'tema=' + lesson.topic.no;
   });
-  $('modeBtn').addEventListener('click', function () {
-    if (mode === 'game') { mode = 'steps'; render(); } else { startGame(); }
-  });
-  $('lsBack').addEventListener('click', function () { location.hash = 'tema=' + lesson.topic.no; });
 
-  function finale() {
-    stopAll();
-    stage.innerHTML = '<div style="text-align:center"><div style="font-size:90px">🎉</div>' +
-      '<div style="font-size:40px;font-weight:800;color:var(--navy-ink)">Pamokėlė baigta! Puikiai!</div>' +
-      '<div style="display:flex;gap:12px;justify-content:center;margin-top:12px"><button class="btn btn-teal" id="again">🔁 Iš naujo</button>' +
-      '<button class="btn" id="toTopic">📚 Kitos pamokėlės</button></div></div>';
-    stage.appendChild(bubbleEl);
-    happy(); confetti();
-    $('again').addEventListener('click', function () { openLesson(lesson.id); });
-    $('toTopic').addEventListener('click', function () { location.hash = 'tema=' + lesson.topic.no; });
-  }
-
-  // ── Tempo control ──
+  // ── Tempo (in the teacher strip) ──
   function setTempo(i) {
     tempoI = Math.max(0, Math.min(2, i));
-    $('tempo').value = tempoI;
     try { localStorage.setItem(TEMPO_KEY, tempoI); } catch (e) {}
-    document.querySelectorAll('#tempoNames button').forEach(function (b, k) { b.classList.toggle('sel', k === tempoI); });
+    document.querySelectorAll('#tbar [data-tempo]').forEach(function (b) { b.classList.toggle('sel', +b.dataset.tempo === tempoI); });
   }
-  TEMPI.forEach(function (t, i) {
-    var b = document.createElement('button');
-    b.textContent = t.name;
-    b.addEventListener('click', function () { setTempo(i); });
-    $('tempoNames').appendChild(b);
-  });
-  $('tempo').addEventListener('input', function () { setTempo(+this.value); });
-  document.querySelectorAll('.tempo .ani').forEach(function (a) { a.addEventListener('click', function () { setTempo(+a.dataset.t); }); });
-  setTempo(tempoI);
 
-  // ── Rhythm attempt: count-in, taps, then a forgiving check ──
-  // How far (part of a beat) a tap may miss for 5–7 year olds.
+  // ── 🔄 Rhythm: the program plays a short example, counts in, and the
+  // child claps it back (a piano key, the space bar or a tap on the staff);
+  // then the claps are compared with the example. ──
+  // How far (part of a beat) a clap may miss.
   var AGE_TOL = 0.33;
 
   function startRhythmAttempt() {
-    stopAll();
-    var beat = beatSec(), a = { kind: 'rhythm', taps: [], open: false, ev: events(step().pattern) };
+    stopAll(); hideBubble();
+    var st = example(), it = lesson.repeat || st, root = $('staffwrap'), echo = $('echo');
+    clearMarks();
+    if (lesson.repeat) {
+      echo.innerHTML = '<span class="echo-ico" aria-hidden="true">🔄</span>' + staffRhythmSvg(it.pattern, { compact: true });
+      echo.hidden = false;
+      stage.classList.add('echoing');
+      root = echo;
+    } else { echo.hidden = true; stage.classList.remove('echoing'); }
+    var beat = beatSec(), total = beatsOf(it.pattern), c0 = 0.15 + total * beat + beat * 0.6;
+    playRhythm(it, true, null, root);
+    var a = { kind: 'rhythm', taps: [], open: false, ev: events(it.pattern), root: root };
     a.sounds = a.ev.filter(function (e) { return e.sound; });
     attempt = a;
     for (var k = 0; k < 4; k++) {
       (function (k) {
-        tick(0.1 + k * beat, k === 0);
-        later(function () { bubble(String(k + 1), 'count', 0); }, (0.1 + k * beat) * 1000);
+        tick(c0 + k * beat, k === 0);
+        later(function () { bubble(String(k + 1), 'count', 0); }, (c0 + k * beat) * 1000);
       })(k);
     }
-    later(function () { a.open = true; bubble('👏 Dabar tu!', 'count', 900); }, (0.1 + 3.6 * beat) * 1000);
-    a.idle = later(function () { if (attempt === a && !a.taps.length) { attempt = null; encourage('Paplok, kai pasirodys „Dabar tu!“'); } }, (0.1 + 4 * beat) * 1000 + 5000);
+    later(function () { a.open = true; bubble('👏 Dabar tu!', 'count', 900); }, (c0 + 3.6 * beat) * 1000);
+    a.idle = later(function () { if (attempt === a && !a.taps.length) { attempt = null; encourage('Plok, kai pasirodys „Dabar tu!“'); } }, (c0 + 4 * beat) * 1000 + 5000);
   }
 
   function rhythmTap() {
@@ -1078,19 +1260,18 @@
     a.taps.push(performance.now() / 1000);
     var e = a.sounds[a.taps.length - 1];
     if (e) {
-      var el = stage.querySelector('.nt[data-i="' + e.i + '"]');
+      var el = a.root.querySelector('.nt[data-i="' + e.i + '"]');
       if (el) { el.classList.add('hit'); }
     }
     clearTimeout(a.idle);
     if (a.taps.length >= a.sounds.length) { finishRhythm(a); return; }
-    // Wait for the longest gap in the pattern before deciding taps are missing.
     var beat = beatSec(), gap = 1;
     for (var i = 1; i < a.sounds.length; i++) { gap = Math.max(gap, a.sounds[i].start - a.sounds[i - 1].start); }
     a.idle = setTimeout(function () { if (attempt === a) { finishRhythm(a); } }, (gap + 1.5) * beat * 1300);
   }
 
-  // First the number of taps, only then their timing (aligned on the first
-  // tap and stretched a little, so a slightly slower child still passes).
+  // First the number of claps, only then their timing (aligned on the first
+  // clap and stretched a little, so a slightly slower child still passes).
   function judgeRhythm(sounds, taps, beat) {
     var n = sounds.length;
     if (taps.length !== n) { return { ok: false, why: taps.length < n ? 'few' : 'many' }; }
@@ -1115,23 +1296,27 @@
     clearTimeout(a.idle);
     var r = judgeRhythm(a.sounds, a.taps, beatSec());
     a.sounds.forEach(function (e, i) {
-      var el = stage.querySelector('.nt[data-i="' + e.i + '"]');
+      var el = a.root.querySelector('.nt[data-i="' + e.i + '"]');
       if (!el) { return; }
-      el.classList.remove('hit');
-      if (r.marks) { el.classList.add(r.marks[i] ? 'ok' : 'off'); }
-      else if (i < a.taps.length) { el.classList.add('ok'); }
+      if (r.marks) { mark(el, r.marks[i]); }
+      else { mark(el, i < a.taps.length); }
     });
     if (r.ok) { praise(); }
-    else if (r.why === 'few') { encourage('Pabandykime dar kartą – trūko ' + (a.sounds.length - a.taps.length) + ' 👏'); }
+    else if (r.why === 'few') { encourage('Trūko ' + (a.sounds.length - a.taps.length) + ' 👏 – paklausyk 🎧 ir bandyk dar'); }
+    else if (r.why === 'many') { encourage('Per daug 👏 – paklausyk 🎧 ir bandyk dar'); }
     else { encourage('Beveik! Paklausyk 🎧 ir pabandyk dar kartą'); }
   }
 
-  // ── Melody attempt: the same keys in the same order ──
+  // ── 🔄 Melody: the program plays it, then the same keys in the same order ──
   function startMelodyAttempt() {
-    stopAll();
-    attempt = { kind: 'melody', presses: [], times: [], notes: step().notes };
-    bubble('🎹 Dabar tu! Pagrok', 'count', 1400);
-    attempt.idle = later(function () { if (attempt && attempt.kind === 'melody' && !attempt.presses.length) { attempt = null; encourage('Spausk spalvotus klavišus'); } }, 8000);
+    stopAll(); clearMarks();
+    var notes = example().notes;
+    playMelody(notes, true, function () {
+      var a = { kind: 'melody', presses: [], times: [], notes: notes };
+      attempt = a;
+      bubble('🎹 Dabar tu! Pagrok', 'count', 1400);
+      a.idle = later(function () { if (attempt === a && !a.presses.length) { attempt = null; encourage('Spausk klavišus'); } }, 8000);
+    });
   }
   function melodyPress(n) {
     var a = attempt, i = a.presses.length;
@@ -1146,15 +1331,11 @@
     attempt = null;
     clearTimeout(a.idle);
     var right = a.presses.length === a.notes.length && a.presses.every(function (n, i) { return n === a.notes[i]; });
-    stage.querySelectorAll('.nt').forEach(function (el, i) {
-      el.classList.remove('hit');
-      if (i < a.presses.length) { el.classList.add(a.presses[i] === a.notes[i] ? 'ok' : 'off'); }
-    });
+    stage.querySelectorAll('.nt').forEach(function (el, i) { if (i < a.presses.length) { mark(el, a.presses[i] === a.notes[i]); } });
     if (!right) {
-      encourage(a.presses.length < a.notes.length ? 'Pabandykime dar kartą – dar ne visos natos' : 'Pabandykime dar kartą 🎧');
+      encourage(a.presses.length < a.notes.length ? 'Dar ne visos natos – paklausyk 🎧' : 'Pabandykime dar kartą 🎧');
       return;
     }
-    // Notes right: now (gently) the timing - evenly, near the chosen tempo.
     var iv = [];
     for (var i = 1; i < a.times.length; i++) { iv.push(a.times[i] - a.times[i - 1]); }
     var even = !iv.length || (Math.max.apply(null, iv) / Math.min.apply(null, iv) <= 2.2 &&
@@ -1189,10 +1370,7 @@
     });
     later(function () { stage.querySelectorAll('.ln-g.on').forEach(function (x) { x.classList.remove('on'); }); }, (0.1 + 5 * beat) * 1000 + 300);
   }
-
   function wiggle(el) { el.classList.remove('wig'); void el.getBoundingClientRect(); el.classList.add('wig'); }
-
-  // ── One clef: tap it ──
   function bindClef(clef) {
     var cg = stage.querySelector('.clefg');
     cg.addEventListener('pointerdown', function () {
@@ -1201,16 +1379,15 @@
       later(function () { praise(clef === 'treble' ? 'Smuiko raktas!' : 'Boso raktas!'); }, 900);
     });
   }
-
-  // ── Which clef? high sound → treble, low → bass ──
+  // Which clef? high sound → treble, low → bass
   var quizClef = 'treble';
   function renderClefQuiz(autoplay) {
     quizClef = Math.random() < 0.5 ? 'treble' : 'bass';
-    stage.innerHTML = '<div class="quiz">' + ['treble', 'bass'].map(function (c) {
+    var box = $('staffwrap');
+    box.innerHTML = '<div class="quiz">' + ['treble', 'bass'].map(function (c) {
       return '<div class="card" data-c="' + c + '">' + clefSvg(c, { bare: true, w: 300 }) + (c === 'treble' ? '🐦 Aukštas' : '🐻 Žemas') + '</div>';
     }).join('') + '</div>';
-    stage.appendChild(bubbleEl);
-    stage.querySelectorAll('.card').forEach(function (card) {
+    box.querySelectorAll('.card').forEach(function (card) {
       card.addEventListener('click', function () {
         if (card.dataset.c === quizClef) { card.classList.add('right'); praise(); }
         else { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); encourage('Paklausyk dar kartą 🎧'); }
@@ -1219,15 +1396,108 @@
     if (autoplay) { setTimeout(function () { playClefTune(quizClef); }, 300); }
   }
 
-  // ───────────────────────────── Game: "Ką girdi?" ─────────────────────────────
-  // Plays one example and the child picks it among 2–3 pictures. The pool is
-  // the lesson's own examples plus the topic's, so it fits the topic's goal.
+  // ───────────────────────────── 📝 Užduotys ─────────────────────────────
+  // The tasks written in the lesson template, one after another; at the
+  // end the result (right on the first try). A lesson without written tasks
+  // gets "Ką girdi?" questions from its own examples until it is filled in.
+  function startTasks() {
+    var list = lesson.tasks || autoTasks();
+    if (!list.length) { bubble('📝 Užduotys ruošiamos', 'soft'); return; }
+    tk = { list: list, i: 0, right: 0, first: true };
+    mode = 'tasks';
+    render();
+  }
+  function autoTasks() {
+    var pool = gamePool(), out = [];
+    if (pool.length < 2) { return out; }
+    for (var k = 0; k < 3; k++) {
+      var opts = shuffle(pool).slice(0, Math.min(3, pool.length));
+      out.push({
+        title: 'Ką girdi?', listen: true,
+        question: pool[0].type === 'clef' ? 'Paklausyk: aukštas ar žemas garsas?' : 'Paklausyk ir pasirink, ką girdi.',
+        options: opts.map(function (o) { return { item: o }; }), answer: Math.floor(Math.random() * opts.length)
+      });
+    }
+    return out;
+  }
+  function optionHtml(o) {
+    if (o.notes) { return staffRhythmSvg(o.notes, { noStaff: true, big: true }); }
+    if (o.rhythm) { return staffRhythmSvg(o.rhythm, { compact: true }); }
+    if (o.item) { return itemHtml(o.item); }
+    return '<span class="ctext">' + esc(o.text) + '</span>';
+  }
+  function itemHtml(it) {
+    if (it.type === 'rhythm') { return staffRhythmSvg(it.pattern, { compact: true, meter: it.meter }); }
+    if (it.type === 'melody') { return melodySvg(it.notes, { noNames: true }); }
+    return clefSvg(it.clef, { bare: true, w: 300 }) + (it.clef === 'treble' ? '🐦 Aukštas' : '🐻 Žemas');
+  }
+  function taskTarget(task) {
+    var o = task && task.options[task.answer];
+    if (!o) { return null; }
+    return o.rhythm ? { type: 'rhythm', pattern: o.rhythm } : o.item || null;
+  }
+  function playTaskTarget() {
+    var it = tk && !tk.solved && taskTarget(tk.list[tk.i]);
+    if (it) { playItem(it); }
+  }
+  function renderTask() {
+    var task = tk.list[tk.i], n = tk.list.length;
+    if (!task) { taskResult(); return; }
+    $('explain').innerHTML = '<span class="tnum">📝 Užduotis ' + (tk.i + 1) + ' iš ' + n + ' · ' + esc(task.title) + '</span>' + esc(task.question);
+    $('listenBtn').hidden = !task.listen;
+    $('repeatBtn').hidden = true;
+    var order = shuffle(task.options.map(function (_, i) { return i; }));
+    var h = '<div class="taskbox">' + (task.show ? '<div class="tshow">' + optionHtml(task.show) + '</div>' : '') + '<div class="quiz">';
+    order.forEach(function (i) { h += '<button class="card" data-o="' + i + '">' + optionHtml(task.options[i]) + '</button>'; });
+    h += '</div><div class="tdots">' + tk.list.map(function (_, k) { return '<span class="' + (k < tk.i ? 'done' : k === tk.i ? 'cur' : '') + '"></span>'; }).join('') + '</div></div>';
+    stage.innerHTML = h;
+    stage.appendChild(bubbleEl);
+    tk.first = true; tk.solved = false;
+    stage.querySelectorAll('.card').forEach(function (c) {
+      c.addEventListener('click', function () {
+        if (tk.solved) { return; }
+        var right = +c.dataset.o === task.answer;
+        if (tk.first) { tk.first = false; if (right) { tk.right++; } }
+        if (right) {
+          tk.solved = true;
+          c.classList.add('right');
+          praise('Teisingai!');
+          var mine = tk;   // a plain timer: playing a sound must not cancel it
+          setTimeout(function () { if (mode === 'tasks' && tk === mine) { tk.i++; renderTask(); } }, 1600);
+        } else {
+          c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+          encourage(task.listen ? 'Paklausyk dar kartą 🎧' : 'Pagalvok dar kartą');
+          if (task.listen) { later(playTaskTarget, 900); }
+        }
+      });
+    });
+    if (task.listen) { later(playTaskTarget, 500); }
+  }
+  function taskResult() {
+    var n = tk.list.length, r = tk.right, stars = r === n ? 3 : r * 2 >= n ? 2 : 1;
+    $('explain').textContent = 'Užduotys atliktos!';
+    $('listenBtn').hidden = true;
+    $('repeatBtn').hidden = true;
+    stage.innerHTML = '<div class="result"><div class="rstars">' + '⭐'.repeat(stars) + '<span class="dim">' + '⭐'.repeat(3 - stars) + '</span></div>' +
+      '<div class="rtext">Teisingai iš pirmo karto: ' + r + ' iš ' + n + '</div>' +
+      '<div class="rbtns"><button class="btn btn-teal" id="tAgain">🔁 Dar kartą</button><button class="btn" id="tBack">🎹 Į pamokėlę</button>' +
+      (lesson.games ? '<button class="btn" id="tGame">🎮 Žaidimai</button>' : '') + '</div></div>';
+    stage.appendChild(bubbleEl);
+    happy(); confetti();
+    $('tAgain').addEventListener('click', startTasks);
+    $('tBack').addEventListener('click', function () { mode = 'lesson'; render(); });
+    if ($('tGame')) { $('tGame').addEventListener('click', startGame); }
+  }
+
+  // ───────────────────────────── 🎮 Žaidimas: "Ką girdi?" ─────────────────────────────
+  // For now: one example plays and the child picks it among 2–3 pictures.
+  // The lessons' own games are being prepared separately.
   var ROUNDS = 5;
   function gamePool() {
     var t = lesson.topic;
     if (t.kind === 'staff') { return [{ type: 'clef', clef: 'treble' }, { type: 'clef', clef: 'bass' }]; }
     var seen = {}, pool = [];
-    lesson.steps.concat(t.presets).forEach(function (st) {
+    lesson.examples.concat(t.presets).forEach(function (st) {
       if (st.type !== 'rhythm' && st.type !== 'melody') { return; }
       var key = st.type + (st.pattern || st.notes).join(',') + (st.meter || '');
       if (!seen[key]) { seen[key] = 1; pool.push(st); }
@@ -1243,18 +1513,12 @@
     $('explain').textContent = lesson.topic.kind === 'staff'
       ? 'Paklausyk! Aukštas garsas – smuiko raktas, žemas – boso raktas.'
       : 'Paklausyk 🎧 ir paspausk paveikslėlį, kurį girdi!';
-    $('repeatLbl').textContent = 'Kitas';
-    $('nextBtn').textContent = '📖 Užduotėlės';
-    $('nextBtn').classList.remove('ready');
-    renderBottom(lesson.topic.kind === 'rhythm' ? 'pad' : 'piano');
+    $('listenBtn').hidden = false;
+    $('repeatBtn').hidden = false;
+    $('repeatBtn').title = 'Kitas';
     newRound();
   }
-  function playTarget() {
-    var t = game.target;
-    if (t.type === 'rhythm') { playRhythm(t, false); }
-    else if (t.type === 'melody') { playMelody(t.notes, false); }
-    else { playClefTune(t.clef); }
-  }
+  function playTarget() { playItem(game.target); }
   function newRound() {
     stopAll(); hideBubble();
     if (game.round >= ROUNDS) { gameOver(); return; }
@@ -1269,9 +1533,7 @@
     opts.forEach(function (o) {
       var c = document.createElement('div');
       c.className = 'card';
-      c.innerHTML = o.type === 'rhythm' ? rhythmSvg(o.pattern, o.meter)
-        : o.type === 'melody' ? melodySvg(o.notes)
-        : clefSvg(o.clef, { bare: true, w: 300 }) + (o.clef === 'treble' ? '🐦 Aukštas' : '🐻 Žemas');
+      c.innerHTML = itemHtml(o);
       c.addEventListener('click', function () {
         if (!game.target) { return; }
         if (o === game.target) {
@@ -1289,17 +1551,17 @@
       });
       $('quiz').appendChild(c);
     });
-    setTimeout(function () { if (game && game.target) { playTarget(); } }, 500);
+    setTimeout(function () { if (game && game.target && mode === 'game') { playTarget(); } }, 500);
   }
   function gameOver() {
-    stage.innerHTML = '<div style="text-align:center"><div style="font-size:48px">' + '⭐'.repeat(Math.max(1, game.stars)) + '</div>' +
-      '<div style="font-size:40px;font-weight:800;color:var(--navy-ink)">Puikiai pažaidei!</div>' +
-      '<div style="display:flex;gap:12px;justify-content:center;margin-top:12px"><button class="btn btn-teal" id="gAgain">🔁 Žaisti dar</button>' +
-      '<button class="btn" id="gBack">📖 Į užduotėles</button></div></div>';
+    stage.innerHTML = '<div class="result"><div class="rstars">' + '⭐'.repeat(Math.max(1, game.stars)) + '</div>' +
+      '<div class="rtext">Puikiai pažaidei!</div>' +
+      '<div class="rbtns"><button class="btn btn-teal" id="gAgain">🔁 Žaisti dar</button>' +
+      '<button class="btn" id="gBack">🎹 Į pamokėlę</button></div></div>';
     stage.appendChild(bubbleEl);
     happy(); confetti();
     $('gAgain').addEventListener('click', startGame);
-    $('gBack').addEventListener('click', function () { mode = 'steps'; render(); });
+    $('gBack').addEventListener('click', function () { mode = 'lesson'; render(); });
   }
 
   // ───────────────────────────── Teacher's editor ─────────────────────────────
@@ -1320,7 +1582,7 @@
     var from = opts.from ? getLesson(opts.from) : null;
     ed = {
       id: r ? r.id : null, topic: t, build: [], meter: 4, text: '',
-      steps: JSON.parse(JSON.stringify(s ? s.steps : from ? from.steps : []))
+      steps: JSON.parse(JSON.stringify(s ? s.steps : from ? from.examples : []))
     };
     $('edTitle').textContent = (r ? '✏️ ' + r.title : '➕ Nauja pamokėlė') + ' · ' + t.no + '. tema';
     $('edName').value = r ? r.title : (from ? from.title + ' (mano)' : '');
@@ -1467,7 +1729,7 @@
   // ───────────────────────────── Routing ─────────────────────────────
   // '' topics · #tema=N · #pamoka=ID · #nauja=N[&nuo=ID] · #keisti=ID
   function route() {
-    stopAll(); attempt = null; bottomKind = '';
+    stopAll(); attempt = null;
     var h = decodeURIComponent(location.hash.slice(1));
     var m;
     if ((m = /^pamoka=(.+)$/.exec(h))) { editor.hidden = true; openLesson(m[1]); }

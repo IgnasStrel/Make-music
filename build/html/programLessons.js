@@ -32,10 +32,38 @@
 
   function fixed(b, id) { b.id = id; return b; }
 
+  // ♩ ♪ ♫ for the text answers of a question block.
+  function noteText(tokens) { return (tokens || []).map(function (t) { return { q: '♩', e: '♪', ee: '♪♪' }[t] || t; }).join(' '); }
+
+  // A topic filled in from the lesson template: its explanation, the staff
+  // example, 🔄, and the written tasks, as blocks.
+  function templateBlocks(tp) {
+    var id = function (x) { return 'p' + tp.no + '-' + x; };
+    var b = [
+      { id: id('goal'), type: 'text', title: '🎯', text: tp.goal },
+      { id: id('explain'), type: 'text', title: '📖', text: tp.explain },
+      { id: id('staff'), type: 'rhythm', meter: 4, accent: false, pattern: tp.staff.pattern.slice(),
+        text: (tp.legend || []).map(function (l) { return (l.notes ? noteText(l.notes) + ' ' : '') + l.text; }).join(' · ') }
+    ];
+    if (tp.repeat) { b.push({ id: id('repeat'), type: 'rhythm', meter: 4, accent: false, pattern: tp.repeat.pattern.slice(), text: 'Paklausyk ir pakartok šį ritmą.' }); }
+    (tp.tasks || []).forEach(function (t, i) {
+      if (t.listen) {
+        b.push({ id: id('task' + (i + 1)), type: 'listening', title: t.title, text: t.question, answer: t.answer, random: false,
+          options: t.options.map(function (o) { return { type: 'rhythm', meter: 4, pattern: o.rhythm.slice() }; }) });
+      } else {
+        b.push({ id: id('task' + (i + 1)), type: 'task', title: t.title, answer: t.answer,
+          text: t.question + (t.show ? '  ' + noteText(t.show.notes) : ''),
+          choices: t.options.map(function (o) { return o.text || noteText(o.notes); }) });
+      }
+    });
+    return b;
+  }
+
   var list = [];
   D.TOPICS.forEach(function (tp) {
     var blocks = [fixed({ type: 'text', title: '🎯', text: tp.goal }, 'p' + tp.no + '-goal')];
-    tp.presets.slice(0, tp.base).forEach(function (st, i) { blocks.push(fixed(LE.fromStep(st), 'p' + tp.no + '-' + (i + 1))); });
+    if (tp.staff && tp.tasks) { blocks = templateBlocks(tp); }
+    else { tp.presets.slice(0, tp.base).forEach(function (st, i) { blocks.push(fixed(LE.fromStep(st), 'p' + tp.no + '-' + (i + 1))); }); }
     var pool = tp.kind === 'staff'
       ? [{ type: 'clef', clef: 'treble' }, { type: 'clef', clef: 'bass' }]
       : tp.presets.map(LE.itemFromStep).filter(Boolean);

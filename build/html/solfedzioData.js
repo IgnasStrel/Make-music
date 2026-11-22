@@ -32,12 +32,58 @@
   ];
   var BLACK = [{ n: 'C#4', after: 0 }, { n: 'D#4', after: 1 }, { n: 'F#4', after: 3 }, { n: 'G#4', after: 4 }, { n: 'A#4', after: 5 }];
 
-  // The eight topics. presets: the program author's own examples; the
-  // built-in lesson of a topic is its first `base` presets.
+  // The eight topics. presets: the program author's own examples (also the
+  // teacher's building blocks).
+  //
+  // A topic filled in from the lesson template ("Solfedžio interaktyvių
+  // pamokėlių šablonas", part A) also has:
+  //   grade, age, topicFull, source   – basic information
+  //   learn: [..]                      – what the child has to understand
+  //   explain                          – the short explanation on screen
+  //   staff: {type:'rhythm', pattern}  – the fixed example on the staff
+  //   legend: [{notes, text}]          – note lengths shown under the explanation
+  //   repeat: {type:'rhythm', pattern} – what 🔄 plays before the child repeats
+  //   tasks: [{title, question, show?, listen?, options:[{notes}|{text}|{rhythm}], answer}]
+  //   audio: {AUDIO_01: '…'}           – the sound file plan (files come later)
+  // Without them the lesson shows its first `base` presets, one at a time.
   var TOPICS = [
     { no: 1, ico: '👣', color: '#e8333a', kind: 'rhythm', tokens: ['q', 'ee'],
-      name: 'Ritmas. Ketvirtinė ir aštuntinė natos',
-      goal: 'Pajusti ir atkartoti paprastą ritmą: ketvirtinę natą TA ir dvi aštuntines TI-TI.',
+      name: 'Ketvirtinės ir aštuntinės natos',
+      goal: 'Mokinys susipažįsta su ketvirtine ir aštuntine nata, supranta jų trukmės skirtumą ir pradeda atpažinti paprastus ritminius derinius.',
+      grade: '1 klasė', age: '7–8 metai', topicFull: 'Ketvirtinės ir aštuntinės natos. Ritmas',
+      source: 'D. Ūsaitė, „Solfedžio“, 1 dalis, p. 5',
+      learn: [
+        'Ketvirtinė nata ♩ trunka vieną judesį.',
+        'Aštuntinė nata ♪ trunka pusę judesio.',
+        'Dvi aštuntinės ♪ ♪ sudaro vieno judesio trukmę.',
+        'Įvairios skirtingos trukmės natų kaitos sudaro muzikos ritmą.',
+        'Ritmas gali būti atliekamas balsu, judesiu, plojant ar beldžiant ritmą.'
+      ],
+      explain: 'Muzikos garsus užrašome natomis. Natos gali trukti skirtingą laiką. Ketvirtinė ♩ trunka vieną judesį. ' +
+        'Aštuntinė ♪ trunka pusę judesio. Dvi aštuntinės ♪ ♪ kartu užima vieną judesį. Skirtingos natų trukmės sudaro ritmą.',
+      staff: { type: 'rhythm', pattern: ['q', 'q', 'ee', 'q', 'ee'] },
+      legend: [
+        { notes: ['q'], text: 'Ketvirtinė – 1 judesys', audio: 'AUDIO_01' },
+        { notes: ['e'], text: 'Aštuntinė – ½ judesio' },
+        { notes: ['ee'], text: 'Dvi aštuntinės – 1 judesys', audio: 'AUDIO_02' },
+        { text: 'Ritmas – skirtingos trukmės garsų kaita' }
+      ],
+      repeat: { type: 'rhythm', pattern: ['q', 'ee', 'q'], audio: 'AUDIO_03' },
+      tasks: [
+        { title: 'Atpažink natą', question: 'Kuri nata trunka vieną judesį?',
+          options: [{ notes: ['q'] }, { notes: ['e'] }], answer: 0 },
+        { title: 'Suskaičiuok', question: 'Kiek judesių trunka dvi aštuntinės?', show: { notes: ['ee'] },
+          options: [{ text: '½' }, { text: '1' }, { text: '2' }], answer: 1 },
+        { title: 'Atpažink ritmą', question: 'Paklausyk ir pasirink ritmą, kurį girdi.', listen: true, audio: 'AUDIO_04',
+          options: [{ rhythm: ['q', 'ee', 'q', 'q'] }, { rhythm: ['ee', 'q', 'q', 'q'] }, { rhythm: ['q', 'q', 'ee', 'q'] }], answer: 0 }
+      ],
+      audio: {
+        AUDIO_01: 'Ketvirtinės ritminis pavyzdys – 1 judesio trukmė',
+        AUDIO_02: 'Dvi aštuntinės – 1 judesio trukmė',
+        AUDIO_03: 'Trumpas mišrus ritmas: ♩ | ♪ ♪ | ♩',
+        AUDIO_04: 'Ritmas, skirtas 3 užduočiai „Atpažink ritmą“',
+        VOICE_01: 'Trumpas paaiškinimas, jei naudojamas įgarsinimas'
+      },
       presets: [
         { type: 'rhythm', meter: 4, pattern: ['q', 'q', 'q', 'q'], text: 'Ketvirtinė nata – vienas ramus žingsnis: TA. Paklausyk ir paplok.' },
         { type: 'rhythm', meter: 4, pattern: ['ee', 'ee', 'ee', 'ee'], text: 'Dvi aštuntinės – du greiti žingsneliai: ti-ti.' },
